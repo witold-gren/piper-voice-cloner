@@ -1,0 +1,18 @@
+line-length = 110
+target-version = "py310"
+
+[lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[lint.isort]
+force-sort-within-sections = true
+known-first-party = ["piper_voice_cloner"]
+combine-as-imports = true
+
+[lint.per-file-ignores]
+# UI prose, wrapping it would only hurt readability
+"piper_voice_cloner/webui/texts.py" = ["E501"]
+# CSS and HTML snippets
+"piper_voice_cloner/webui/style.py" = ["E501"]
+"piper_voice_cloner/webui/guide.py" = ["E501"]

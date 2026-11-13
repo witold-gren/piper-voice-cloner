@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piper Voice Cloner – guide</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjU5ZTBiIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2VmNGYzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9InVybCgjZykiLz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg4IDgpIHNjYWxlKDIpIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMi40IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiPgogICAgPHBhdGggZD0iTTIgMTJjMS43LTYgMy4zLTYgNSAwczMuMyA2IDUgMCAzLjMtNiA1IDAgMy4zIDYgNSAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxLjggLTIuNikiIHN0cm9rZS1vcGFjaXR5PSIuNSIvPgogICAgPHBhdGggZD0iTTIgMTJjMS43LTYgMy4zLTYgNSAwczMuMyA2IDUgMCAzLjMtNiA1IDAgMy4zIDYgNSAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMC45IDEuMykiLz4KICA8L2c+Cjwvc3ZnPgo=">
+<style>
+  :root {
+    --bg: #f4f6fb; --card: #ffffff; --line: #e5e7ef; --text: #111827; --muted: #6b7280;
+    --accent: #5b5bf0; --accent-2: #8b5cf6; --code: #eef0f7; --pre: #0d1117; --pre-text: #e6edf3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0e17; --card: #141a29; --line: #232b3e; --text: #e5e7eb; --muted: #9aa3b5;
+      --accent: #8183ff; --accent-2: #b18cff; --code: #1d2436;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  .layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 32px; max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+  nav { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; padding: 28px 0; }
+  nav .brand { font-weight: 800; margin: 0 8px 4px; }
+  nav .label { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; margin: 0 8px 10px; }
+  nav a { display: block; color: var(--muted); text-decoration: none; padding: 4px 8px; border-left: 2px solid transparent; font-size: .92rem; }
+  nav a.l3 { padding-left: 20px; font-size: .86rem; }
+  nav a:hover, nav a.active { color: var(--accent); border-left-color: var(--accent); }
+  main { padding: 28px 0 80px; min-width: 0; }
+  article { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px 36px; }
+  h1 { font-size: 1.9rem; margin: 0 0 12px; }
+  h2 { margin-top: 2.2em; padding-top: .4em; border-top: 1px solid var(--line); }
+  h3 { margin-top: 1.6em; }
+  a { color: var(--accent); }
+  code { background: var(--code); padding: 1px 6px; border-radius: 6px; font-size: .88em; }
+  pre { background: var(--pre); color: var(--pre-text); padding: 14px 16px; border-radius: 12px; overflow-x: auto; }
+  pre code { background: none; padding: 0; color: inherit; }
+  table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; margin: 1em 0; }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code); }
+  blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--accent); background: var(--code); border-radius: 0 10px 10px 0; }
+  blockquote p { margin: .3em 0; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; gap: 0; }
+    nav { position: static; max-height: none; padding-bottom: 0; }
+    nav a { display: inline-block; border-left: 0; padding: 2px 6px; }
+    nav a.l3 { display: none; }
+    article { padding: 20px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav id="toc"><div class="brand">Piper Voice Cloner</div><div class="label">Contents</div><a href="#what-it-does" class="l2">What it does</a><a href="#installation" class="l2">Installation</a><a href="#gpu-machine-over-ssh-working-from-a-mac-or-laptop" class="l3">GPU machine over SSH (working from a Mac or laptop)</a><a href="#power-of-the-gpu-machine-through-home-assistant" class="l3">Power of the GPU machine through Home Assistant</a><a href="#web-interface" class="l2">Web interface</a><a href="#where-the-data-lives" class="l2">Where the data lives</a><a href="#renaming-a-voice" class="l3">Renaming a voice</a><a href="#1-record-the-reference" class="l2">1. Record the reference</a><a href="#2-sentences" class="l2">2. Sentences</a><a href="#3-audition" class="l2">3. Audition</a><a href="#4-generate-and-filter" class="l2">4. Generate and filter</a><a href="#a-voice-from-elevenlabs-no-recording-no-gpu" class="l2">A voice from ElevenLabs (no recording, no GPU)</a><a href="#5-train" class="l2">5. Train</a><a href="#your-own-base-without-english-bazowy-pl" class="l3">Your own base without English (bazowy-pl)</a><a href="#how-long-to-train-and-what-to-watch" class="l2">How long to train and what to watch</a><a href="#progress-in-the-panel" class="l3">Progress in the panel</a><a href="#what-to-watch" class="l3">What to watch</a><a href="#training-queue" class="l3">Training queue</a><a href="#reading-the-training-progress" class="l3">Reading the training progress</a><a href="#powering-the-machine-off-after-training" class="l3">Powering the machine off after training</a><a href="#6-export-and-use" class="l2">6. Export and use</a><a href="#exporting-a-trained-voice" class="l3">Exporting a trained voice</a><a href="#exporting-the-base-voice" class="l3">Exporting the base voice</a><a href="#adding-the-voice-to-home-assistant" class="l3">Adding the voice to Home Assistant</a><a href="#a-new-voice-from-a-short-recording" class="l2">A new voice from a short recording</a><a href="#are-15-seconds-enough" class="l3">Are 15 seconds enough?</a><a href="#trial-results" class="l3">Trial results</a><a href="#step-by-step-target-1500-clips" class="l3">Step by step (target 1500 clips)</a><a href="#mac-or-ubuntu" class="l3">Mac or Ubuntu?</a><a href="#how-long-it-takes-in-total" class="l3">How long it takes in total</a><a href="#limits-and-law" class="l3">Limits and law</a><a href="#retraining-existing-voices" class="l2">Retraining existing voices</a><a href="#adding-a-language" class="l2">Adding a language</a><a href="#faq-and-troubleshooting" class="l2">FAQ and troubleshooting</a><a href="#filter-no-generated-clips-in-raw-nothing-to-filter" class="l3">Filter: no generated clips in …/raw: nothing to filter</a><a href="#export-no-module-named-onnxscript-or-guardondatadependentsymnode" class="l3">Export: No module named &#x27;onnxscript&#x27; or GuardOnDataDependentSymNode</a><a href="#listening-elevenlabsfatalerror-no-api-key-in-the-panel-on-the-machine" class="l3">Listening: ElevenLabsFatalError: no API key in the panel on the machine</a><a href="#piotr-is-an-imported-voice-create-a-new-voice-to-generate-clips" class="l3">&#x27;piotr&#x27; is an imported voice: create a new voice to generate clips</a><a href="#after-restarting-make-ui-an-event-handler-run_export-didnt-receive-enough-input-values" class="l3">After restarting make ui: An event handler (run_export) didn&#x27;t receive enough input values</a><a href="#generate-stopped-http-401--quota_exceeded-invalid_api_key" class="l3">Generate: Stopped: HTTP 401: … (quota_exceeded, invalid_api_key)</a><a href="#load-voices-http-401--missing_permissions" class="l3">Load voices: HTTP 401: … missing_permissions</a><a href="#generate-stopped-raw-holds-clips-of-another-voice-" class="l3">Generate: Stopped: raw/ holds clips of another voice (…)</a><a href="#use-this-set-raw-already-holds--clips-of-other-sentences" class="l3">Use this set: raw/ already holds … clips of other sentences</a><a href="#voice-name-lowercase-letters-digits-and-_-only" class="l3">voice name: lowercase letters, digits and &#x27;_&#x27; only</a><a href="#make-ui-python311-not-found" class="l3">make ui: python3.11 not found</a><a href="#i-cant-see-the-tools-or-settings-tabs" class="l3">I can&#x27;t see the Tools or Settings tabs</a><a href="#what-goes-into-persona-metadata-file" class="l3">What goes into &quot;Persona metadata file&quot;?</a><a href="#the-import-dropped-some-clips" class="l3">The import dropped some clips</a><a href="#the-panel-says-no-nvidia-card" class="l3">The panel says &quot;no NVIDIA card&quot;</a><a href="#ctrlc-does-not-stop-make-ui" class="l3">Ctrl+C does not stop make ui</a><a href="#nothing-happens-after-a-click-no-progress" class="l3">Nothing happens after a click, no progress</a><a href="#value-kasia-is-not-in-the-list-of-choices--in-the-make-ui-terminal" class="l3">Value: kasia is not in the list of choices: [] in the make ui terminal</a><a href="#-is-still-running-wait-until-it-ends-formerly-another-job-is-still-running--is-still-running" class="l3">&quot;… is still running. Wait until it ends&quot; (formerly Another job is still running: … is still running)</a><a href="#check-connection-ssh-connect-to-host--port-22-network-is-unreachable-or-operation-timed-out" class="l3">Check connection: ssh: connect to host … port 22: Network is unreachable or Operation timed out</a><a href="#training-stops-after-the-first-epoch-modelcheckpointmonitorval_mos-could-not-find-the-monitored-key" class="l3">Training stops after the first epoch: ModelCheckpoint(monitor=&#x27;val_mos&#x27;) could not find the monitored key</a><a href="#audition-or-generation-typeerror-nonetype-object-is-not-callable-perthperthimplicitwatermarker" class="l3">Audition or generation: TypeError: &#x27;NoneType&#x27; object is not callable (perth.PerthImplicitWatermarker())</a><a href="#the-filter-drops-almost-everything-as-too_fast_or_cut-the-log-says-forcing-eos-token--token_repetitiontrue" class="l3">The filter drops almost everything as too_fast_or_cut, the log says forcing EOS token, … token_repetition=True</a><a href="#training-again-after-a-finished-run-you-restored-a-checkpoint-with-current_epoch1273-but-you-have-set-trainermax_epochs800" class="l3">Training again after a finished run: You restored a checkpoint with current_epoch=1273, but you have set Trainer(max_epochs=800)</a><a href="#training-stops-after-many-epochs-torchoutofmemoryerror-cuda-out-of-memory" class="l3">Training stops after many epochs: torch.OutOfMemoryError: CUDA out of memory</a><a href="#check-connection-permission-denied-publickey-or-host-key-verification-failed" class="l3">Check connection: Permission denied (publickey) or Host key verification failed</a><a href="#check-connection-ffmpeg-missing-or-another-tool" class="l3">Check connection: ffmpeg: MISSING (or another tool)</a><a href="#install-modulenotfounderror-no-module-named-cython-localbincythonize" class="l3">Install: ModuleNotFoundError: No module named &#x27;Cython&#x27; (~/.local/bin/cythonize)</a><a href="#install-no-module-named-skbuild-or-cannot-import-name-espeakbridge" class="l3">Install: No module named &#x27;skbuild&#x27; or cannot import name &#x27;espeakbridge&#x27;</a><a href="#red-status-server-installing---failed-exit-code-1" class="l3">Red status &quot;Server: installing (-) failed (exit code 1)&quot;</a><a href="#i-lost-the-login-of-the-panel-on-the-machine" class="l3">I lost the login of the panel on the machine</a><a href="#machine-no-reading-from-ha" class="l3">&quot;Machine: no reading from HA&quot;</a><a href="#machine-ha-token-rejected" class="l3">&quot;Machine: HA token rejected&quot;</a><a href="#home-assistant-401-the-token-is-wrong-or-expired--home-assistant-403-the-token-belongs-to-a-user-who-is-not-an-administrator" class="l3">Home Assistant 401: the token is wrong or expired / Home Assistant 403: the token belongs to a user who is not an administrator</a><a href="#this-does-not-look-like-a-home-assistant-long-lived-token--home-assistant-address-eg-httphomeassistantlocal8123" class="l3">this does not look like a Home Assistant long-lived token / Home Assistant address: e.g. http://homeassistant.local:8123</a><a href="#a-job-is-running-on-the-machine----stop-it-first-or-wait-until-it-ends" class="l3">a job is running on the machine: … - stop it first or wait until it ends</a><a href="#the-ui-loads-slowly-or-shows-checking-the-machine-for-long" class="l3">The UI loads slowly or shows &quot;Checking the machine…&quot; for long</a><a href="#privacy-and-law" class="l2">Privacy and law</a></nav>
+<main><article>
+<h1>Piper Voice Cloner – guide</h1>
+<p><a href="../pl/instrukcja.md">Polski</a> · <a href="guide.html">HTML</a></p>
+<p>Turn a short recording (10–60 s) into your own fast Piper voice. Example: a cartoon character for
+a child's room in Home Assistant.</p>
+<ul>
+<li><a href="#what-it-does">What it does</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#web-interface">Web interface</a></li>
+<li><a href="#where-the-data-lives">Where the data lives</a></li>
+<li><a href="#1-record-the-reference">1. Record the reference</a></li>
+<li><a href="#2-sentences">2. Sentences</a></li>
+<li><a href="#3-audition">3. Audition</a></li>
+<li><a href="#4-generate-and-filter">4. Generate and filter</a></li>
+<li><a href="#5-train">5. Train</a></li>
+<li><a href="#how-long-to-train-and-what-to-watch">How long to train and what to watch</a></li>
+<li><a href="#6-export-and-use">6. Export and use</a></li>
+<li><a href="#a-new-voice-from-a-short-recording">A new voice from a short recording</a></li>
+<li><a href="#retraining-existing-voices">Retraining existing voices</a></li>
+<li><a href="#adding-a-language">Adding a language</a></li>
+<li><a href="#faq-and-troubleshooting">FAQ and troubleshooting</a></li>
+<li><a href="#privacy-and-law">Privacy and law</a></li>
+</ul>
+<h2 id="what-it-does">What it does</h2>
+<p>Piper is fast even on a Raspberry Pi or a Jetson, but it can only speak in voices trained for it.
+Cloning models (Chatterbox, XTTS) imitate a voice from a few seconds of audio, but they are too
+slow for a voice assistant. This tool bridges the two:</p>
+<table>
+<thead>
+<tr>
+<th>Recording</th>
+<th>Cloning</th>
+<th>Filter</th>
+<th>Training</th>
+<th>Export</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10–60 s of clean speech</td>
+<td>~2600 clips (Chatterbox)</td>
+<td>~2000 clips (Whisper, timbre, MOS)</td>
+<td>medium voice (piper1-gpl)</td>
+<td><code>.onnx</code> + <code>.json</code> for Home Assistant</td>
+</tr>
+</tbody>
+</table>
+<p>The whole run is a handful of commands:</p>
+<pre><code class="language-bash">pvc init kuba_bajka --piper-name pl_PL-kuba_bajka
+pvc reference kuba_bajka recordings/*.m4a
+pvc corpus kuba_bajka --source my_sentences.txt
+pvc audition kuba_bajka --apply-best
+pvc synthesize kuba_bajka
+pvc filter kuba_bajka
+pvc train kuba_bajka --base lessac
+pvc export kuba_bajka
+</code></pre>
+<h2 id="installation">Installation</h2>
+<p>You need:</p>
+<ul>
+<li>Ubuntu 24.04 with an NVIDIA GeForce RTX 4090 (24 GB). The scripts are prepared for this card only;
+other GPUs and machines are not supported (you may try, but support is up to you).</li>
+<li><code>ffmpeg</code>, <code>espeak-ng</code>, <code>build-essential cmake ninja-build</code> and <a href="https://docs.astral.sh/uv/">uv</a>.</li>
+</ul>
+<pre><code class="language-bash">git clone https://github.com/witold-gren/piper-voice-cloner.git
+cd piper-voice-cloner
+./scripts/setup.sh                         # .venv (cloning + checks) and .venv-train (piper1-gpl)
+export PVC_HOME=$HOME/home-assistant/voices-private # private data lives OUTSIDE the repository
+export PVC_TRAIN_PYTHON=$PWD/.venv-train/bin/python
+source .venv/bin/activate
+</code></pre>
+<p>The script creates two environments, because Chatterbox and Piper training need different
+PyTorch versions. <code>XTTS_ENV=1 ./scripts/setup.sh</code> also creates a third one for XTTS-v2.</p>
+<h3 id="gpu-machine-over-ssh-working-from-a-mac-or-laptop">GPU machine over SSH (working from a Mac or laptop)</h3>
+<p>You can prepare the data on any computer (import, sentences) and send the code, the data and the
+install to the GPU machine with one click: <strong>⚒ Tools → GPU server (SSH)</strong>. The same from a terminal:</p>
+<pre><code class="language-bash">make remote-configure HOST=ubuntu.local SSH_USER=me   # saves server.json in the data folder
+make remote-status     # checklist: what the machine has and what is still to do
+make remote-prepare    # do everything possible: packages, uv, code and data, environments, service
+make remote-push       # rsync: code -&gt; ~/piper-voice-cloner/repo, data -&gt; ~/piper-voice-cloner/data
+make remote-install    # setup.sh + the UI service; then http://ubuntu.local:7860
+make remote-pull       # finished voices/*/export/ back here
+</code></pre>
+<ul>
+<li>Login must work without a password (SSH key, <code>ssh-copy-id</code>). No password is stored anywhere.</li>
+<li><strong>Prepare machine</strong> checks the machine first and then does what is missing, in order: system
+packages (only when <code>sudo</code> on the machine needs no password), <code>uv</code>, sending code and data, the
+environments (<code>setup.sh</code>) and the web UI service. At the end it checks the machine again.</li>
+<li>The <strong>Machine</strong> checklist below the buttons shows the state: ✓ done, → Prepare does it, ✋ only you
+can do it (e.g. <code>ssh -t … sudo apt install -y ffmpeg</code> in the Mac terminal, as it needs the sudo
+password; or the NVIDIA driver and a reboot), ! warning (little disk space, torch does not see the
+card). It also holds the login to the web UI on the machine (<strong>show</strong>).</li>
+<li>While a training runs on the machine, Prepare sends code and data but does not reinstall the
+environments (that would change them under the running training).</li>
+<li>Sending transfers only changes and never deletes anything on the machine: checkpoints, exports and bases stay.</li>
+<li>Then start the training in the web UI on the machine; the Mac can be switched off.</li>
+</ul>
+<h3 id="power-of-the-gpu-machine-through-home-assistant">Power of the GPU machine through Home Assistant</h3>
+<p>The GPU machine does not have to run all the time. When it sits on a smart plug in Home
+Assistant, the web UI can switch it on and shut it down safely with a button in the top bar (the
+same as the wake word training panel, home-assistant-wakeword).</p>
+<ol>
+<li><strong>In Home Assistant</strong> you need a switch for the machine that does the whole job: on = the plug
+on (the BIOS starts the computer when power comes back; the machine is on Wi-Fi, so no
+Wake-on-LAN), off = <code>sudo poweroff</code> over SSH, wait until the plug measures less than 5 W (up to
+5 minutes) and only then the plug off. A ready example:
+<a href="../home-assistant/maszyna_gpu.yaml"><code>docs/home-assistant/maszyna_gpu.yaml</code></a> (a package with
+<code>switch.maszyna_gpu</code> and a script; adapt <code>shell_command.turn_off_ubuntu</code> and the entity ids).
+Do not pick the plug itself: switching it off would cut a running system.</li>
+<li><strong>In the web UI</strong>: <strong>⚒ Tools → Home Assistant</strong> – the address (e.g.
+<code>http://homeassistant.local:8123</code>) and a long-lived token of an <strong>administrator</strong> (Home
+Assistant → your profile → Security → Long-lived access tokens → Create) → <strong>Save connection</strong>.
+The UI asks Home Assistant right away and says whether it answers.</li>
+<li>Below, in <strong>Power of the GPU machine</strong>: <strong>↻ Suggestions from HA</strong> fills the lists; pick the
+machine's switch (<code>switch.maszyna_gpu</code>) and the plug's power sensor in W (e.g.
+<code>sensor.pokoj_kuby_komputer_moc_czynna</code>), keep the 5 W threshold → <strong>Save power settings</strong>.
+You can also type an entity id.</li>
+</ol>
+<p>The top bar gets a button with the machine's state:</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Means</th>
+<th>A click</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Machine: off</td>
+<td>switch off, the plug below the threshold</td>
+<td>asks, switches on</td>
+</tr>
+<tr>
+<td>Machine: starting</td>
+<td>switch on, the SSH port not answering yet</td>
+<td>asks, switches off</td>
+</tr>
+<tr>
+<td>Machine: on · 212 W</td>
+<td>switch on, SSH answers; the plug's power next to it</td>
+<td>asks, switches off</td>
+</tr>
+<tr>
+<td>Machine: shutting down</td>
+<td>switch off, the plug still drawing more than the threshold</td>
+<td>nothing (wait)</td>
+</tr>
+<tr>
+<td>Machine: checking…</td>
+<td>no first answer yet</td>
+<td>nothing</td>
+</tr>
+<tr>
+<td>Machine: no reading from HA</td>
+<td>Home Assistant does not answer or refuses; the reason is in the tooltip</td>
+<td>nothing</td>
+</tr>
+<tr>
+<td>Machine: HA token rejected</td>
+<td>Home Assistant rejected the token (401); the UI stopped asking HA until the connection is saved</td>
+<td><strong>Save connection</strong> in ⚒ Tools</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Every click asks for a confirmation first.</li>
+<li><strong>Switching off is refused while a job runs on the machine</strong> (training, generating, filter…):
+the UI checks it just before, over SSH (<code>&lt;folder&gt;/data/jobs/current.json</code> on the machine). Stop
+the job or wait until it ends.</li>
+<li>The address and the token are kept only on this computer, in
+<code>~/.config/piper-voice-cloner/home_assistant.json</code> (mode 600), not in the data folder (that one
+is copied to the machine and into backups). The token never comes back to the page; an empty
+token field keeps the saved one. <code>PVC_HA_URL</code> and <code>PVC_HA_TOKEN</code> override the file. The power
+settings live in the same file, key <code>&quot;power&quot;</code>.</li>
+<li>The UI never waits for the machine nor for Home Assistant: the page loads at once and the state
+shows up a moment later (asked in the background about every 10 s; a machine that is off costs
+a 1.5 s connect attempt to its SSH port instead of a 10 s SSH timeout).</li>
+</ul>
+<h2 id="web-interface">Web interface</h2>
+<p>Every step of this guide is also available without commands, in the browser:</p>
+<pre><code class="language-bash">pvc ui --lang en              # http://&lt;machine&gt;:7860
+./scripts/install-service.sh  # permanently: systemd user service, starts at boot
+</code></pre>
+<ul>
+<li><strong>Languages</strong>: English at <code>/en/</code>, Polish at <code>/pl/</code>; the EN | PL switch in the top bar remembers the
+choice. <code>--lang</code> only sets the default for the first visit.</li>
+<li><strong>Live panel</strong>: current stage, elapsed time and the GPU (load, memory, temperature, power), the
+same layout as the wake word training panel.</li>
+<li><strong>Step bar</strong> at the top: steps 1–7 plus Settings (<code>voice.yaml</code>) and Tools (import, own base).
+It is both the progress (✓ = done, ringed number = next step) and the navigation: click a step
+to open it. Every step has a description and a &quot;?&quot; that explains what it does.</li>
+<li><strong>GPU machine in the top bar</strong>: the power button (with a Home Assistant connection, see
+<a href="#power-of-the-gpu-machine-through-home-assistant">Power of the GPU machine through Home Assistant</a>)
+and the status. With a GPU server saved, the status also shows a job running on the machine
+(&quot;On the machine: Training (kuba) is running…&quot;) and, right after the page opens, &quot;Checking the
+machine…&quot;.</li>
+<li><strong>Background jobs</strong>: generating, filtering, training, export and import run in the background.
+The top of the page shows the live log and a &quot;Stop job&quot; button (works like Ctrl+C). One job
+runs at a time, because there is one GPU. Closing the browser or restarting the service does
+not interrupt a job.</li>
+<li><strong>Remote access</strong>: the service listens on your local network (<code>0.0.0.0:7860</code>). The login is in
+<code>~/.config/piper-voice-cloner/env</code> (<code>PVC_UI_AUTH</code>); the script generates it on first install.
+From outside your home, connect through a VPN such as WireGuard. Don't expose the port to the
+internet.</li>
+<li><strong>Managing the service</strong>: logs with <code>journalctl --user -u piper-voice-cloner -f</code>, restart with
+<code>systemctl --user restart piper-voice-cloner</code>, remove with
+<code>./scripts/install-service.sh --remove</code>.</li>
+</ul>
+<h2 id="where-the-data-lives">Where the data lives</h2>
+<p>All private data lives under <code>$PVC_HOME</code> (<code>voices/&lt;name&gt;/</code>, <code>bases/</code>, <code>models/</code>). Keep it
+outside the repository. If it ends up inside a git repository whose <code>.gitignore</code> does not exclude
+<code>voices/</code>, <code>pvc</code> prints a warning.</p>
+<pre><code>voices/&lt;name&gt;/
+  voice.yaml          settings (created by `pvc init`)
+  reference/          cleaned reference clips, speaker embedding, calibrated threshold
+  prompts.tsv         selected sentences
+  audition/           settings comparison (audition.html)
+  raw/                synthetic clips + manifest.csv
+  dataset/            final training set: metadata.csv + wav/ (22,050 Hz, 16-bit) + reports
+  train/              Piper training run (lightning_logs/, config.json, run.json)
+  export/             &lt;locale&gt;-&lt;name&gt;-medium.onnx + .onnx.json
+</code></pre>
+<h3 id="renaming-a-voice">Renaming a voice</h3>
+<p><strong>⚙ Settings</strong> change the voice name and the Piper file name. The voice name is the folder name, so
+the panel moves the whole folder with its clips and settings. It does not work while a job runs on
+the voice. The GPU machine keeps the old folder and its training under the old name: after sending,
+a new folder without training results appears there. So rename before training, or in the panel on
+the machine. Exported files keep their names until the next export.</p>
+<h2 id="1-record-the-reference">1. Record the reference</h2>
+<ul>
+<li>10–60 seconds of <strong>clean</strong> speech is enough: no music, no background TV, no other voices.</li>
+<li>Close to the microphone, in a quiet room, at normal talking volume. A phone voice memo is fine.</li>
+<li>Natural, varied speech beats reading a list. For a child: let them tell a short story or answer
+questions.</li>
+<li>For a cartoon character: cut lines where the character speaks alone, without music or effects.
+Music in the reference ends up in every generated clip.</li>
+</ul>
+<pre><code class="language-bash">pvc init kuba_bajka --piper-name pl_PL-kuba_bajka
+pvc reference kuba_bajka clip1.m4a clip2.wav
+</code></pre>
+<p><code>pvc reference</code> trims and level-normalizes the clips and cuts them into prompts of 3–12 s. It
+also computes the speaker embedding and stores a <strong>calibrated similarity threshold</strong> in
+<code>voice.yaml</code> (<code>quality.min_similarity</code>). The threshold comes from how much the reference itself
+varies. Child voices naturally score lower, and the calibration adapts to that.</p>
+<h2 id="2-sentences">2. Sentences</h2>
+<pre><code class="language-bash">pvc corpus kuba_bajka --source books.txt --source persona_lines.txt
+</code></pre>
+<ul>
+<li>Sources are text files with one sentence per line, or TSV <code>id&lt;TAB&gt;text</code>.</li>
+<li>The language pack adds its own sentences: for Polish, simple child-friendly lines.</li>
+<li>Every sentence goes through the plain-text rules. Lines with digits, times, dates, list
+numbering, symbols, URLs or abbreviations are <strong>rejected, not rewritten</strong>. Your voice
+should only learn ordinary words; numbers are read correctly by the runtime text normalizer.
+Writing them out in the training text gives inconsistent pronunciations.</li>
+<li>3–20 words per sentence, duplicates removed.</li>
+<li>The selection covers phonemes and diphones evenly. By default it picks
+<code>target_clips × overgenerate</code> (2000 × 1.3 = 2600) sentences.</li>
+<li>See <code>corpus_report.csv</code> for what was rejected and why.</li>
+</ul>
+<h2 id="3-audition">3. Audition</h2>
+<pre><code class="language-bash">pvc audition kuba_bajka --apply-best
+</code></pre>
+<ul>
+<li>Generates 12 sentences for each combination of backend settings. For Chatterbox the grid is
+<code>cfg_weight</code> 0 / 0.3 / 0.5 × <code>exaggeration</code> 0.5 / 0.7.</li>
+<li>Writes <code>audition/audition.html</code>: listen to each combination and compare CER, similarity and
+MOS.</li>
+<li><code>--apply-best</code> stores the best-scoring settings in <code>voice.yaml</code>. Trust your ears over the
+score.</li>
+<li><code>cfg_weight</code> 0 reduces the accent carried over from the reference, which helps when the
+reference is in another language.</li>
+<li>If no combination sounds like the target, fix the reference (cleaner, longer, more varied)
+before generating 2600 clips. Small children's voices are the hardest case for every cloning
+model.</li>
+</ul>
+<h2 id="4-generate-and-filter">4. Generate and filter</h2>
+<pre><code class="language-bash">pvc synthesize kuba_bajka            # resumable; reference clips and seeds rotate per sentence
+pvc filter kuba_bajka                # Whisper large-v3 + CAM++ + UTMOS
+</code></pre>
+<p>A clip is rejected when:</p>
+<table>
+<thead>
+<tr>
+<th>reason</th>
+<th>rule (voice.yaml <code>quality</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>too_fast_or_cut</code> / <code>too_slow_or_hallucinated</code></td>
+<td>seconds per letter outside 0.035–0.16</td>
+</tr>
+<tr>
+<td><code>asr_mismatch</code></td>
+<td>Whisper CER above <code>max_cer</code> (0.04)</td>
+</tr>
+<tr>
+<td><code>speaker_mismatch</code></td>
+<td>similarity below <code>min_similarity</code> (calibrated)</td>
+</tr>
+<tr>
+<td><code>low_mos</code></td>
+<td>in the worst <code>mos_drop_fraction</code> (10%) by UTMOS</td>
+</tr>
+<tr>
+<td><code>surplus</code></td>
+<td>more clips passed than <code>target_clips</code>; the most similar ones are kept</td>
+</tr>
+</tbody>
+</table>
+<p><code>dataset/filter_report.csv</code> lists every clip with its scores. If too few clips survive, generate
+more by raising <code>overgenerate</code> and re-running <code>pvc corpus</code> and <code>pvc synthesize</code>. Already
+generated clips are reused.</p>
+<h2 id="a-voice-from-elevenlabs-no-recording-no-gpu">A voice from ElevenLabs (no recording, no GPU)</h2>
+<p>When the voice already exists in your ElevenLabs account, there is nothing to clone locally.
+ElevenLabs reads the sentences in its cloud and the clips land in <code>raw/</code> on the computer running
+the panel. A Mac is enough for this step: the GPU is needed only for training.</p>
+<ol>
+<li><strong>⚙ Settings:</strong> save the API key once, for all voices (file
+<code>~/.config/piper-voice-cloner/elevenlabs.json</code>, outside the data folder, so it does not reach the
+GPU machine or backups). The key needs access to voices and text to speech. The <code>user_read</code> permission is optional: it shows the credits.</li>
+<li><strong>New voice:</strong> enter a name. The cloning model is chosen in Generate, the training start in Train.</li>
+<li><strong>Step 4. Generate:</strong> set <strong>Cloning model</strong> to <code>elevenlabs</code>, click <strong>Load voices</strong> and pick the
+voice: your voices come first in the list, which you can filter by typing. The panel shows the credits when the key has <code>user_read</code>. Do not reuse a voice that already has Chatterbox clips:
+generating refuses to mix two sources.</li>
+<li>Choose a <strong>Sentence set</strong>, e.g. <code>marek (1496)</code>, and click <strong>Use this set</strong>. <code>marek</code>, <code>ewa</code> and
+<code>basia</code> hold the same sentences, so every new voice reads the same set and gets the same clip
+ids.</li>
+<li>Make a test: enter 20 sentences and listen to the clips in <code>raw/</code>. Then set 0 and generate the
+rest. Finished clips are neither generated nor counted again.</li>
+</ol>
+<p>The same from the terminal:</p>
+<pre><code class="language-bash">pvc init alicja --backend elevenlabs --base bazowy-pl
+pvc elevenlabs voices                 # account voices and credits left
+pvc elevenlabs pick alicja &lt;voice_id&gt;
+pvc sentences alicja marek           # the sentences of voice marek
+pvc synthesize alicja --limit 20     # test
+pvc synthesize alicja                # the rest
+</code></pre>
+<p>The <code>marek</code> set costs about 78,000 characters. <code>eleven_multilingual_v2</code> counts about 1 credit per
+character; check the current pricing in your ElevenLabs account.</p>
+<p>Using a set sets <code>target_clips</code> to the number of sentences, <code>overgenerate</code> to 1 and
+<code>mos_drop_fraction</code> to 0: the filter rejects only clips that fail a check, not the weakest 10%.
+There is no recording, so the filter skips speaker similarity and prints
+<code>skipped check: similarity</code>.</p>
+<p>When the service is busy or the connection drops, each sentence is retried 5 times. A wrong key, no
+credits or an unknown voice stop the whole job; finished clips stay.</p>
+<h2 id="5-train">5. Train</h2>
+<p>Pick the starting point in <code>voice.yaml</code> (<code>train.base</code>) or with <code>--base</code>:</p>
+<table>
+<thead>
+<tr>
+<th>base</th>
+<th>what it is</th>
+<th>when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bazowy-pl</code></td>
+<td>your own base, trained from random weights</td>
+<td>no English knowledge inside the voice</td>
+</tr>
+<tr>
+<td><code>lessac</code></td>
+<td>English <code>en_US-lessac-medium</code> (downloaded once, ~850 MB)</td>
+<td>fastest good result</td>
+</tr>
+<tr>
+<td><code>ckpt:&lt;path&gt;</code></td>
+<td>any Piper <strong>medium</strong> checkpoint</td>
+<td>e.g. continue from an earlier voice</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-bash">pvc train kuba_bajka                 # resumes automatically from the last checkpoint
+pvc train kuba_bajka --dry-run       # only print the piper1-gpl command
+</code></pre>
+<ul>
+<li><code>train.max_epochs</code> counts <strong>on top of</strong> the starting checkpoint. Lightning continues the
+epoch counter of the checkpoint (lessac starts at epoch 2164), and <code>pvc</code> accounts for that.</li>
+<li>piper1-gpl keeps the best checkpoints by <code>val_mel</code> and by <code>val_mos</code> (UTMOS), plus <code>last.ckpt</code>.</li>
+<li>Watch training with <code>tensorboard --logdir voices/&lt;name&gt;/train/lightning_logs</code>. Choose the final
+checkpoint by listening; <code>val_mos</code> is a good hint.</li>
+</ul>
+<h3 id="your-own-base-without-english-bazowy-pl">Your own base without English (<code>bazowy-pl</code>)</h3>
+<p>2000 clips are not enough to train a voice from random weights; that takes roughly 13,000 or more
+utterances. So the base is trained <strong>once</strong> on a large single-speaker dataset, and every voice is
+then fine-tuned from it.</p>
+<p>A good free choice for Polish is <strong>MC Speech</strong>: CC0, one female speaker, about 22,000 recordings
+(<a href="https://www.kaggle.com/datasets/czyzi0/the-mc-speech-dataset">Kaggle</a>). Convert it to an
+LJSpeech folder (<code>metadata.csv</code> with <code>file|text</code> plus the audio folder), then:</p>
+<pre><code class="language-bash">pvc base prepare /data/mc_speech --audio-dir /data/mc_speech/wavs   # same text rules as voices
+pvc base train --max-epochs 3000                                     # days on a single GPU
+pvc base select bases/pl-scratch/train/lightning_logs/version_0/checkpoints/&lt;best&gt;.ckpt
+</code></pre>
+<p>After <code>base select</code>, <code>train.base: bazowy-pl</code> uses it for every voice.</p>
+<h4>Rating the recordings: the quality ceiling of the base</h4>
+<p>A model learns to sound like its recordings, so the score of the recordings themselves is the
+practical ceiling of <code>val_mos</code>. In the panel (Tools, own base) click <strong>Rate recordings</strong>. It takes a
+random sample (300 recordings by default, <code>0</code> = all) and scores it with the same UTMOS that computes
+<code>val_mos</code>. The panel shows the median, the 10% worst and best limits, the share at 4.0 or more,
+and the three worst and best recordings to listen to. When a training run holds the GPU, the rating
+runs on the CPU (about 7 recordings/s) next to the training without stopping it. The result is kept
+in <code>bases/pl-scratch/dataset/utmos.json</code>.</p>
+<pre><code class="language-bash">pvc base score --sample 300      # from the command line; --sample 0 rates every recording
+</code></pre>
+<p>If the recordings have a median of e.g. 3.67 and the model is already at <code>val_mos</code> 3.55, training
+the same base longer gives little. A larger model or cleaner recordings can sound clearly better.</p>
+<h4>Model size: medium or high</h4>
+<ul>
+<li><strong>medium</strong> - Piper's standard: quick to train (about 3 min per epoch with 18,000 recordings on an
+RTX 4090) and quick to speak.</li>
+<li><strong>high</strong> - the decoder (the part that turns the spectrum into sound) is about 8 times larger:
+14 instead of 1.7 M parameters, as in the official Piper &quot;high&quot; voices. Cleaner sound, but
+training takes about 2-3 times longer and speech on the Jetson is slower. The default batch is 16
+to fit a 24 GB card.</li>
+</ul>
+<p>Each size trains in its own folder (<code>bases/pl-scratch/train</code> and <code>bases/pl-scratch-high/train</code>)
+from the <strong>same</strong> recordings with the same test sentences, so they compare fairly. A voice
+fine-tuned from a base gets its size automatically (read from the checkpoint), and the export names
+the file <code>…-medium.onnx</code> or <code>…-high.onnx</code>.</p>
+<pre><code class="language-bash">pvc base train --quality high --max-epochs 3000          # batch 16; --batch-size changes it
+</code></pre>
+<p>In the panel, <strong>Compare base models</strong> shows for each size the mean <code>val_mos</code> and <code>val_mel</code> of the
+last 10 epochs up to the epoch both models have reached (one epoch is only 5 sentences, so its value
+jumps), plus the best values. In <strong>Listen to the training</strong> the <strong>Model</strong> switch plays the same
+epoch of both sizes. The medium training can be stopped at any time and resumed later from its
+newest checkpoint.</p>
+<h2 id="how-long-to-train-and-what-to-watch">How long to train and what to watch</h2>
+<blockquote>
+<p><strong>Estimates for:</strong> RTX 4090 24 GB, Intel Core i9-14900K, 128 GB DDR5 RAM. They are not
+measured with <code>pvc</code>. They are based on earlier voices (about 10 h of training per voice on this
+card) and on an assumed 1.5–2 steps per second at <code>batch_size</code> 32. The Lightning progress bar
+shows the real speed (<code>it/s</code>) after a few minutes of training; recalculate the table with it.</p>
+</blockquote>
+<p>The arithmetic: <strong>steps per epoch = clips × 0.95 ÷ 32</strong>, and <strong>epoch time = steps ÷ steps per
+second</strong>. Think in steps rather than epochs: a large dataset needs fewer epochs.</p>
+<table>
+<thead>
+<tr>
+<th>Job</th>
+<th>Clips</th>
+<th>Steps per epoch</th>
+<th>Epoch time</th>
+<th>How long</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New voice (from a base)</td>
+<td>2,000</td>
+<td>~60</td>
+<td>30–40 s</td>
+<td>300–1000 epochs (20–60k steps)</td>
+<td>3–11 h</td>
+</tr>
+<tr>
+<td>Small existing voices</td>
+<td>1,500</td>
+<td>~45</td>
+<td>25–30 s</td>
+<td>400–1000 epochs</td>
+<td>3–8 h</td>
+</tr>
+<tr>
+<td>Medium voice</td>
+<td>3,800</td>
+<td>~115</td>
+<td>1–1.3 min</td>
+<td>300–600 epochs</td>
+<td>5–13 h</td>
+</tr>
+<tr>
+<td>Large voice</td>
+<td>18,400</td>
+<td>~550</td>
+<td>5–6 min</td>
+<td>100–250 epochs (55–140k steps)</td>
+<td>9 h – 1 day</td>
+</tr>
+<tr>
+<td>Base from scratch (MC Speech)</td>
+<td>~22,000</td>
+<td>~650</td>
+<td>6–7 min</td>
+<td>500–1000+ epochs (300–600k steps)</td>
+<td>3–7 days</td>
+</tr>
+</tbody>
+</table>
+<p>Hardware notes:</p>
+<ul>
+<li><strong>The first run</strong> prepares the data into <code>train/cache/</code> first: phonemes, silence trimming and
+spectrograms. This takes a few minutes for small voices and tens of minutes for large sets.
+Later runs reuse the cache.</li>
+<li><strong><code>train.num_workers</code></strong> is the number of data loader processes, 8 by default. piper1-gpl itself
+defaults to 1, which leaves the GPU waiting for data. The i9-14900K has 8 performance cores, so
+8–12 is a sensible range. 128 GB of RAM is plenty.</li>
+<li><strong><code>batch_size</code></strong>: keep 32. 24 GB of VRAM is enough. A larger batch makes epochs faster, but
+changes how fine-tuning behaves. For a base from scratch you can try 48–64 while watching VRAM
+in <code>nvidia-smi</code>.</li>
+<li><strong>Disk</strong>: a checkpoint is about 800 MB. piper1-gpl keeps the 5 best by <code>val_mel</code>, the 5 best
+by <code>val_mos</code> and <code>last.ckpt</code>, so up to about 9 GB per voice, plus the cache (a few GB for
+large sets).</li>
+<li><strong>Power and heat</strong>: at full load the card draws up to about 450 W, and a base from scratch runs
+for days. Make sure cooling is good. A power limit (<code>nvidia-smi -pl 350</code>, needs admin rights)
+lowers the draw at the cost of a few percent of speed.</li>
+</ul>
+<h3 id="progress-in-the-panel">Progress in the panel</h3>
+<p>The <strong>Progress</strong> card on the right shows the running job: its name, time since the start and a bar.</p>
+<ul>
+<li><strong>Import, filter, generate, base prepare:</strong> a file counter (e.g. <code>950 / 18400</code>), the percentage and
+<code>about … left</code>. The time left is based on the pace so far, so it is rough in the first minutes.</li>
+<li><strong>Training (a voice or the base):</strong> the bar covers the <strong>whole training</strong>, not one epoch. For
+example <code>Epoch 2464 · 25/50 · 300 / 1000 epochs · about 11:40:00 left · 30%</code>:
+<ul>
+<li><code>Epoch 2464</code> is Lightning's epoch counter. Starting from lessac or another checkpoint, it
+continues from that checkpoint's number, not from zero.</li>
+<li><code>25/50</code> are the steps of the current epoch.</li>
+<li><code>300 / 1000 epochs</code> are the epochs done in this training out of the planned ones
+(<code>train.max_epochs</code> in <code>voice.yaml</code>, 1000 by default; the base uses <code>--max-epochs</code>, 3000 by
+default).</li>
+<li><strong><code>about … left</code></strong> is the length of one epoch, taken from the Lightning bar, applied to the
+epochs still to go. It appears a few seconds into the first epoch. Validation after each epoch
+is not counted, so the real end can be a few percent later.</li>
+<li><code>30%</code> is the progress of the whole training.</li>
+</ul>
+</li>
+<li>The first minutes of training prepare <code>train/cache/</code>; the bar stays at <code>0 / … epochs</code> meanwhile.</li>
+<li>Training does not have to reach 100%. When the TensorBoard samples (below) sound good, stop it
+with <strong>Stop</strong> and pick the best checkpoint. After a resume the bar continues where it stopped.</li>
+<li>Below the bar are the GPU rings (load, memory, temperature, power) from <code>nvidia-smi</code>. The panel on
+a Mac without an NVIDIA card does not show them.</li>
+</ul>
+<h3 id="what-to-watch">What to watch</h3>
+<p><strong>Listening in the panel.</strong> The <strong>Training</strong> tab (for a voice) and <strong>⚒ Tools → Own base</strong> (for the
+base) have a <strong>Listen to the training</strong> block: pick an epoch and listen to the test sentences the
+trainer reads after every epoch. Every epoch shows its <strong>quality</strong> (val_mos, UTMOS 1–5: about 2 raw,
+about 3 understandable, 3.5+ good; a model rarely beats its own recordings - see <strong>Rating the
+recordings</strong>) and the best epoch so far. The panel keeps the samples of the first epoch, every 10th,
+the 3 newest, the 5 with the best <code>val_mos</code> and <strong>every epoch that has a checkpoint</strong> (marked
+<code>💾 checkpoint</code> in the list). The file <code>epoch=1273-val_mel=0.3614.ckpt</code> in <strong>Base checkpoint</strong> is
+&quot;epoch 1273 · 💾 checkpoint&quot; in the listening block, so every checkpoint can be heard before choosing.
+<code>last.ckpt</code> carries its run in front (<code>version_1/last.ckpt</code>), since every resume has its own;
+<strong>↻ Refresh</strong> fetches new samples.</p>
+<p><strong>Listening at leisure on your computer.</strong> <strong>⬇ Download samples (ZIP)</strong> below the listening block
+(of the base or a voice) packs the samples of every kept epoch into one file that the browser saves
+on your computer (about 85 MB for the base from kasia). Inside: a folder per epoch with its quality in
+the name (<code>epoch01273-mos3.71-checkpoint/00.wav</code>, Space in Finder plays it), <code>samples.csv</code> and
+<strong><code>index.html</code></strong>: a table with players, sorting by <code>val_mos</code> and <code>val_mel</code> and a filter &quot;only epochs
+with a checkpoint&quot;, i.e. only the epochs that can be chosen. From the terminal:
+<code>pvc base samples --quality medium</code> or <code>pvc samples &lt;voice&gt;</code> (file <code>train/monitor/samples.zip</code>).</p>
+<p><strong>Chart in the panel.</strong> Below the <strong>Log</strong> (right column) is a chart of the current training: the
+upper one shows the quality <code>val_mos</code>, the lower one the errors <code>val_mel</code> and <code>train_mel</code>, sharing the
+epoch axis. Hover for the values; click to open it full screen. There, dragging over a chart zooms
+into those epochs (or type <strong>From epoch / to</strong>), a click picks an epoch and shows its values, and the
+side panel explains the three values and lists the best epochs. The chart follows the training that
+runs now (or ran last), otherwise the chosen voice or the base; it refreshes every 20 s.</p>
+<ul>
+<li><strong>val_mos</strong> - predicted naturalness (UTMOS, 1–5) on the test sentences: <strong>higher is better</strong>.</li>
+<li><strong>val_mel</strong> - sound error on sentences the model never trained on: <strong>lower is better</strong>.</li>
+<li><strong>train_mel</strong> - the same error on the training sentences (mean of the epoch); it keeps falling slowly.</li>
+<li><strong>Best model:</strong> <code>val_mos</code> has not risen for about 150–200 epochs, <code>val_mel</code> is not rising, the
+samples sound good - take the checkpoint with the highest <code>val_mos</code> from that stretch.</li>
+<li><strong>Overtraining:</strong> <code>train_mel</code> keeps falling while <code>val_mel</code> rises - take a checkpoint from before.</li>
+</ul>
+<p><strong>Charts in TensorBoard.</strong> A TensorBoard service runs on the machine (installed by <strong>Prepare
+machine</strong>, port 6006, setting <code>PVC_TB_PORT</code> in <code>~/.config/piper-voice-cloner/env</code>). The <strong>Charts in
+TensorBoard ↗</strong> link is next to the listening block. TensorBoard has no login - it is reachable in the
+local network only (from outside through a VPN). By hand:</p>
+<pre><code class="language-bash">tensorboard --logdir voices/kuba_bajka/train/lightning_logs --bind_all   # http://&lt;machine&gt;:6006
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Signal</th>
+<th>Meaning</th>
+<th>What to expect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AUDIO</strong> tab</td>
+<td>test sentences rendered after every epoch</td>
+<td><strong>most important</strong>: listen to how the voice develops</td>
+</tr>
+<tr>
+<td><code>val_mos</code></td>
+<td>predicted naturalness (UTMOS, 1–5 scale)</td>
+<td>rises and levels off; the ceiling is the MOS of your training clips (<code>mos</code> column in <code>filter_report.csv</code>)</td>
+</tr>
+<tr>
+<td><code>val_mel</code></td>
+<td>spectrogram reconstruction error on the validation set</td>
+<td>drops fast and flattens; flattening does <strong>not</strong> mean done, audio quality keeps improving</td>
+</tr>
+<tr>
+<td><code>loss_g</code>, <code>loss_d</code></td>
+<td>generator and discriminator (GAN training)</td>
+<td>they oscillate, which is normal; bad sign: <code>loss_d</code> falls to about zero while <code>loss_g</code> shoots up</td>
+</tr>
+</tbody>
+</table>
+<p>What you hear in the samples:</p>
+<ul>
+<li><strong>At the start of fine-tuning</strong> you hear the base voice. With 2000 clips the voice usually turns
+into the new one after 50–100 epochs.</li>
+<li><strong>Metallic, noisy, hissing sound</strong>: too early, keep training.</li>
+<li><strong>Swallowed or repeated words, wrong pronunciation of specific sounds</strong>: usually a data problem,
+not a time problem. Check <code>filter_report.csv</code>, lower <code>max_cer</code> and filter again.</li>
+<li><strong><code>val_mel</code> starts rising while samples sound flat or worse</strong>: overfitting. Pick an earlier
+checkpoint.</li>
+</ul>
+<p>When to stop:</p>
+<ul>
+<li><code>val_mos</code> has not improved for about 100 epochs on small voices, or about 30 epochs on large
+sets and bases, <strong>and</strong> the samples sound good.</li>
+<li>You can stop at any time (Ctrl+C). <code>pvc train</code> resumes from the newest checkpoint
+(<code>last.ckpt</code> or a newer &quot;best&quot; one), so at most a few epochs are repeated.</li>
+</ul>
+<p>Choosing the checkpoint:</p>
+<ol>
+<li>Take the file with the best <code>val_mos</code> (<code>epoch=…-val_mos=….ckpt</code> in
+<code>train/lightning_logs/version_*/checkpoints/</code>).</li>
+<li>Compare it by ear with <code>last.ckpt</code>.</li>
+<li>Export the one you choose: <code>pvc export kuba_bajka --checkpoint &lt;file&gt;</code>.</li>
+<li>Listen to a dozen sentences that are not in the training set, including numbers and dates
+(your runtime text normalizer reads those).</li>
+</ol>
+<h3 id="training-queue">Training queue</h3>
+<p>In the panel on the machine, in the <strong>Train</strong> step, set <strong>Training start</strong> and the epochs. In
+<strong>Training queue</strong> pick the voices in the order they should train and click <strong>Start the queue</strong>.
+The <strong>Stage</strong> card shows that order and the state of every voice. Every voice gets the same settings. A failed voice does not stop the next ones, and <strong>Stop job</strong> ends
+the whole queue. A ticked power-off runs after the last voice. Filter is only needed for voices with
+generated clips: imported ones have a ready <code>dataset/</code>.</p>
+<p>From a terminal:</p>
+<pre><code class="language-bash">pvc train-queue alicja_nowa tomek marek --epochs 500 --base bazowy-pl
+</code></pre>
+<h3 id="reading-the-training-progress">Reading the training progress</h3>
+<p>Example: <code>557 / 1000 epochs · model epoch 1670 · step 17/112</code>.</p>
+<ul>
+<li><code>557 / 1000 epochs</code>: the voice's epochs since the base and the limit from the epochs field.</li>
+<li><code>model epoch 1670</code>: the counter including the base's epochs. Checkpoints and <strong>Listen</strong> use this
+number.</li>
+<li><code>step 17/112</code>: the position inside the current epoch.</li>
+</ul>
+<p>To train a finished voice further, raise the limit, because it counts from the base. A voice with
+500 epochs gets about 500 more only with a limit of 1000. With a limit of 500 the training ends
+almost at once.</p>
+<h3 id="powering-the-machine-off-after-training">Powering the machine off after training</h3>
+<p>In the <strong>Train</strong> step of the panel on the machine, tick <strong>Power the machine off when training ends</strong>.
+When training ends, Ubuntu shuts down with <code>sudo poweroff</code>, also after a failed training. The
+<strong>Stop job</strong> button does not power it off. The automation in
+<code>docs/home-assistant/maszyna_gpu.yaml</code> cuts the plug once it draws under 5 W, so in the morning you
+only switch the machine on in Home Assistant.</p>
+<p>You can change your mind while the job runs. A <strong>Power the machine off when this job ends</strong> box then
+shows under the <strong>Stage</strong> card. Tick or untick it and the training carries on. In a training queue
+it applies to the end of the whole queue, not to a single voice.</p>
+<h2 id="6-export-and-use">6. Export and use</h2>
+<p>Export turns a checkpoint into a Piper voice. It makes two files and both are needed: <code>.onnx</code> is the
+model and <code>.onnx.json</code> holds its settings.</p>
+<h3 id="exporting-a-trained-voice">Exporting a trained voice</h3>
+<p>In the panel where the training ran, open step <strong>7. Export</strong>. Choose the checkpoint that sounded best
+when listening and run the export. Without a choice <code>pvc</code> uses the newest one:</p>
+<pre><code class="language-bash">pvc export kuba_bajka
+</code></pre>
+<p>The files land in <code>voices/kuba_bajka/export/</code>, e.g. <code>pl_PL-kuba_bajka-medium.onnx</code>. The name comes
+from the <strong>Piper file name</strong> field.</p>
+<h3 id="exporting-the-base-voice">Exporting the base voice</h3>
+<p>Base models live on the GPU machine, so use the panel on that machine:</p>
+<ol>
+<li>Open <strong>⚒ Tools → Own base without English (bazowy-pl)</strong>.</li>
+<li>Choose a checkpoint in <strong>Base checkpoint</strong>.</li>
+<li>Click <strong>Export as a voice</strong>.</li>
+</ol>
+<p>The files land in <code>bases/export/pl_PL-bazowy-medium.onnx</code> and <code>.onnx.json</code>. The same export from a
+terminal on the machine, with your own file name:</p>
+<pre><code class="language-bash">cd ~/piper-voice-cloner/repo
+PVC_TRAIN_PYTHON=$PWD/.venv-train/bin/python .venv/bin/pvc --root ~/piper-voice-cloner/data \
+  base export --name pl_PL-my_base
+</code></pre>
+<p>Without <code>--checkpoint</code> the export takes the model set as <code>bazowy-pl</code>.</p>
+<h3 id="adding-the-voice-to-home-assistant">Adding the voice to Home Assistant</h3>
+<p>The examples are for Wyoming Piper on a separate server. Put in your addresses and the folder with
+Piper's <code>*.onnx</code> files.</p>
+<ol>
+<li>
+<p><strong>Fetch the files from the GPU machine.</strong> For a trained voice <code>make remote-pull</code> is enough. Fetch
+the base voice like this (zsh needs the quotes):</p>
+<pre><code class="language-bash">scp '&lt;user&gt;@&lt;machine&gt;:piper-voice-cloner/data/bases/export/pl_PL-bazowy-medium.onnx*' .
+</code></pre>
+</li>
+<li>
+<p><strong>Copy both files to the Piper server.</strong> Use a new voice name. The same name overwrites a working
+voice, so back it up first.</p>
+<pre><code class="language-bash">scp pl_PL-bazowy-medium.onnx pl_PL-bazowy-medium.onnx.json &lt;user&gt;@&lt;server&gt;:/path/to/piper/models/
+</code></pre>
+</li>
+<li>
+<p><strong>Refresh the voice list in Home Assistant.</strong> Open <strong>Settings → Devices &amp; services → Wyoming
+Protocol</strong> and choose <strong>⋮ → Reload</strong> on the Piper entry. Older Wyoming Piper versions may need a
+restart of the Piper container.</p>
+</li>
+<li>
+<p><strong>Choose the voice.</strong> Open <strong>Settings → Voice assistants</strong>, choose an assistant and set the new
+voice in its text-to-speech section. This applies to that assistant only.</p>
+</li>
+<li>
+<p><strong>Check it.</strong> Save the assistant and listen to a reply, or use <strong>Try voice</strong> next to the voice.</p>
+</li>
+</ol>
+<p>To go back, choose the previous voice in the assistant. You can then delete the files on the server.</p>
+<h2 id="a-new-voice-from-a-short-recording">A new voice from a short recording</h2>
+<p>You have one recording, e.g. 15 s, and want a Piper voice from it on about 1500 clips. It works,
+but the result depends more on the <strong>quality</strong> of the recording than on its length. The numbers
+in this chapter come from a real trial (a film character, two recordings) on a MacBook Pro M1 Max
+64 GB.</p>
+<h3 id="are-15-seconds-enough">Are 15 seconds enough?</h3>
+<ul>
+<li><strong>For cloning, yes.</strong> Chatterbox clones from about 10 s. <code>pvc reference</code> cuts 15 s into 1–2
+prompts and warns that the recording is short (under 20 s or a single prompt).</li>
+<li><strong>A longer recording is better, not required.</strong> 30–60 s of varied speech gives more prompts
+(synthesis rotates them, so the clips are less monotonous) and a steadier similarity threshold
+in the filter. If you can record more, do it before generating 2000 clips, not after.</li>
+<li><strong>The language of the recording matters.</strong> A Polish recording gives clearly better results than
+an English one. In the trial 8.8 s of Polish speech beat the 33 s English original (table below):
+with a foreign language the Polish clips sound less like the original and the filter drops them
+as <code>speaker_mismatch</code>.</li>
+<li><strong>Sound effects do not carry over.</strong> Reverb, a &quot;robot&quot; effect or background music are either
+lost or dirty every clip. A clean voice is best.</li>
+<li><strong>A clone of a synthetic voice</strong> (e.g. from ElevenLabs) works technically, but it copies its
+flatness too: Piper trained on such a clone sounds like a clone of a clone.</li>
+<li><strong>Children's voices</strong> are the hardest case for every cloning model. Here a longer recording
+(60 s) really pays off.</li>
+</ul>
+<h3 id="trial-results">Trial results</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>33 s, English original</th>
+<th>8.8 s in Polish (ElevenLabs)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>reference prompts</td>
+<td>3</td>
+<td>1</td>
+</tr>
+<tr>
+<td>best audition settings</td>
+<td><code>cfg_weight</code> 0.3, <code>exaggeration</code> 0.7</td>
+<td><code>cfg_weight</code> 0, <code>exaggeration</code> 0.7</td>
+</tr>
+<tr>
+<td>passed the filter (of 50)</td>
+<td><strong>22 (44%)</strong></td>
+<td><strong>38 (76%)</strong></td>
+</tr>
+<tr>
+<td>dropped: other timbre / text error / low quality</td>
+<td>17 / 8 / 3</td>
+<td>0 / 7 / 5</td>
+</tr>
+<tr>
+<td>median similarity, CER, UTMOS</td>
+<td>0.52 · 0.4% · 3.16</td>
+<td>0.86 · 0.9% · 3.47</td>
+</tr>
+<tr>
+<td>sentences for 1500 clips</td>
+<td>~3400 (<code>overgenerate</code> 2.3)</td>
+<td>~1950 (default 1.3)</td>
+</tr>
+</tbody>
+</table>
+<p>So: with 76% of the clips passing, the default sentence margin is enough. At 44% raise
+<code>overgenerate</code> or, better, improve the recording.</p>
+<h3 id="step-by-step-target-1500-clips">Step by step (target 1500 clips)</h3>
+<ol>
+<li><strong>New voice</strong>: <code>pvc init &lt;name&gt;</code> and set <code>target_clips: 1500</code> in <code>voice.yaml</code> (panel: New voice
+step).</li>
+<li><strong>Recording</strong>: <code>pvc reference &lt;name&gt; recording.wav</code>. The short-recording warning is a note, not
+an error.</li>
+<li><strong>Sentences</strong>: <code>pvc corpus &lt;name&gt;</code> picks <code>1500 × 1.3 ≈ 1950</code> sentences (about 2 min).</li>
+<li><strong>Audition</strong>: <code>pvc audition &lt;name&gt; --apply-best</code> (72 clips). Listen to
+<code>audition/audition.html</code>. If no combination sounds like the original, fix the recording now.</li>
+<li><strong>Trial</strong>: <code>pvc synthesize &lt;name&gt; --limit 50</code>, then <code>pvc filter &lt;name&gt;</code>. The end of the
+generation shows the speed (e.g. <code>50 clips in 19.4 min on mps: 23.2 s per clip</code>) and the filter
+shows the share that passes. From that you work out how many sentences you need.</li>
+<li><strong>Everything</strong>: <code>pvc synthesize &lt;name&gt;</code> (can be stopped and resumed) and <code>pvc filter &lt;name&gt;</code>.</li>
+<li><strong>Training</strong> from <code>bazowy-pl</code> on the machine with an NVIDIA card, then <strong>export</strong>.</li>
+</ol>
+<h3 id="mac-or-ubuntu">Mac or Ubuntu?</h3>
+<p>An Apple Silicon Mac generates and filters (<code>make setup-mac</code>, the Apple GPU through <code>mps</code>).
+Training Piper needs an NVIDIA card, so it stays on Ubuntu.</p>
+<table>
+<thead>
+<tr>
+<th>step (1950 sentences)</th>
+<th>Mac M1 Max, measured</th>
+<th>Ubuntu RTX 4090, estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>recording + sentences</td>
+<td>~2 min</td>
+<td>~2 min</td>
+</tr>
+<tr>
+<td>audition (72 clips)</td>
+<td>50–110 min</td>
+<td>~15 min</td>
+</tr>
+<tr>
+<td>generation</td>
+<td>23 s per clip → <strong>~12.5 h</strong></td>
+<td>~3 s per clip → ~1.5–2 h</td>
+</tr>
+<tr>
+<td>filter (Whisper on the CPU on a Mac)</td>
+<td>7 s per clip → <strong>~3.8 h</strong></td>
+<td>~1 s per clip → ~0.5 h</td>
+</tr>
+<tr>
+<td>training from <code>bazowy-pl</code> (1500 clips)</td>
+<td>not possible</td>
+<td>3–8 h</td>
+</tr>
+</tbody>
+</table>
+<p>The Ubuntu column is an estimate; it will be replaced by a measurement once the card is free from
+the base training.</p>
+<ul>
+<li><strong>The Mac makes sense</strong> when the card trains something else (e.g. a base for several days):
+generate on the Mac overnight and send the finished set to the machine (<code>pvc remote push</code>) only
+for training.</li>
+<li><strong>Ubuntu is several times faster</strong> when the card is free.</li>
+<li>Do not run two cloning models at once on the Mac: memory runs out and the system kills the
+process (exit code 137). The generation can simply be resumed then.</li>
+</ul>
+<h3 id="how-long-it-takes-in-total">How long it takes in total</h3>
+<ul>
+<li><strong>Your work</strong>: preparing the recording and listening take 30–60 min. The rest runs by itself.</li>
+<li><strong>Mac + Ubuntu</strong>: ~17 h of generation and filtering on the Mac, then 3–8 h of training, i.e.
+1–1.5 days.</li>
+<li><strong>Ubuntu alone</strong>: ~2–3 h of generation and filtering plus 3–8 h of training, about a day with
+time to listen and pick a checkpoint.</li>
+</ul>
+<h3 id="limits-and-law">Limits and law</h3>
+<ul>
+<li>Every Chatterbox clip carries the inaudible Resemble Perth watermark. It marks speech as
+generated; it does not change the sound and does not disturb training.</li>
+<li>A real person's voice only with their consent; a child's voice with a parent's or guardian's
+consent.</li>
+<li>Film and cartoon characters: private home use only. See <a href="#privacy-and-law">Privacy and law</a>.</li>
+</ul>
+<h2 id="retraining-existing-voices">Retraining existing voices</h2>
+<p>Old datasets often contain lines with digits, dates or list numbering, and MP3 audio saved with a
+<code>.wav</code> name. <code>pvc import</code> cleans them with the same rules:</p>
+<pre><code class="language-bash">pvc init kasia --piper-name pl_PL-kasia_glos     # keep the old file name
+pvc import kasia /old/pl_PL-kasia_glos-medium \
+  --metadata /old/pl_PL-kasia_glos-medium/metadata.csv \
+  --persona /old/pl_PL-kasia_glos-medium/custom_metadata.csv   # numbered lists: &quot;1. ...&quot;
+pvc train kasia --base bazowy-pl
+pvc export kasia
+</code></pre>
+<ul>
+<li><code>--persona</code> files have their list numbering removed before the text check.</li>
+<li>Short replies (&quot;Will you sit down?&quot;) are kept; long sentences are limited by the 20 s audio cap.</li>
+<li><code>--verify</code> also runs every clip through Whisper (slow).</li>
+<li>Keep the old <code>.onnx</code> files as a backup before replacing them.</li>
+</ul>
+<h2 id="adding-a-language">Adding a language</h2>
+<p>Create <code>piper_voice_cloner/languages/&lt;code&gt;.py</code> with a <code>PACK = LanguagePack(...)</code>:</p>
+<ul>
+<li><code>espeak_voice</code>: the espeak-ng voice Piper should use (e.g. <code>cs</code>);</li>
+<li><code>locale</code>: the file name prefix (e.g. <code>cs_CZ</code>);</li>
+<li><code>synth_language</code>: the language code for the cloning backend and Whisper;</li>
+<li><code>extra_letters</code>: letters besides a–z (e.g. <code>áčďéěíňóřšťúůýž</code>);</li>
+<li><code>abbreviations</code>: abbreviations to reject;</li>
+<li><code>focus_phonemes</code>: sounds to cover generously;</li>
+<li><code>prompt_files</code>: optional bundled sentences in <code>languages/data/</code>.</li>
+</ul>
+<p>Then <code>pvc init &lt;name&gt; --language &lt;code&gt;</code>. Check that the cloning backend supports the language;
+Chatterbox lists 23.</p>
+<h2 id="faq-and-troubleshooting">FAQ and troubleshooting</h2>
+<p>Search for the message (Ctrl+F). The full job log is in the panel on the right and in
+<code>&lt;data&gt;/jobs/*.log</code>.</p>
+<h3 id="filter-no-generated-clips-in-raw-nothing-to-filter">Filter: <code>no generated clips in …/raw: nothing to filter</code></h3>
+<p>An imported voice has no generated clips and its <code>dataset/</code> is ready for training. Skip Filter. Older
+versions emptied <code>dataset/</code> here. If that happened on the machine, <strong>⚒ Tools → Prepare machine</strong>
+restores the set from the computer that sent it.</p>
+<h3 id="export-no-module-named-onnxscript-or-guardondatadependentsymnode">Export: <code>No module named 'onnxscript'</code> or <code>GuardOnDataDependentSymNode</code></h3>
+<p>The training environment lacked the ONNX packages, and PyTorch's new exporter does not handle this
+model. Click <strong>Prepare machine</strong> and export again: the cloner uses the older exporter.</p>
+<h3 id="listening-elevenlabsfatalerror-no-api-key-in-the-panel-on-the-machine">Listening: <code>ElevenLabsFatalError: no API key</code> in the panel on the machine</h3>
+<p>The ElevenLabs key lives on the computer where it was entered. Generate clips on the Mac. Skip the
+<strong>Audition</strong> step: for an ElevenLabs voice it uses credits and training does not need it.</p>
+<h3 id="piotr-is-an-imported-voice-create-a-new-voice-to-generate-clips"><code>'piotr' is an imported voice: create a new voice to generate clips</code></h3>
+<p>An imported voice is a finished recording set and a source of sentences, so it does not generate new
+clips. Create a new voice and choose the model and sentence set there. The message below the set
+always names the selected voice.</p>
+<h3 id="after-restarting-make-ui-an-event-handler-run_export-didnt-receive-enough-input-values">After restarting <code>make ui</code>: <code>An event handler (run_export) didn't receive enough input values</code></h3>
+<p>A tab opened before the panel update sent its timer events in the old layout, and in the new one
+those numbers belong to other functions. <code>Value: '…' is not in the list of choices: []</code> has the same
+cause. The panel rejects these events and no job starts. Refresh the tab (Cmd+R). After updating the
+code it is best to close old tabs before starting the panel.</p>
+<h3 id="generate-stopped-http-401--quota_exceeded-invalid_api_key">Generate: <code>Stopped: HTTP 401: …</code> (<code>quota_exceeded</code>, <code>invalid_api_key</code>)</h3>
+<p>Code 401 means a wrong key or no credits; the response says which. Save a new key in Settings
+or buy credits, then run generating again. Finished clips stay.</p>
+<h3 id="load-voices-http-401--missing_permissions">Load voices: <code>HTTP 401: … missing_permissions</code></h3>
+<p>A restricted key has no access to voices. Enable this permission for the key in ElevenLabs or create
+a new one. Missing <code>user_read</code> alone is not an error: the voices load, only without the credits.</p>
+<h3 id="generate-stopped-raw-holds-clips-of-another-voice-">Generate: <code>Stopped: raw/ holds clips of another voice (…)</code></h3>
+<p><code>raw/</code> holds clips of another model or another ElevenLabs voice. Create a new voice in the panel or
+move <code>raw/</code> out of the voice folder.</p>
+<h3 id="use-this-set-raw-already-holds--clips-of-other-sentences">Use this set: <code>raw/ already holds … clips of other sentences</code></h3>
+<p>The voice already has clips of other sentences and the filter would use them with the new ones.
+Create a new voice.</p>
+<h3 id="voice-name-lowercase-letters-digits-and-_-only"><code>voice name: lowercase letters, digits and '_' only</code></h3>
+<p>A voice name may only contain lowercase letters, digits and <code>_</code>. The web UI turns <code>Tomek</code> into
+<code>tomek</code> and <code>Kuba Bajka</code> into <code>kuba_bajka</code> by itself; you only see this in an older version or
+in <code>pvc init</code>. Type the name in lowercase.</p>
+<h3 id="make-ui-python311-not-found"><code>make ui</code>: <code>python3.11 not found</code></h3>
+<p>An older Makefile rebuilt the environment after every change of <code>pyproject.toml</code> and demanded
+<code>python3.11</code> even when <code>.venv</code> already existed (e.g. on Python 3.12). Fixed: an existing <code>.venv</code>
+is only refreshed with its own Python, a new one is made with <code>python3.11</code> or <code>python3.12</code>. If
+neither exists: <code>brew install python@3.12</code> (macOS) or <code>uv python install 3.11</code> (Ubuntu).</p>
+<h3 id="i-cant-see-the-tools-or-settings-tabs">I can't see the Tools or Settings tabs</h3>
+<p>Every step is in the bar at the top; click <strong>⚙ Settings</strong> or <strong>⚒ Tools</strong> at its end. Older
+versions hid them under &quot;⋯&quot; on the right of the tabs.</p>
+<h3 id="what-goes-into-persona-metadata-file">What goes into &quot;Persona metadata file&quot;?</h3>
+<p>The name of an extra file with lines written as a numbered list (&quot;1. …&quot;) that sits next to
+<code>metadata.csv</code>, e.g. <code>custom_metadata.csv</code>. If there is no such file, leave it empty. Don't give
+files with only times or dates (e.g. <code>ha_metadata.csv</code>): the filter drops every line with digits
+anyway.</p>
+<h3 id="the-import-dropped-some-clips">The import dropped some clips</h3>
+<p>The reason for each one is in <code>voices/&lt;voice&gt;/dataset/import_report.csv</code>. <code>duration</code> is a clip
+shorter than ~0.6 s or too long; <code>text:digits</code> / <code>text:abbreviation</code> / <code>text:foreign_characters</code>
+is text that would spoil the pronunciation. A few per thousand is normal.</p>
+<h3 id="the-panel-says-no-nvidia-card">The panel says &quot;no NVIDIA card&quot;</h3>
+<p>Normal on a Mac or a computer without an NVIDIA card: import, sentences and settings work, but
+generating, the Whisper filter and training need the card. Use the <a href="#gpu-machine-over-ssh-working-from-a-mac-or-laptop">GPU machine over
+SSH</a>.</p>
+<h3 id="ctrlc-does-not-stop-make-ui">Ctrl+C does not stop <code>make ui</code></h3>
+<p>Older versions waited for the browser to close its connection, i.e. forever. Update the code; it
+now exits after 2–4 s. If an old version hangs: close the panel tab or <code>pkill -f &quot;pvc.*ui&quot;</code>.
+Background jobs (training) are separate processes and survive the panel.</p>
+<h3 id="nothing-happens-after-a-click-no-progress">Nothing happens after a click, no progress</h3>
+<p>Long steps run in the background. Progress (bar and counter) and the log are in the card on the
+right; &quot;Stop job&quot; is only active while something runs. When it ends the card shows &quot;Last job …
+finished / failed&quot; and the time it took. One job runs at a time.</p>
+<h3 id="value-kasia-is-not-in-the-list-of-choices--in-the-make-ui-terminal"><code>Value: kasia is not in the list of choices: []</code> in the <code>make ui</code> terminal</h3>
+<p>The browser tab remembered the chosen voice from an earlier run of the panel (e.g. before restarting
+<code>make ui</code> or changing the data folder) and the new session did not list it. Nothing broke: the data is
+on the disk. Reload the page (Cmd+R) or click <strong>↻ Refresh</strong> next to the voice list. Newer versions no
+longer print this error; a voice that is not on the disk counts as not chosen.</p>
+<h3 id="-is-still-running-wait-until-it-ends-formerly-another-job-is-still-running--is-still-running">&quot;… is still running. Wait until it ends&quot; (formerly <code>Another job is still running: … is still running</code>)</h3>
+<p>One job runs at a time and another was clicked before the first one ended, for example &quot;Send code
+and data&quot; right after &quot;Check&quot;. Wait until the <strong>Progress</strong> card shows &quot;Last job …&quot; or stop the job,
+then click again. Older versions also printed a long <code>Traceback … JobBusy</code> in the <code>make ui</code>
+terminal; it was this message, not a crash.</p>
+<h3 id="check-connection-ssh-connect-to-host--port-22-network-is-unreachable-or-operation-timed-out">Check connection: <code>ssh: connect to host … port 22: Network is unreachable</code> or <code>Operation timed out</code></h3>
+<p>The GPU machine is off or the Mac has no route to it. Away from home, check the VPN (WireGuard); at
+home, check that the machine is running (the machine button in the top bar, if Home Assistant is
+set up). After switching it on wait 1–2 minutes and click <strong>Check</strong> again.</p>
+<p>In the top bar this error shows as &quot;Server: connection check failed (exit code 255)&quot;. It is the
+result of the last job, not the current state. When the machine answers over SSH again (the panel
+asks it about every 10 s), the bar changes by itself to &quot;Server answers over SSH again&quot;. Other
+failures, e.g. a failed install (exit code 1), stay visible until the next job.</p>
+<h3 id="training-stops-after-the-first-epoch-modelcheckpointmonitorval_mos-could-not-find-the-monitored-key">Training stops after the first epoch: <code>ModelCheckpoint(monitor='val_mos') could not find the monitored key</code></h3>
+<p>The training environment lacks <code>torchaudio</code>, so piper does not compute the quality (<code>val_mos</code>) and
+the checkpoint saving waits for it. The log shows <code>Could not load MOS predictor 'utmos' (No module named 'torchaudio')</code> earlier. Click <strong>Prepare machine</strong> (the checklist shows &quot;Training environment&quot;
+to do) or on the machine: <code>uv pip install --python .venv-train/bin/python torchaudio</code>. Then start the
+training again - it resumes from the last checkpoint.</p>
+<h3 id="audition-or-generation-typeerror-nonetype-object-is-not-callable-perthperthimplicitwatermarker">Audition or generation: <code>TypeError: 'NoneType' object is not callable</code> (<code>perth.PerthImplicitWatermarker()</code>)</h3>
+<p>Chatterbox adds an inaudible watermark from the <code>resemble-perth</code> library to every clip. That library
+imports <code>pkg_resources</code>, which <code>setuptools</code> no longer ships since version 81. When the import fails,
+<code>perth</code> silently sets the watermarker to <code>None</code>, so the model fails as it starts. Since this version
+the <code>chatterbox</code> extra pins <code>setuptools&lt;81</code> and the setup checks the watermark. In an older
+environment: <code>.venv/bin/pip install 'setuptools&lt;81'</code> (on the machine: click <strong>Prepare machine</strong> while
+nothing trains, or <code>uv pip install --python .venv/bin/python 'setuptools&lt;81'</code>).</p>
+<h3 id="the-filter-drops-almost-everything-as-too_fast_or_cut-the-log-says-forcing-eos-token--token_repetitiontrue">The filter drops almost everything as <code>too_fast_or_cut</code>, the log says <code>forcing EOS token, … token_repetition=True</code></h3>
+<p>Clips stop after a few words (e.g. 2 s instead of 11 s) and the generation log shows
+<code>🚨 Detected 2x repetition of token …</code> and <code>forcing EOS token</code>. Chatterbox 0.1.7 ends the speech
+when two equal speech tokens follow each other anywhere in the clip. Low, drawn-out voices (e.g. a
+film character) hit it almost every time, and the 12-sentence audition may not show it. Since this
+version the app checks for repetitions only after the whole text is spoken, so loops at the end are
+still stopped. A bad batch from an older version: remove the voice's <code>raw/</code> and <code>dataset/</code> (or move
+them aside) and generate the clips again.</p>
+<h3 id="training-again-after-a-finished-run-you-restored-a-checkpoint-with-current_epoch1273-but-you-have-set-trainermax_epochs800">Training again after a finished run: <code>You restored a checkpoint with current_epoch=1273, but you have set Trainer(max_epochs=800)</code></h3>
+<p>The base (or voice) training finished its planned epochs, then <strong>Train base</strong> was clicked again with
+fewer epochs. Resuming starts from the newest checkpoint (here epoch 1273), and older versions
+counted the epochs from the start of the first run (0 + 800 = 800). Lightning refuses to end below
+the checkpoint's epoch. Since this version, when the plan is already done, the <strong>Epochs</strong> field
+means &quot;how many more&quot;: 800 epochs from 1273 to 2073 (the log says <code>The planned … epochs are done …; training 800 more</code>). A stopped, unfinished training still resumes up to its original end.</p>
+<p>Note: piper saves a checkpoint only when <code>val_mel</code>/<code>val_mos</code> improve, so the last epochs without an
+improvement (e.g. 1274–1299) have no checkpoint and resuming starts from the last saved one. About
+the size: <strong>medium</strong> continues the same model, <strong>high</strong> starts a separate training in
+<code>bases/pl-scratch-high</code>.</p>
+<h3 id="training-stops-after-many-epochs-torchoutofmemoryerror-cuda-out-of-memory">Training stops after many epochs: <code>torch.OutOfMemoryError: CUDA out of memory</code></h3>
+<p>The GPU (24 GB) ran out of memory. A batch is padded to its longest clip, so memory use jumps from
+batch to batch. A rare batch with several long clips (15-20 s) plus a fragmented CUDA cache goes over
+the limit, sometimes only after hundreds of epochs. Nothing is lost: click <strong>Train base</strong> (or
+<strong>Train</strong>) again. Training resumes from the newest checkpoint (<code>last.ckpt</code> or a newer
+&quot;best&quot; one), so at most a few epochs are repeated. Since this version
+training runs with <code>PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True</code>, which limits fragmentation
+(after updating, click <strong>Prepare machine</strong>). If the error comes back, lower the batch:
+<code>pvc base train --batch-size 24</code>.</p>
+<h3 id="check-connection-permission-denied-publickey-or-host-key-verification-failed">Check connection: <code>Permission denied (publickey)</code> or <code>Host key verification failed</code></h3>
+<p>Login to the machine must work without a password. Once, in a terminal:</p>
+<pre><code class="language-bash">ssh-copy-id user@ubuntu.local   # copies your key to the machine
+ssh user@ubuntu.local           # first connection: accept the host key (yes)
+</code></pre>
+<p>If you use a key other than the default one, pick it in <strong>SSH key</strong>.</p>
+<h3 id="check-connection-ffmpeg-missing-or-another-tool">Check connection: <code>ffmpeg: MISSING</code> (or another tool)</h3>
+<p>System packages you install once yourself on the machine (they need sudo). The end of the output
+has the command, e.g.:</p>
+<pre><code class="language-bash">ssh user@ubuntu.local
+sudo apt install ffmpeg
+</code></pre>
+<p>Missing <code>uv</code>: <code>curl -LsSf https://astral.sh/uv/install.sh | sh</code>.</p>
+<h3 id="install-modulenotfounderror-no-module-named-cython-localbincythonize">Install: <code>ModuleNotFoundError: No module named 'Cython'</code> (<code>~/.local/bin/cythonize</code>)</h3>
+<p>An older <code>setup.sh</code> ran <code>cythonize</code> from another Python. Fixed: click <strong>Send code and data</strong>,
+then <strong>Install / update</strong>. The second run takes minutes because the packages are already
+downloaded.</p>
+<h3 id="install-no-module-named-skbuild-or-cannot-import-name-espeakbridge">Install: <code>No module named 'skbuild'</code> or <code>cannot import name 'espeakbridge'</code></h3>
+<p>The espeak-ng bridge was not compiled in the training environment. Fixed in <code>setup.sh</code> as above:
+<strong>Send code and data</strong> → <strong>Install / update</strong>. At the end the install checks that both piper1-gpl
+modules import.</p>
+<h3 id="red-status-server-installing---failed-exit-code-1">Red status &quot;Server: installing (-) failed (exit code 1)&quot;</h3>
+<p>The status at the top shows the <strong>last</strong> job, so it stays red until you start another one. Read
+the end of the log (on the right or <code>&lt;data&gt;/jobs/*-remote-install.log</code>), find the message in this
+FAQ, and after the fix run <strong>Send code and data</strong> and <strong>Install / update</strong> again. The install can
+be repeated safely.</p>
+<h3 id="i-lost-the-login-of-the-panel-on-the-machine">I lost the login of the panel on the machine</h3>
+<p>It is in <code>~/.config/piper-voice-cloner/env</code> on the machine (<code>PVC_UI_AUTH=admin:password</code>). Change
+it and restart the service:</p>
+<pre><code class="language-bash">nano ~/.config/piper-voice-cloner/env
+systemctl --user restart piper-voice-cloner
+</code></pre>
+<h3 id="machine-no-reading-from-ha">&quot;Machine: no reading from HA&quot;</h3>
+<p><strong>Symptom</strong>: a red &quot;Machine: no reading from HA&quot; button in the top bar; its tooltip gives the
+reason, e.g. <code>Home Assistant at http://homeassistant.local:8123 cannot be reached: timed out</code> or
+<code>Home Assistant 404: Entity not found.</code></p>
+<p><strong>Cause</strong>: the UI did not get the machine switch's state from Home Assistant: Home Assistant is
+off or restarting, the address is wrong, the token expired (401/403, below) or an entity of the
+settings does not exist (404, <code>unavailable</code>).</p>
+<p><strong>Fix</strong>: check the address in <strong>⚒ Tools → Home Assistant</strong> and click <strong>Save connection</strong> (it says
+at once whether Home Assistant answers). On 404 click <strong>↻ Suggestions from HA</strong> and pick an
+existing switch and sensor. The state refreshes by itself about every 10 s.</p>
+<h3 id="machine-ha-token-rejected">&quot;Machine: HA token rejected&quot;</h3>
+<p><strong>Symptom</strong>: a red &quot;Machine: HA token rejected&quot; button in the top bar, and &quot;Home Assistant rejected
+the token…&quot; in the token field of <strong>⚒ Tools → Home Assistant</strong>.</p>
+<p><strong>Cause</strong>: Home Assistant answered 401 (a wrong, expired or deleted token). Each such answer is a
+failed login for HA, and with <code>ip_ban</code> on HA blocks the address after a few of them (through a VPN
+this may be the Jetson's address). So the UI <strong>stops asking HA after the first rejection</strong>: machine
+state, entity suggestions and switching the machine.</p>
+<p><strong>Fix</strong>: paste a new long-lived token (profile → Security) and click <strong>Save connection</strong>. When the
+token is fine and HA was e.g. restarting, <strong>Save connection</strong> alone is enough: the UI checks the
+connection with one request.</p>
+<h3 id="home-assistant-401-the-token-is-wrong-or-expired--home-assistant-403-the-token-belongs-to-a-user-who-is-not-an-administrator"><code>Home Assistant 401: the token is wrong or expired</code> / <code>Home Assistant 403: the token belongs to a user who is not an administrator</code></h3>
+<p><strong>Symptom</strong>: the message after <strong>Save connection</strong>, <strong>↻ Suggestions from HA</strong> or a click on the
+machine button.</p>
+<p><strong>Cause</strong>: 401 – the token is wrong, expired or was deleted in the profile. 403 – the token
+belongs to a user who is not an administrator (switching needs that).</p>
+<p><strong>Fix</strong>: in Home Assistant log in as an administrator → profile → Security → Long-lived access
+tokens → Create; paste the new token in <strong>⚒ Tools → Home Assistant</strong> and save.</p>
+<h3 id="this-does-not-look-like-a-home-assistant-long-lived-token--home-assistant-address-eg-httphomeassistantlocal8123"><code>this does not look like a Home Assistant long-lived token</code> / <code>Home Assistant address: e.g. http://homeassistant.local:8123</code></h3>
+<p><strong>Cause</strong>: the pasted token has spaces or quotes or is cut off (a token is a long string of
+letters, digits, <code>.</code>, <code>_</code>, <code>-</code>); the address does not start with <code>http://</code> or <code>https://</code> or has
+a path.</p>
+<p><strong>Fix</strong>: copy the token again in full; type the address as <code>http://&lt;host&gt;:8123</code> with nothing
+after the port. The message deliberately never shows the typed token.</p>
+<h3 id="a-job-is-running-on-the-machine----stop-it-first-or-wait-until-it-ends"><code>a job is running on the machine: … - stop it first or wait until it ends</code></h3>
+<p><strong>Symptom</strong>: after clicking &quot;Machine: on&quot; and confirming, this error shows and the machine stays
+on.</p>
+<p><strong>Cause</strong>: a job of the web UI runs on the machine (e.g. <code>train (kuba)</code>) or the UI on this
+computer is sending code to it or installing (<code>remote-push</code>, <code>remote-install</code>). Switching off
+would break it.</p>
+<p><strong>Fix</strong>: wait until the job ends or stop it with <strong>Stop job</strong> (in the web UI on the machine when
+the job runs there) and try again. Training resumes later from the newest checkpoint.</p>
+<h3 id="the-ui-loads-slowly-or-shows-checking-the-machine-for-long">The UI loads slowly or shows &quot;Checking the machine…&quot; for long</h3>
+<p><strong>Symptom</strong>: after opening the UI the status &quot;Checking the machine…&quot; / &quot;Machine: checking…&quot; stays
+for more than a few seconds.</p>
+<p><strong>Cause</strong>: the GPU machine is off or does not answer and Home Assistant answers slowly or not at
+all. The page itself never waits for them (they are asked in the background): the first state
+shows after about 1.5 s (a connect attempt to the SSH port), the Home Assistant state after a few
+seconds at most (5 s limit per request). The slow <code>homeassistant.local</code> answers on a Mac (5 s
+waiting for an IPv6 answer on every request) are avoided: the name is looked up once, IPv4 first,
+and kept for 5 minutes.</p>
+<p><strong>Fix</strong>: usually nothing – the state shows up by itself. If &quot;checking&quot; never goes away, restart
+the UI and read the tooltip of the status. When it says <code>The GPU machine did not answer over SSH: …</code>, the machine is on but the SSH login fails – see
+<a href="#check-connection-permission-denied-publickey-or-host-key-verification-failed">Check connection: Permission denied (publickey)</a>.</p>
+<h2 id="privacy-and-law">Privacy and law</h2>
+<ul>
+<li><strong>Children's voices</strong>: record and use them only with a parent's or guardian's consent, and keep
+everything local. The default backend runs entirely on your machine. ElevenLabs sends text to
+the cloud and the tool says so whenever it is used.</li>
+<li><strong>Cartoon and film characters</strong>: the recordings are copyrighted, and voice actors have rights to
+their voice and performance. Keep such voices for private use. Don't publish the model or its
+samples, and never use them commercially.</li>
+<li><strong>Model licenses</strong>: Chatterbox is MIT. XTTS-v2 is CPML, which is non-commercial, so treat its
+outputs and voices trained on them as non-commercial too. Chatterbox adds an inaudible
+watermark (Resemble Perth) to everything it generates.</li>
+<li>If you ever publish synthetic speech, label it as AI-generated (EU AI Act, Art. 50).</li>
+</ul>
+<p>This is not legal advice.</p>
+
+</article></main>
+</div>
+<script>
+  const links = [...document.querySelectorAll("#toc a")];
+  const heads = links.map((a) => document.getElementById(a.getAttribute("href").slice(1))).filter(Boolean);
+  const mark = () => {
+    let current = heads[0];
+    for (const h of heads) if (h.getBoundingClientRect().top < 120) current = h;
+    links.forEach((a) => a.classList.toggle("active", current && a.getAttribute("href") === "#" + current.id));
+  };
+  addEventListener("scroll", mark, { passive: true });
+  mark();
+</script>
+</body>
+</html>

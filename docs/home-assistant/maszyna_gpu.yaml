@@ -1,0 +1,113 @@
+# Maszyna z GPU (Ubuntu 192.168.1.21, RTX 4090) na gniazdku "Pokój Kuby Komputer".
+#
+# Komputer działa po Wi-Fi, więc Wake-on-LAN nie działa - BIOS uruchamia go sam
+# po powrocie zasilania, dlatego "włącz" = włączenie gniazdka.
+# "Wyłącz" = bezpieczne wyłączenie: najpierw system przez SSH (sudo poweroff),
+# potem czekanie aż pobór spadnie poniżej 5 W i dopiero wtedy odcięcie gniazdka.
+# Gdy komputer nie wyłączy się w 5 minut, gniazdko zostaje włączone i przychodzi
+# powiadomienie.
+#
+# switch.maszyna_gpu używają panel trenowania słów wybudzających
+# (home-assistant-wakeword: przycisk w nagłówku i Ustawienia → Home Assistant)
+# oraz Piper Voice Cloner (przycisk na górnym pasku i ⚒ Narzędzia → Home Assistant).
+#
+# EN: the GPU machine on a smart plug. On = plug on (the BIOS boots the machine,
+# it is on Wi-Fi, so no Wake-on-LAN); off = "sudo poweroff" over SSH, wait until
+# the plug measures < 5 W (up to 5 min), then plug off. Put this file into
+# /config/packages/ (homeassistant: packages: !include_dir_named packages) and
+# adapt the entity ids and shell_command.turn_off_ubuntu to your setup.
+
+script:
+  maszyna_gpu_wylacz:
+    alias: Maszyna GPU - bezpieczne wyłączenie
+    description: >-
+      Wyłącza Ubuntu przez SSH, czeka aż gniazdko pokaże mniej niż 5 W i dopiero
+      wtedy odcina zasilanie.
+    icon: mdi:power
+    mode: single
+    sequence:
+      - condition: state
+        entity_id: switch.pokoj_kuby_komputer_przelacznik
+        state: "on"
+      - action: shell_command.turn_off_ubuntu
+        continue_on_error: true
+        response_variable: ssh_wynik
+      # 255 = SSH zerwane przez samo wyłączanie systemu - to nie błąd
+      - if:
+          - condition: template
+            value_template: >-
+              {{ (ssh_wynik | default({}, true)).get('returncode', 0) not in [0, 255] }}
+        then:
+          - action: notify.notify
+            data:
+              message: >-
+                Nie udało się wyłączyć maszyny GPU przez SSH (kod
+                {{ (ssh_wynik | default({}, true)).get('returncode', '?') }}) - gniazdko zostaje włączone.
+          - stop: Komenda SSH nie powiodła się
+      - wait_template: "{{ states('sensor.pokoj_kuby_komputer_moc_czynna') | float(999) < 5 }}"
+        timeout: "00:05:00"
+        continue_on_timeout: true
+      - if:
+          - condition: template
+            value_template: "{{ not wait.completed }}"
+        then:
+          - action: notify.notify
+            data:
+              message: >-
+                Maszyna GPU nie wyłączyła się w 5 minut
+                ({{ states('sensor.pokoj_kuby_komputer_moc_czynna') }} W) - gniazdko zostaje włączone.
+          - stop: Komputer się nie wyłączył
+      # chwilowy spadek to jeszcze nie wyłączenie - sprawdzamy ponownie po 10 s
+      - delay: 10
+      - condition: numeric_state
+        entity_id: sensor.pokoj_kuby_komputer_moc_czynna
+        below: 5
+      - action: switch.turn_off
+        target:
+          entity_id: switch.pokoj_kuby_komputer_przelacznik
+
+automation:
+  # Trening może wyłączyć Ubuntu sam (sudo poweroff), bez skryptu powyżej. Gniazdko
+  # zostałoby wtedy włączone, a rano włączenie maszyny nic by nie dało: BIOS startuje
+  # dopiero po powrocie zasilania.
+  - id: maszyna_gpu_odciecie_gniazdka
+    alias: Maszyna GPU - odcięcie gniazdka po wyłączeniu systemu
+    description: >-
+      Gdy komputer sam się wyłączy i pobór przez 5 minut jest poniżej 5 W, odcina
+      gniazdko, żeby przełącznik Maszyna GPU rano uruchomił go ponownie.
+    triggers:
+      - trigger: numeric_state
+        entity_id: sensor.pokoj_kuby_komputer_moc_czynna
+        below: 5
+        for: "00:05:00"
+    conditions:
+      - condition: state
+        entity_id: switch.pokoj_kuby_komputer_przelacznik
+        state: "on"
+      - condition: state
+        entity_id: script.maszyna_gpu_wylacz
+        state: "off"
+    actions:
+      - action: switch.turn_off
+        target:
+          entity_id: switch.pokoj_kuby_komputer_przelacznik
+    mode: single
+
+template:
+  - switch:
+      - unique_id: maszyna_gpu
+        name: Maszyna GPU
+        icon: mdi:expansion-card
+        # wyłączana (skrypt w toku) pokazuje się już jako wyłączona; panel rozpoznaje
+        # ten stan po poborze mocy (wyłączona, a wciąż powyżej 5 W)
+        state: >-
+          {{ is_state('switch.pokoj_kuby_komputer_przelacznik', 'on')
+             and not is_state('script.maszyna_gpu_wylacz', 'on') }}
+        turn_on:
+          - action: switch.turn_on
+            target:
+              entity_id: switch.pokoj_kuby_komputer_przelacznik
+        turn_off:
+          - action: script.turn_on
+            target:
+              entity_id: script.maszyna_gpu_wylacz

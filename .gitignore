@@ -1,0 +1,21 @@
+# Private voice data: references, samples, datasets, checkpoints, exported voices.
+# Never commit anything from here - children's voices and character voices stay at home.
+voices/
+bases/
+*.ckpt
+*.onnx
+*.onnx.json
+
+.venv/
+.venv-*/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+lightning_logs/
+third_party/
+
+# local backups (CLAUDE.md: backups go to backup/)
+backup/
+
+.DS_Store

@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "piper-voice-cloner"
+version = "0.1.0"
+description = "Clone a voice from a short recording, generate a checked dataset and train a Piper TTS voice"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "soundfile>=0.12",
+  "pyyaml>=6",
+  "pydantic>=2.6",
+  "typer>=0.12",
+]
+
+[project.optional-dependencies]
+# Each heavy stack lives in its own environment (torch versions clash), see scripts/setup.sh.
+# resemble-perth (Chatterbox's watermark) imports pkg_resources, gone from setuptools 81; without it
+# perth silently sets its watermarker to None and the model fails to load ("'NoneType' object is not callable")
+chatterbox = ["chatterbox-tts>=0.1.4", "setuptools<81"]
+xtts = ["coqui-tts>=0.27"]
+elevenlabs = ["requests>=2.31"]
+quality = ["faster-whisper>=1.1", "sherpa-onnx>=1.10", "torch>=2.4", "torchaudio>=2.4"]
+ui = ["gradio>=5"]
+docs = ["playwright>=1.45"]  # scripts/screenshots.py - uses the installed Google Chrome
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[project.scripts]
+pvc = "piper_voice_cloner.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["piper_voice_cloner*"]
+
+[tool.setuptools.package-data]
+piper_voice_cloner = ["languages/data/*", "webui/static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

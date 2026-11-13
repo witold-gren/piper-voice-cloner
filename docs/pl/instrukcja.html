@@ -1,0 +1,1176 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piper Voice Cloner – instrukcja</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjU5ZTBiIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2VmNGYzYyIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPGNpcmNsZSBjeD0iMzIiIGN5PSIzMiIgcj0iMzIiIGZpbGw9InVybCgjZykiLz4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSg4IDgpIHNjYWxlKDIpIiBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iMi40IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiPgogICAgPHBhdGggZD0iTTIgMTJjMS43LTYgMy4zLTYgNSAwczMuMyA2IDUgMCAzLjMtNiA1IDAgMy4zIDYgNSAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxLjggLTIuNikiIHN0cm9rZS1vcGFjaXR5PSIuNSIvPgogICAgPHBhdGggZD0iTTIgMTJjMS43LTYgMy4zLTYgNSAwczMuMyA2IDUgMCAzLjMtNiA1IDAgMy4zIDYgNSAwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMC45IDEuMykiLz4KICA8L2c+Cjwvc3ZnPgo=">
+<style>
+  :root {
+    --bg: #f4f6fb; --card: #ffffff; --line: #e5e7ef; --text: #111827; --muted: #6b7280;
+    --accent: #5b5bf0; --accent-2: #8b5cf6; --code: #eef0f7; --pre: #0d1117; --pre-text: #e6edf3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0e17; --card: #141a29; --line: #232b3e; --text: #e5e7eb; --muted: #9aa3b5;
+      --accent: #8183ff; --accent-2: #b18cff; --code: #1d2436;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  .layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 32px; max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+  nav { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto; padding: 28px 0; }
+  nav .brand { font-weight: 800; margin: 0 8px 4px; }
+  nav .label { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; margin: 0 8px 10px; }
+  nav a { display: block; color: var(--muted); text-decoration: none; padding: 4px 8px; border-left: 2px solid transparent; font-size: .92rem; }
+  nav a.l3 { padding-left: 20px; font-size: .86rem; }
+  nav a:hover, nav a.active { color: var(--accent); border-left-color: var(--accent); }
+  main { padding: 28px 0 80px; min-width: 0; }
+  article { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px 36px; }
+  h1 { font-size: 1.9rem; margin: 0 0 12px; }
+  h2 { margin-top: 2.2em; padding-top: .4em; border-top: 1px solid var(--line); }
+  h3 { margin-top: 1.6em; }
+  a { color: var(--accent); }
+  code { background: var(--code); padding: 1px 6px; border-radius: 6px; font-size: .88em; }
+  pre { background: var(--pre); color: var(--pre-text); padding: 14px 16px; border-radius: 12px; overflow-x: auto; }
+  pre code { background: none; padding: 0; color: inherit; }
+  table { border-collapse: collapse; width: 100%; display: block; overflow-x: auto; margin: 1em 0; }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--code); }
+  blockquote { margin: 1em 0; padding: 10px 16px; border-left: 4px solid var(--accent); background: var(--code); border-radius: 0 10px 10px 0; }
+  blockquote p { margin: .3em 0; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; gap: 0; }
+    nav { position: static; max-height: none; padding-bottom: 0; }
+    nav a { display: inline-block; border-left: 0; padding: 2px 6px; }
+    nav a.l3 { display: none; }
+    article { padding: 20px 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav id="toc"><div class="brand">Piper Voice Cloner</div><div class="label">Spis treści</div><a href="#o-co-chodzi" class="l2">O co chodzi</a><a href="#instalacja" class="l2">Instalacja</a><a href="#komputer-z-gpu-przez-ssh-praca-z-maca-lub-laptopa" class="l3">Komputer z GPU przez SSH (praca z Maca lub laptopa)</a><a href="#zasilanie-maszyny-przez-home-assistant" class="l3">Zasilanie maszyny przez Home Assistant</a><a href="#interfejs-w-przeglądarce" class="l2">Interfejs w przeglądarce</a><a href="#gdzie-są-dane" class="l2">Gdzie są dane</a><a href="#zmiana-nazwy-głosu" class="l3">Zmiana nazwy głosu</a><a href="#1-nagranie-referencyjne" class="l2">1. Nagranie referencyjne</a><a href="#2-zdania" class="l2">2. Zdania</a><a href="#3-odsłuch-ustawień" class="l2">3. Odsłuch ustawień</a><a href="#4-generowanie-i-filtr" class="l2">4. Generowanie i filtr</a><a href="#głos-z-elevenlabs-bez-nagrania-i-karty-graficznej" class="l2">Głos z ElevenLabs (bez nagrania i karty graficznej)</a><a href="#5-trening" class="l2">5. Trening</a><a href="#własna-baza-bez-angielskiego-bazowy-pl" class="l3">Własna baza bez angielskiego (bazowy-pl)</a><a href="#jak-długo-trenować-i-na-co-patrzeć" class="l2">Jak długo trenować i na co patrzeć</a><a href="#postęp-w-panelu" class="l3">Postęp w panelu</a><a href="#na-co-patrzeć" class="l3">Na co patrzeć</a><a href="#kolejka-treningów" class="l3">Kolejka treningów</a><a href="#jak-czytać-postęp-treningu" class="l3">Jak czytać postęp treningu</a><a href="#wyłączenie-maszyny-po-treningu" class="l3">Wyłączenie maszyny po treningu</a><a href="#6-eksport-i-użycie" class="l2">6. Eksport i użycie</a><a href="#eksport-wytrenowanego-głosu" class="l3">Eksport wytrenowanego głosu</a><a href="#eksport-głosu-bazowego" class="l3">Eksport głosu bazowego</a><a href="#wgranie-głosu-do-home-assistant" class="l3">Wgranie głosu do Home Assistant</a><a href="#nowy-głos-z-krótkiego-nagrania" class="l2">Nowy głos z krótkiego nagrania</a><a href="#czy-15-sekund-wystarczy" class="l3">Czy 15 sekund wystarczy?</a><a href="#wynik-próby" class="l3">Wynik próby</a><a href="#krok-po-kroku-cel-1500-klipów" class="l3">Krok po kroku (cel 1500 klipów)</a><a href="#mac-czy-ubuntu" class="l3">Mac czy Ubuntu?</a><a href="#ile-to-trwa-w-sumie" class="l3">Ile to trwa w sumie</a><a href="#ograniczenia-i-prawo" class="l3">Ograniczenia i prawo</a><a href="#przetrenowanie-istniejących-głosów" class="l2">Przetrenowanie istniejących głosów</a><a href="#dodanie-języka" class="l2">Dodanie języka</a><a href="#faq-i-rozwiązywanie-problemów" class="l2">FAQ i rozwiązywanie problemów</a><a href="#filtr-no-generated-clips-in-raw-nothing-to-filter" class="l3">Filtr: no generated clips in …/raw: nothing to filter</a><a href="#eksport-no-module-named-onnxscript-albo-guardondatadependentsymnode" class="l3">Eksport: No module named &#x27;onnxscript&#x27; albo GuardOnDataDependentSymNode</a><a href="#odsłuch-elevenlabsfatalerror-no-api-key-w-panelu-na-maszynie" class="l3">Odsłuch: ElevenLabsFatalError: no API key w panelu na maszynie</a><a href="#piotr-is-an-imported-voice-create-a-new-voice-to-generate-clips" class="l3">&#x27;piotr&#x27; is an imported voice: create a new voice to generate clips</a><a href="#po-restarcie-make-ui-an-event-handler-run_export-didnt-receive-enough-input-values" class="l3">Po restarcie make ui: An event handler (run_export) didn&#x27;t receive enough input values</a><a href="#generowanie-stopped-http-401--quota_exceeded-invalid_api_key" class="l3">Generowanie: Stopped: HTTP 401: … (quota_exceeded, invalid_api_key)</a><a href="#wczytaj-głosy-http-401--missing_permissions" class="l3">Wczytaj głosy: HTTP 401: … missing_permissions</a><a href="#generowanie-stopped-raw-holds-clips-of-another-voice-" class="l3">Generowanie: Stopped: raw/ holds clips of another voice (…)</a><a href="#użyj-zestawu-raw-already-holds--clips-of-other-sentences" class="l3">Użyj zestawu: raw/ already holds … clips of other sentences</a><a href="#voice-name-lowercase-letters-digits-and-_-only" class="l3">voice name: lowercase letters, digits and &#x27;_&#x27; only</a><a href="#make-ui-python311-not-found" class="l3">make ui: python3.11 not found</a><a href="#nie-widzę-zakładek-narzędzia-ani-ustawienia" class="l3">Nie widzę zakładek Narzędzia ani Ustawienia</a><a href="#co-wpisać-w-plik-metadanych-persony" class="l3">Co wpisać w „Plik metadanych persony”?</a><a href="#import-odrzucił-część-klipów" class="l3">Import odrzucił część klipów</a><a href="#panel-pokazuje-brak-karty-nvidia" class="l3">Panel pokazuje „brak karty NVIDIA”</a><a href="#ctrlc-nie-zatrzymuje-make-ui" class="l3">Ctrl+C nie zatrzymuje make ui</a><a href="#nic-się-nie-dzieje-po-kliknięciu-nie-widać-postępu" class="l3">Nic się nie dzieje po kliknięciu, nie widać postępu</a><a href="#value-kasia-is-not-in-the-list-of-choices--w-terminalu-make-ui" class="l3">Value: kasia is not in the list of choices: [] w terminalu make ui</a><a href="#trwa-jeszcze-zadanie--dawniej-inne-zadanie-jeszcze-trwa--is-still-running" class="l3">„Trwa jeszcze zadanie: …” (dawniej Inne zadanie jeszcze trwa: … is still running)</a><a href="#sprawdź-połączenie-ssh-connect-to-host--port-22-network-is-unreachable-albo-operation-timed-out" class="l3">Sprawdź połączenie: ssh: connect to host … port 22: Network is unreachable albo Operation timed out</a><a href="#trening-staje-po-pierwszej-epoce-modelcheckpointmonitorval_mos-could-not-find-the-monitored-key" class="l3">Trening staje po pierwszej epoce: ModelCheckpoint(monitor=&#x27;val_mos&#x27;) could not find the monitored key</a><a href="#odsłuch-albo-generowanie-typeerror-nonetype-object-is-not-callable-perthperthimplicitwatermarker" class="l3">Odsłuch albo generowanie: TypeError: &#x27;NoneType&#x27; object is not callable (perth.PerthImplicitWatermarker())</a><a href="#filtr-odrzuca-prawie-wszystko-jako-too_fast_or_cut-w-logu-forcing-eos-token--token_repetitiontrue" class="l3">Filtr odrzuca prawie wszystko jako too_fast_or_cut, w logu forcing EOS token, … token_repetition=True</a><a href="#ponowny-trening-po-zakończonym-you-restored-a-checkpoint-with-current_epoch1273-but-you-have-set-trainermax_epochs800" class="l3">Ponowny trening po zakończonym: You restored a checkpoint with current_epoch=1273, but you have set Trainer(max_epochs=800)</a><a href="#trening-przerwany-po-wielu-epokach-torchoutofmemoryerror-cuda-out-of-memory" class="l3">Trening przerwany po wielu epokach: torch.OutOfMemoryError: CUDA out of memory</a><a href="#sprawdź-połączenie-permission-denied-publickey-albo-host-key-verification-failed" class="l3">Sprawdź połączenie: Permission denied (publickey) albo Host key verification failed</a><a href="#sprawdź-połączenie-ffmpeg-missing-albo-inne-narzędzie" class="l3">Sprawdź połączenie: ffmpeg: MISSING (albo inne narzędzie)</a><a href="#instalacja-modulenotfounderror-no-module-named-cython-localbincythonize" class="l3">Instalacja: ModuleNotFoundError: No module named &#x27;Cython&#x27; (~/.local/bin/cythonize)</a><a href="#instalacja-no-module-named-skbuild-albo-cannot-import-name-espeakbridge" class="l3">Instalacja: No module named &#x27;skbuild&#x27; albo cannot import name &#x27;espeakbridge&#x27;</a><a href="#czerwony-status-serwer-instalacja-nie-powiodło-się-kod-1" class="l3">Czerwony status „Serwer: instalacja nie powiodło się (kod 1)”</a><a href="#zgubiłem-login-do-panelu-na-serwerze" class="l3">Zgubiłem login do panelu na serwerze</a><a href="#maszyna-brak-odczytu-z-ha" class="l3">„Maszyna: brak odczytu z HA”</a><a href="#maszyna-token-ha-odrzucony" class="l3">„Maszyna: token HA odrzucony”</a><a href="#home-assistant-401-the-token-is-wrong-or-expired--home-assistant-403-the-token-belongs-to-a-user-who-is-not-an-administrator" class="l3">Home Assistant 401: the token is wrong or expired / Home Assistant 403: the token belongs to a user who is not an administrator</a><a href="#this-does-not-look-like-a-home-assistant-long-lived-token--home-assistant-address-eg-httphomeassistantlocal8123" class="l3">this does not look like a Home Assistant long-lived token / Home Assistant address: e.g. http://homeassistant.local:8123</a><a href="#a-job-is-running-on-the-machine----stop-it-first-or-wait-until-it-ends" class="l3">a job is running on the machine: … - stop it first or wait until it ends</a><a href="#panel-długo-się-ładuje-albo-długo-pokazuje-sprawdzam-maszynę" class="l3">Panel długo się ładuje albo długo pokazuje „Sprawdzam maszynę…”</a><a href="#prywatność-i-prawo" class="l2">Prywatność i prawo</a></nav>
+<main><article>
+<h1>Piper Voice Cloner – instrukcja</h1>
+<p><a href="../en/guide.md">English</a> · <a href="instrukcja.html">HTML</a></p>
+<p>Z krótkiego nagrania (10–60 s) powstaje własny, szybki głos Piper. Przykład: postać z bajki do
+pokoju dziecka w Home Assistant.</p>
+<ul>
+<li><a href="#o-co-chodzi">O co chodzi</a></li>
+<li><a href="#instalacja">Instalacja</a></li>
+<li><a href="#interfejs-w-przegl%C4%85darce">Interfejs w przeglądarce</a></li>
+<li><a href="#gdzie-s%C4%85-dane">Gdzie są dane</a></li>
+<li><a href="#1-nagranie-referencyjne">1. Nagranie referencyjne</a></li>
+<li><a href="#2-zdania">2. Zdania</a></li>
+<li><a href="#3-ods%C5%82uch-ustawie%C5%84">3. Odsłuch ustawień</a></li>
+<li><a href="#4-generowanie-i-filtr">4. Generowanie i filtr</a></li>
+<li><a href="#5-trening">5. Trening</a></li>
+<li><a href="#jak-d%C5%82ugo-trenowa%C4%87-i-na-co-patrze%C4%87">Jak długo trenować i na co patrzeć</a></li>
+<li><a href="#6-eksport-i-u%C5%BCycie">6. Eksport i użycie</a></li>
+<li><a href="#nowy-g%C5%82os-z-kr%C3%B3tkiego-nagrania">Nowy głos z krótkiego nagrania</a></li>
+<li><a href="#przetrenowanie-istniej%C4%85cych-g%C5%82os%C3%B3w">Przetrenowanie istniejących głosów</a></li>
+<li><a href="#dodanie-j%C4%99zyka">Dodanie języka</a></li>
+<li><a href="#faq-i-rozwi%C4%85zywanie-problem%C3%B3w">FAQ i rozwiązywanie problemów</a></li>
+<li><a href="#prywatno%C5%9B%C4%87-i-prawo">Prywatność i prawo</a></li>
+</ul>
+<h2 id="o-co-chodzi">O co chodzi</h2>
+<p>Piper działa szybko nawet na Raspberry Pi czy Jetsonie, ale mówi tylko głosami wytrenowanymi
+specjalnie dla niego. Modele klonujące (Chatterbox, XTTS) naśladują głos z kilku sekund nagrania,
+ale są za wolne dla asystenta głosowego. Narzędzie łączy jedno z drugim:</p>
+<table>
+<thead>
+<tr>
+<th>Nagranie</th>
+<th>Klonowanie</th>
+<th>Filtr</th>
+<th>Trening</th>
+<th>Eksport</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10–60 s czystej mowy</td>
+<td>~2600 klipów (Chatterbox)</td>
+<td>~2000 klipów (Whisper, barwa, MOS)</td>
+<td>głos medium (piper1-gpl)</td>
+<td><code>.onnx</code> + <code>.json</code> do Home Assistant</td>
+</tr>
+</tbody>
+</table>
+<p>Cały przebieg to kilka komend:</p>
+<pre><code class="language-bash">pvc init kuba_bajka --piper-name pl_PL-kuba_bajka
+pvc reference kuba_bajka nagrania/*.m4a
+pvc corpus kuba_bajka --source moje_zdania.txt
+pvc audition kuba_bajka --apply-best
+pvc synthesize kuba_bajka
+pvc filter kuba_bajka
+pvc train kuba_bajka --base lessac
+pvc export kuba_bajka
+</code></pre>
+<h2 id="instalacja">Instalacja</h2>
+<p>Potrzebne są:</p>
+<ul>
+<li>Ubuntu 24.04 z kartą NVIDIA GeForce RTX 4090 (24 GB). Skrypty są przygotowane tylko pod tę kartę;
+inne karty i maszyny nie są wspierane (można próbować, ale wsparcie trzeba zapewnić samemu).</li>
+<li><code>ffmpeg</code>, <code>espeak-ng</code>, <code>build-essential cmake ninja-build</code> oraz <a href="https://docs.astral.sh/uv/">uv</a>.</li>
+</ul>
+<pre><code class="language-bash">git clone https://github.com/witold-gren/piper-voice-cloner.git
+cd piper-voice-cloner
+./scripts/setup.sh                         # .venv (klonowanie + kontrola) i .venv-train (piper1-gpl)
+export PVC_HOME=$HOME/home-assistant/voices-private # prywatne dane POZA repozytorium
+export PVC_TRAIN_PYTHON=$PWD/.venv-train/bin/python
+source .venv/bin/activate
+</code></pre>
+<p>Skrypt tworzy dwa osobne środowiska, bo Chatterbox i trening Pipera wymagają różnych wersji
+PyTorcha. Z <code>XTTS_ENV=1 ./scripts/setup.sh</code> powstaje też trzecie, dla XTTS-v2.</p>
+<h3 id="komputer-z-gpu-przez-ssh-praca-z-maca-lub-laptopa">Komputer z GPU przez SSH (praca z Maca lub laptopa)</h3>
+<p>Dane możesz przygotować na zwykłym komputerze (import, zdania), a kod, dane i instalację wysłać
+na maszynę z kartą jednym kliknięciem: <strong>⚒ Narzędzia → Serwer z GPU (SSH)</strong>. To samo z terminala:</p>
+<pre><code class="language-bash">make remote-configure HOST=ubuntu.local SSH_USER=ja   # zapisuje server.json w folderze danych
+make remote-status     # lista kontrolna: co maszyna ma, a co zostało do zrobienia
+make remote-prepare    # zrób wszystko, co się da: pakiety, uv, kod i dane, środowiska, usługa
+make remote-push       # rsync: kod -&gt; ~/piper-voice-cloner/repo, dane -&gt; ~/piper-voice-cloner/data
+make remote-install    # setup.sh + usługa panelu; potem http://ubuntu.local:7860
+make remote-pull       # gotowe voices/*/export/ z powrotem tutaj
+</code></pre>
+<ul>
+<li>Logowanie musi działać bez hasła (klucz SSH, <code>ssh-copy-id</code>). Hasła nie są nigdzie zapisywane.</li>
+<li><strong>Przygotuj maszynę</strong> najpierw sprawdza maszynę, a potem robi po kolei to, czego brakuje:
+pakiety systemowe (tylko gdy <code>sudo</code> na maszynie nie pyta o hasło), <code>uv</code>, wysyłkę kodu i danych,
+środowiska (<code>setup.sh</code>) i usługę panelu. Na końcu sprawdza maszynę jeszcze raz.</li>
+<li>Lista <strong>Maszyna</strong> pod przyciskami pokazuje stan: ✓ gotowe, → zrobi Przygotuj, ✋ musisz zrobić sam
+(np. <code>ssh -t … sudo apt install -y ffmpeg</code> w terminalu na Macu, bo wymaga hasła sudo; albo
+sterownik NVIDIA i restart), ! ostrzeżenie (mało miejsca, torch nie widzi karty). Tam jest też
+login do panelu na maszynie (<strong>pokaż</strong>).</li>
+<li>Gdy na maszynie trwa trening, Przygotuj wyśle kod i dane, ale nie przeinstaluje środowisk (zmieniłoby
+je pod działającym treningiem).</li>
+<li>Wysyłka przesyła tylko zmiany i niczego na serwerze nie usuwa: checkpointy, eksporty i bazy zostają.</li>
+<li>Trening uruchamiasz potem w panelu na serwerze; Mac może być wyłączony.</li>
+</ul>
+<h3 id="zasilanie-maszyny-przez-home-assistant">Zasilanie maszyny przez Home Assistant</h3>
+<p>Maszyna z GPU nie musi być włączona cały czas. Jeśli stoi na inteligentnym gniazdku w Home
+Assistant, panel może ją włączać i bezpiecznie wyłączać przyciskiem na górnym pasku (tak samo jak
+panel treningu słów wybudzających, home-assistant-wakeword).</p>
+<ol>
+<li><strong>W Home Assistant</strong> potrzebny jest przełącznik maszyny, który sam robi całą pracę:
+włączenie = włączenie gniazdka (BIOS uruchamia komputer po powrocie zasilania; maszyna jest na
+Wi-Fi, więc Wake-on-LAN nie działa), wyłączenie = <code>sudo poweroff</code> przez SSH, czekanie aż
+gniazdko pokaże mniej niż 5 W (do 5 minut) i dopiero wtedy odcięcie gniazdka. Gotowy przykład:
+<a href="../home-assistant/maszyna_gpu.yaml"><code>docs/home-assistant/maszyna_gpu.yaml</code></a> (pakiet z
+<code>switch.maszyna_gpu</code> i skryptem; <code>shell_command.turn_off_ubuntu</code> i nazwy encji dopasuj do
+siebie). Nie wybieraj samego gniazdka: wyłączenie odcięłoby prąd działającemu systemowi.</li>
+<li><strong>W panelu</strong>: <strong>⚒ Narzędzia → Home Assistant</strong> – adres (np. <code>http://homeassistant.local:8123</code>)
+i token długoterminowy <strong>administratora</strong> (Home Assistant → Twój profil → Bezpieczeństwo →
+Tokeny długoterminowe → Utwórz) → <strong>Zapisz połączenie</strong>. Panel od razu pyta Home Assistant i
+mówi, czy odpowiada.</li>
+<li>Niżej, w <strong>Zasilanie maszyny z GPU</strong>: <strong>↻ Podpowiedzi z HA</strong> wypełnia listy; wybierz
+przełącznik maszyny (<code>switch.maszyna_gpu</code>) i pomiar mocy gniazdka w W
+(np. <code>sensor.pokoj_kuby_komputer_moc_czynna</code>), próg wyłączenia zostaw 5 W → <strong>Zapisz
+zasilanie</strong>. Identyfikator encji można też wpisać ręcznie.</li>
+</ol>
+<p>Na górnym pasku pojawia się przycisk ze stanem maszyny:</p>
+<table>
+<thead>
+<tr>
+<th>Stan</th>
+<th>Znaczy</th>
+<th>Kliknięcie</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Maszyna: wyłączona</td>
+<td>przełącznik wyłączony, gniazdko poniżej progu</td>
+<td>pyta i włącza</td>
+</tr>
+<tr>
+<td>Maszyna: uruchamia się</td>
+<td>przełącznik włączony, port SSH jeszcze nie odpowiada</td>
+<td>pyta i wyłącza</td>
+</tr>
+<tr>
+<td>Maszyna: włączona · 212 W</td>
+<td>przełącznik włączony, SSH odpowiada; obok moc z gniazdka</td>
+<td>pyta i wyłącza</td>
+</tr>
+<tr>
+<td>Maszyna: wyłącza się</td>
+<td>przełącznik wyłączony, a gniazdko wciąż pobiera więcej niż próg</td>
+<td>nic (czekaj)</td>
+</tr>
+<tr>
+<td>Maszyna: sprawdzam…</td>
+<td>panel jeszcze nie dostał pierwszej odpowiedzi</td>
+<td>nic</td>
+</tr>
+<tr>
+<td>Maszyna: brak odczytu z HA</td>
+<td>Home Assistant nie odpowiada albo odmawia; przyczyna w podpowiedzi po najechaniu</td>
+<td>nic</td>
+</tr>
+<tr>
+<td>Maszyna: token HA odrzucony</td>
+<td>Home Assistant odrzucił token (401); panel przestał pytać HA, aż zapiszesz połączenie</td>
+<td><strong>Zapisz połączenie</strong> w ⚒ Narzędzia</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Każde kliknięcie najpierw pyta o potwierdzenie.</li>
+<li><strong>Wyłączenie jest odrzucane, gdy na maszynie trwa zadanie</strong> (trening, generowanie, filtr…):
+panel sprawdza to tuż przed, przez SSH (<code>&lt;folder&gt;/data/jobs/current.json</code> na maszynie). Zatrzymaj
+zadanie albo poczekaj, aż się skończy.</li>
+<li>Adres i token są tylko na tym komputerze, w <code>~/.config/piper-voice-cloner/home_assistant.json</code>
+(prawa 600), nie w folderze danych (ten jest kopiowany na maszynę i do kopii zapasowych). Token
+nigdy nie wraca na stronę; puste pole tokenu przy zapisie zostawia zapisany. Zmienne
+<code>PVC_HA_URL</code> i <code>PVC_HA_TOKEN</code> mają pierwszeństwo przed plikiem. W tym samym pliku, pod kluczem
+<code>&quot;power&quot;</code>, są ustawienia zasilania.</li>
+<li>Panel nie czeka na maszynę ani na Home Assistant: strona ładuje się od razu, a stan pojawia
+się po chwili (pytanie idzie w tle co ~10 s; wyłączona maszyna = 1,5 s próby połączenia z
+portem SSH zamiast 10 s czekania na SSH).</li>
+</ul>
+<h2 id="interfejs-w-przeglądarce">Interfejs w przeglądarce</h2>
+<p>Każdy krok tej instrukcji jest dostępny także bez komend, w przeglądarce:</p>
+<pre><code class="language-bash">pvc ui --lang pl              # http://&lt;komputer&gt;:7860
+./scripts/install-service.sh  # na stałe: usługa systemd użytkownika, startuje z systemem
+</code></pre>
+<ul>
+<li><strong>Języki</strong>: polski pod <code>/pl/</code>, angielski pod <code>/en/</code>; przełącznik EN | PL w górnym pasku
+zapamiętuje wybór. <code>--lang</code> ustawia tylko język przy pierwszej wizycie.</li>
+<li><strong>Panel na żywo</strong>: bieżący etap, czas trwania i karta graficzna (obciążenie, pamięć, temperatura,
+moc), w tym samym układzie co panel treningu wake word.</li>
+<li><strong>Pasek kroków</strong> u góry: kroki 1–7 oraz Ustawienia (<code>voice.yaml</code>) i Narzędzia (import, własna
+baza). Pokazuje postęp (✓ = zrobione, numer w obwódce = następny krok) i służy do nawigacji:
+kliknij krok, żeby go otworzyć. Każdy krok ma opis i znak „?”, który wyjaśnia, co robi.</li>
+<li><strong>Maszyna z GPU na górnym pasku</strong>: przycisk zasilania (gdy jest ustawione połączenie z Home
+Assistant, patrz <a href="#zasilanie-maszyny-przez-home-assistant">Zasilanie maszyny przez Home Assistant</a>)
+i status. Gdy jest zapisany serwer z GPU, status pokazuje też zadanie trwające na maszynie
+(„Na maszynie trwa Trening (kuba)…”), a zaraz po otwarciu strony „Sprawdzam maszynę…”.</li>
+<li><strong>Zadania w tle</strong>: generowanie, filtr, trening, eksport i import działają w tle. Na górze strony
+widać ich log na żywo i przycisk „Zatrzymaj zadanie” (działa jak Ctrl+C). Naraz działa jedno
+zadanie, bo karta graficzna jest jedna. Zamknięcie przeglądarki ani restart usługi nie
+przerywają zadania.</li>
+<li><strong>Dostęp zdalny</strong>: usługa nasłuchuje w sieci domowej (<code>0.0.0.0:7860</code>). Login i hasło są w
+<code>~/.config/piper-voice-cloner/env</code> (<code>PVC_UI_AUTH</code>); skrypt generuje je przy pierwszej
+instalacji. Spoza domu łącz się przez VPN, np. WireGuard. Nie wystawiaj portu do internetu.</li>
+<li><strong>Obsługa usługi</strong>: logi przez <code>journalctl --user -u piper-voice-cloner -f</code>, restart przez
+<code>systemctl --user restart piper-voice-cloner</code>, usunięcie przez
+<code>./scripts/install-service.sh --remove</code>.</li>
+</ul>
+<h2 id="gdzie-są-dane">Gdzie są dane</h2>
+<p>Wszystkie prywatne dane są w <code>$PVC_HOME</code> (<code>voices/&lt;nazwa&gt;/</code>, <code>bases/</code>, <code>models/</code>). Trzymaj ten
+katalog poza repozytorium. Jeśli znajdzie się w repozytorium git, którego <code>.gitignore</code> nie
+wyklucza <code>voices/</code>, <code>pvc</code> wypisze ostrzeżenie.</p>
+<pre><code>voices/&lt;nazwa&gt;/
+  voice.yaml          ustawienia (tworzy `pvc init`)
+  reference/          oczyszczone nagrania, embedding mówcy, skalibrowany próg
+  prompts.tsv         wybrane zdania
+  audition/           porównanie ustawień (audition.html)
+  raw/                syntetyczne klipy + manifest.csv
+  dataset/            zbiór treningowy: metadata.csv + wav/ (22 050 Hz, 16 bit) + raporty
+  train/              trening Piper (lightning_logs/, config.json, run.json)
+  export/             &lt;locale&gt;-&lt;nazwa&gt;-medium.onnx + .onnx.json
+</code></pre>
+<h3 id="zmiana-nazwy-głosu">Zmiana nazwy głosu</h3>
+<p><strong>⚙ Ustawienia</strong> pozwalają zmienić nazwę głosu i nazwę pliku Piper. Nazwa głosu to nazwa folderu, więc
+panel przenosi cały folder z klipami i ustawieniami. Nie zadziała to, gdy na tym głosie trwa zadanie.
+Maszyna z GPU zachowuje stary folder i trening pod starą nazwą: po wysłaniu powstaje tam nowy folder
+bez wyników treningu. Zmieniaj więc nazwę przed treningiem albo w panelu na maszynie. Wyeksportowane
+pliki zachowują nazwy do następnego eksportu.</p>
+<h2 id="1-nagranie-referencyjne">1. Nagranie referencyjne</h2>
+<ul>
+<li>Wystarczy 10–60 sekund <strong>czystej</strong> mowy: bez muzyki, telewizora w tle i innych głosów.</li>
+<li>Blisko mikrofonu, w cichym pokoju, normalnym głosem. Notatka głosowa z telefonu wystarczy.</li>
+<li>Naturalna, zróżnicowana mowa jest lepsza niż czytanie listy. Dziecko niech opowie krótką
+historię albo odpowie na kilka pytań.</li>
+<li>Postać z bajki: wytnij fragmenty, w których mówi sama, bez muzyki i efektów. Muzyka w
+referencji przechodzi do każdego wygenerowanego klipu.</li>
+</ul>
+<pre><code class="language-bash">pvc init kuba_bajka --piper-name pl_PL-kuba_bajka
+pvc reference kuba_bajka nagranie1.m4a nagranie2.wav
+</code></pre>
+<p><code>pvc reference</code> przycina nagrania, wyrównuje głośność i tnie je na fragmenty 3–12 s. Liczy też
+embedding mówcy i zapisuje w <code>voice.yaml</code> <strong>skalibrowany próg podobieństwa</strong>
+(<code>quality.min_similarity</code>). Próg wynika z tego, jak bardzo różni się sama referencja. Głosy
+dziecięce mają naturalnie niższe wyniki i kalibracja to uwzględnia.</p>
+<h2 id="2-zdania">2. Zdania</h2>
+<pre><code class="language-bash">pvc corpus kuba_bajka --source ksiazki.txt --source kwestie_postaci.txt
+</code></pre>
+<ul>
+<li>Źródła to pliki tekstowe z jednym zdaniem w linii albo TSV <code>id&lt;TAB&gt;tekst</code>.</li>
+<li>Pakiet językowy dokłada własne zdania: dla polskiego proste kwestie dla dzieci.</li>
+<li>Każde zdanie przechodzi przez reguły zwykłego tekstu. Linie z cyframi, godzinami, datami,
+numeracją list, symbolami, adresami albo skrótami są <strong>odrzucane, a nie przerabiane</strong>. Głos ma
+się uczyć tylko zwykłych słów; liczby poprawnie czyta normalizacja tekstu w czasie działania.
+Rozpisywanie ich w tekście treningowym daje niespójną wymowę.</li>
+<li>3–20 słów w zdaniu, bez duplikatów.</li>
+<li>Wybór równomiernie pokrywa fonemy i difony. Domyślnie bierze <code>target_clips × overgenerate</code>
+(2000 × 1,3 = 2600) zdań.</li>
+<li>Co odrzucono i dlaczego, widać w <code>corpus_report.csv</code>.</li>
+</ul>
+<h2 id="3-odsłuch-ustawień">3. Odsłuch ustawień</h2>
+<pre><code class="language-bash">pvc audition kuba_bajka --apply-best
+</code></pre>
+<ul>
+<li>Generuje 12 zdań dla każdej kombinacji ustawień backendu. Dla Chatterboxa siatka to
+<code>cfg_weight</code> 0 / 0,3 / 0,5 × <code>exaggeration</code> 0,5 / 0,7.</li>
+<li>Zapisuje <code>audition/audition.html</code>: odsłuchaj każdą kombinację i porównaj CER, podobieństwo i
+MOS.</li>
+<li><code>--apply-best</code> zapisuje w <code>voice.yaml</code> ustawienia z najlepszym wynikiem. Ucho jest ważniejsze
+niż wynik.</li>
+<li><code>cfg_weight</code> 0 zmniejsza akcent przeniesiony z referencji, co pomaga, gdy referencja jest w
+innym języku.</li>
+<li>Jeśli żadna kombinacja nie brzmi jak oryginał, popraw referencję (czystsza, dłuższa, bardziej
+zróżnicowana), zanim wygenerujesz 2600 klipów. Głosy małych dzieci to najtrudniejszy przypadek
+dla każdego modelu klonującego.</li>
+</ul>
+<h2 id="4-generowanie-i-filtr">4. Generowanie i filtr</h2>
+<pre><code class="language-bash">pvc synthesize kuba_bajka            # można wznawiać; referencje i seedy rotują co zdanie
+pvc filter kuba_bajka                # Whisper large-v3 + CAM++ + UTMOS
+</code></pre>
+<p>Klip jest odrzucany, gdy:</p>
+<table>
+<thead>
+<tr>
+<th>powód</th>
+<th>reguła (<code>quality</code> w voice.yaml)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>too_fast_or_cut</code> / <code>too_slow_or_hallucinated</code></td>
+<td>sekundy na literę poza 0,035–0,16</td>
+</tr>
+<tr>
+<td><code>asr_mismatch</code></td>
+<td>CER Whispera powyżej <code>max_cer</code> (0,04)</td>
+</tr>
+<tr>
+<td><code>speaker_mismatch</code></td>
+<td>podobieństwo poniżej <code>min_similarity</code> (skalibrowane)</td>
+</tr>
+<tr>
+<td><code>low_mos</code></td>
+<td>w najgorszych <code>mos_drop_fraction</code> (10%) według UTMOS</td>
+</tr>
+<tr>
+<td><code>surplus</code></td>
+<td>przeszło więcej niż <code>target_clips</code>; zostają najbardziej podobne</td>
+</tr>
+</tbody>
+</table>
+<p><code>dataset/filter_report.csv</code> pokazuje każdy klip z wynikami. Jeśli przeszło za mało klipów,
+wygeneruj więcej: zwiększ <code>overgenerate</code> i uruchom ponownie <code>pvc corpus</code> i <code>pvc synthesize</code>. Już
+wygenerowane klipy zostaną użyte ponownie.</p>
+<h2 id="głos-z-elevenlabs-bez-nagrania-i-karty-graficznej">Głos z ElevenLabs (bez nagrania i karty graficznej)</h2>
+<p>Gdy głos masz już na koncie ElevenLabs, nie trzeba go klonować lokalnie. ElevenLabs czyta zdania w
+swojej chmurze, a klipy trafiają do <code>raw/</code> na komputerze, na którym działa panel. Do tego kroku
+wystarczy Mac: karta potrzebna jest dopiero do treningu.</p>
+<ol>
+<li><strong>⚙ Ustawienia:</strong> zapisz klucz API raz, dla wszystkich głosów (plik
+<code>~/.config/piper-voice-cloner/elevenlabs.json</code>, poza folderem danych, nie trafia na maszynę z GPU
+ani do kopii). Klucz potrzebuje dostępu do głosów i tekstu na mowę. Uprawnienie <code>user_read</code> jest opcjonalne: pokazuje kredyty.</li>
+<li><strong>Nowy głos:</strong> podaj nazwę. Model klonujący wybierasz w Generowaniu, a start treningu w Treningu.</li>
+<li><strong>Krok 4. Generowanie:</strong> ustaw <strong>Model klonujący</strong> na <code>elevenlabs</code>, kliknij <strong>Wczytaj głosy</strong> i
+wybierz głos: Twoje głosy są na początku listy, którą można filtrować pisaniem. Panel pokaże kredyty, jeśli klucz ma <code>user_read</code>. Nie używaj głosu, który ma już klipy z Chatterboxa:
+generowanie odmówi mieszania dwóch źródeł.</li>
+<li>Wybierz <strong>Zestaw zdań</strong>, np. <code>marek (1496)</code>, i kliknij <strong>Użyj zestawu</strong>. <code>marek</code>, <code>ewa</code> i
+<code>basia</code> mają te same zdania, więc każdy nowy głos czyta ten sam zestaw i ma te same
+identyfikatory klipów.</li>
+<li>Zrób próbę: wpisz 20 zdań i odsłuchaj klipy w <code>raw/</code>. Potem ustaw 0 i wygeneruj resztę. Już
+zrobione klipy nie są generowane ani liczone ponownie.</li>
+</ol>
+<p>To samo z terminala:</p>
+<pre><code class="language-bash">pvc init alicja --backend elevenlabs --base bazowy-pl
+pvc elevenlabs voices                 # głosy z konta i pozostałe kredyty
+pvc elevenlabs pick alicja &lt;voice_id&gt;
+pvc sentences alicja marek           # zdania głosu marek
+pvc synthesize alicja --limit 20     # próba
+pvc synthesize alicja                # reszta
+</code></pre>
+<p>Koszt zestawu <code>marek</code> to około 78 000 znaków. Model <code>eleven_multilingual_v2</code> liczy około 1 kredytu
+za znak; aktualny cennik sprawdź na koncie ElevenLabs.</p>
+<p>Użycie zestawu ustawia <code>target_clips</code> na liczbę zdań, <code>overgenerate</code> na 1 i <code>mos_drop_fraction</code> na
+0: filtr odrzuca tylko klipy, które nie przeszły kontroli, a nie najsłabsze 10%. Nie ma nagrania,
+więc filtr pomija podobieństwo głosu i wypisuje <code>skipped check: similarity</code>.</p>
+<p>Przy przeciążeniu albo zerwanym połączeniu każde zdanie jest ponawiane 5 razy. Błędny klucz, brak
+kredytów i nieznany głos zatrzymują całe zadanie; gotowe klipy zostają.</p>
+<h2 id="5-trening">5. Trening</h2>
+<p>Punkt startowy wybierasz w <code>voice.yaml</code> (<code>train.base</code>) albo przez <code>--base</code>:</p>
+<table>
+<thead>
+<tr>
+<th>baza</th>
+<th>co to jest</th>
+<th>kiedy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bazowy-pl</code></td>
+<td>własna baza, trenowana od losowych wag</td>
+<td>głos bez żadnej wiedzy z angielskiego</td>
+</tr>
+<tr>
+<td><code>lessac</code></td>
+<td>angielski <code>en_US-lessac-medium</code> (pobierany raz, ~850 MB)</td>
+<td>najszybszy dobry wynik</td>
+</tr>
+<tr>
+<td><code>ckpt:&lt;ścieżka&gt;</code></td>
+<td>dowolny checkpoint Piper <strong>medium</strong></td>
+<td>np. kontynuacja wcześniejszego głosu</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-bash">pvc train kuba_bajka                 # sam wznawia od ostatniego checkpointu
+pvc train kuba_bajka --dry-run       # tylko wypisz komendę piper1-gpl
+</code></pre>
+<ul>
+<li><code>train.max_epochs</code> liczy się <strong>ponad</strong> checkpointem startowym. Lightning kontynuuje licznik
+epok z checkpointu (lessac zaczyna od epoki 2164), a <code>pvc</code> to uwzględnia.</li>
+<li>piper1-gpl sam zapisuje najlepsze checkpointy według <code>val_mel</code> i <code>val_mos</code> (UTMOS) oraz
+<code>last.ckpt</code>.</li>
+<li>Postęp śledzisz przez <code>tensorboard --logdir voices/&lt;nazwa&gt;/train/lightning_logs</code>. Ostateczny
+checkpoint wybierz na słuch; <code>val_mos</code> jest dobrą wskazówką.</li>
+</ul>
+<h3 id="własna-baza-bez-angielskiego-bazowy-pl">Własna baza bez angielskiego (<code>bazowy-pl</code>)</h3>
+<p>2000 klipów nie wystarczy do treningu od losowych wag; potrzeba około 13 000 nagrań lub więcej.
+Dlatego bazę trenuje się <strong>raz</strong> na dużym zbiorze jednego mówcy, a potem każdy głos doszkala się
+od niej.</p>
+<p>Dobry darmowy wybór dla polskiego to <strong>MC Speech</strong>: CC0, jedna lektorka, około 22 000 nagrań
+(<a href="https://www.kaggle.com/datasets/czyzi0/the-mc-speech-dataset">Kaggle</a>). Przerób go na katalog
+LJSpeech (<code>metadata.csv</code> w formacie <code>plik|tekst</code> i folder z nagraniami), a potem:</p>
+<pre><code class="language-bash">pvc base prepare /dane/mc_speech --audio-dir /dane/mc_speech/wavs   # te same reguły tekstu
+pvc base train --max-epochs 3000                                     # kilka dni na jednej karcie
+pvc base select bases/pl-scratch/train/lightning_logs/version_0/checkpoints/&lt;najlepszy&gt;.ckpt
+</code></pre>
+<p>Po <code>base select</code> ustawienie <code>train.base: bazowy-pl</code> używa tej bazy dla każdego głosu.</p>
+<h4>Ocena nagrań: sufit jakości bazy</h4>
+<p>Model uczy się brzmieć jak jego nagrania, więc ocena samych nagrań to praktyczny sufit <code>val_mos</code>.
+W panelu (Narzędzia, własna baza) kliknij <strong>Oceń nagrania</strong>. Ocena bierze losową próbkę (domyślnie
+300 nagrań, <code>0</code> = wszystkie) i liczy ją tym samym UTMOS, który liczy <code>val_mos</code>. Panel pokazuje
+medianę, granice 10% najsłabszych i najlepszych nagrań, odsetek ocen co najmniej 4,0 oraz po trzy
+najsłabsze i najlepsze nagrania do odsłuchu. Gdy kartę zajmuje trening, ocena liczy się na CPU
+(ok. 7 nagrań/s) i działa obok treningu, bez przerywania go. Wynik zostaje w
+<code>bases/pl-scratch/dataset/utmos.json</code>.</p>
+<pre><code class="language-bash">pvc base score --sample 300      # z linii poleceń; --sample 0 ocenia wszystkie nagrania
+</code></pre>
+<p>Jeśli mediana nagrań to np. 3,67, a model ma już <code>val_mos</code> 3,55, dłuższy trening tej samej bazy
+niewiele da. Wyraźnie lepszy dźwięk może dać większy model albo czystsze nagrania.</p>
+<h4>Wielkość modelu: medium czy high</h4>
+<ul>
+<li><strong>medium</strong> - standard Pipera: szybki trening (ok. 3 min na epokę przy 18 000 nagrań na RTX 4090)
+i szybkie mówienie.</li>
+<li><strong>high</strong> - dekoder (część, która z widma robi dźwięk) jest ok. 8 razy większy: 14 zamiast 1,7 mln
+parametrów, tak jak w oficjalnych głosach Piper „high”. Dźwięk jest czystszy, ale trening trwa
+ok. 2-3 razy dłużej, a mówienie na Jetsonie jest wolniejsze. Domyślny batch to 16, żeby zmieścić
+się na karcie 24 GB.</li>
+</ul>
+<p>Każda wielkość trenuje się we własnym folderze (<code>bases/pl-scratch/train</code> i
+<code>bases/pl-scratch-high/train</code>) z <strong>tych samych</strong> nagrań i z tymi samymi zdaniami testowymi, więc
+można je uczciwie porównać. Głos doszkalany od bazy dostaje jej wielkość automatycznie (odczytaną
+z checkpointu), a eksport nazywa plik <code>…-medium.onnx</code> albo <code>…-high.onnx</code>.</p>
+<pre><code class="language-bash">pvc base train --quality high --max-epochs 3000          # batch 16; --batch-size zmienia
+</code></pre>
+<p>W panelu <strong>Porównanie modeli bazowych</strong> pokazuje dla każdej wielkości średni <code>val_mos</code> i <code>val_mel</code>
+z ostatnich 10 epok do epoki, do której doszły oba modele (jedna epoka to tylko 5 zdań, więc jej
+wynik skacze), oraz najlepsze wyniki. W <strong>Odsłuchu z treningu</strong> przełącznik <strong>Model</strong> pozwala
+posłuchać tej samej epoki obu wielkości. Trening medium można w każdej chwili zatrzymać, a później
+wznowić: zacznie od najnowszego checkpointu.</p>
+<h2 id="jak-długo-trenować-i-na-co-patrzeć">Jak długo trenować i na co patrzeć</h2>
+<blockquote>
+<p><strong>Szacunki dla:</strong> RTX 4090 24 GB, Intel Core i9-14900K, 128 GB RAM DDR5. Nie są zmierzone
+narzędziem <code>pvc</code>. Opierają się na wcześniejszych głosach (około 10 h treningu na głos na tej
+karcie) i na założeniu 1,5–2 kroków na sekundę przy <code>batch_size</code> 32. Prawdziwą prędkość
+pokazuje pasek postępu Lightning (<code>it/s</code>) po kilku minutach treningu; przelicz tabelę według
+niej.</p>
+</blockquote>
+<p>Rachunek: <strong>kroki na epokę = klipy × 0,95 ÷ 32</strong>, a <strong>czas epoki = kroki ÷ (kroki na sekundę)</strong>.
+Lepiej myśleć w krokach niż w epokach: duży zbiór potrzebuje mniej epok.</p>
+<table>
+<thead>
+<tr>
+<th>Zadanie</th>
+<th>Klipy</th>
+<th>Kroki na epokę</th>
+<th>Czas epoki</th>
+<th>Ile trenować</th>
+<th>Łącznie</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nowy głos (od bazy)</td>
+<td>2 000</td>
+<td>~60</td>
+<td>30–40 s</td>
+<td>300–1000 epok (20–60 tys. kroków)</td>
+<td>3–11 h</td>
+</tr>
+<tr>
+<td>Małe istniejące głosy</td>
+<td>1 500</td>
+<td>~45</td>
+<td>25–30 s</td>
+<td>400–1000 epok</td>
+<td>3–8 h</td>
+</tr>
+<tr>
+<td>Średni głos</td>
+<td>3 800</td>
+<td>~115</td>
+<td>1–1,3 min</td>
+<td>300–600 epok</td>
+<td>5–13 h</td>
+</tr>
+<tr>
+<td>Duży głos</td>
+<td>18 400</td>
+<td>~550</td>
+<td>5–6 min</td>
+<td>100–250 epok (55–140 tys. kroków)</td>
+<td>9 h – 1 doba</td>
+</tr>
+<tr>
+<td>Baza od zera (MC Speech)</td>
+<td>~22 000</td>
+<td>~650</td>
+<td>6–7 min</td>
+<td>500–1000+ epok (300–600 tys. kroków)</td>
+<td>3–7 dni</td>
+</tr>
+</tbody>
+</table>
+<p>Uwagi do sprzętu:</p>
+<ul>
+<li><strong>Pierwsze uruchomienie</strong> najpierw przygotowuje dane do <code>train/cache/</code>: głoski, przycięcie ciszy
+i spektrogramy. Przy małych głosach trwa to kilka minut, przy dużych zbiorach i bazie kilkadziesiąt.
+Kolejne uruchomienia korzystają z gotowego cache.</li>
+<li><strong><code>train.num_workers</code></strong> to liczba procesów ładujących dane, domyślnie 8 (piper1-gpl sam ustawia
+1, przy którym GPU czeka na dane). i9-14900K ma 8 rdzeni wydajnych, więc 8–12 to rozsądny
+zakres. 128 GB RAM wystarcza z dużym zapasem.</li>
+<li><strong><code>batch_size</code></strong>: zostaw 32. 24 GB VRAM wystarcza, a większy batch przyspiesza epokę, ale
+zmienia przebieg fine-tuningu. Przy bazie od zera można spróbować 48–64, pilnując VRAM w
+<code>nvidia-smi</code>.</li>
+<li><strong>Dysk</strong>: checkpoint ma około 800 MB. piper1-gpl trzyma 5 najlepszych według <code>val_mel</code>, 5
+według <code>val_mos</code> i <code>last.ckpt</code>, czyli do około 9 GB na głos, plus cache (kilka GB przy dużych
+zbiorach).</li>
+<li><strong>Prąd i temperatura</strong>: przy pełnym obciążeniu karta pobiera do około 450 W, a baza od zera
+trwa kilka dni. Zadbaj o chłodzenie; limit mocy (<code>nvidia-smi -pl 350</code>, wymaga uprawnień
+administratora) obniża pobór kosztem kilku procent prędkości.</li>
+</ul>
+<h3 id="postęp-w-panelu">Postęp w panelu</h3>
+<p>Karta <strong>Postęp</strong> po prawej stronie pokazuje bieżące zadanie: jego nazwę, czas od startu i pasek.</p>
+<ul>
+<li><strong>Import, filtr, generowanie, przygotowanie bazy:</strong> licznik plików (np. <code>950 / 18400</code>), procent
+i <code>zostało ok. …</code>. Czas do końca wynika z dotychczasowego tempa, więc w pierwszych minutach bywa
+niedokładny.</li>
+<li><strong>Trening (głos albo baza):</strong> pasek obejmuje <strong>cały trening</strong>, a nie jedną epokę. Na przykład
+<code>Epoch 2464 · 25/50 · 300 / 1000 epok · zostało ok. 11:40:00 · 30%</code> znaczy:
+<ul>
+<li><code>Epoch 2464</code> to numer epoki z licznika Lightning. Przy starcie od lessac lub innego checkpointu
+zaczyna się od jego numeru, nie od zera.</li>
+<li><code>25/50</code> to kroki w bieżącej epoce.</li>
+<li><code>300 / 1000 epok</code> to epoki zrobione w tym treningu z zaplanowanych (<code>train.max_epochs</code> w
+<code>voice.yaml</code>, domyślnie 1000; baza <code>--max-epochs</code>, domyślnie 3000).</li>
+<li><strong><code>zostało ok. …</code></strong> to długość jednej epoki z paska Lightning razem z pozostałymi epokami.
+Pojawia się po kilku sekundach pierwszej epoki. Walidacji po epokach nie liczy, więc
+rzeczywisty koniec bywa kilka procent później.</li>
+<li><code>30%</code> to postęp całego treningu.</li>
+</ul>
+</li>
+<li>Pierwsze minuty treningu to przygotowanie <code>train/cache/</code>; pasek stoi wtedy na <code>0 / … epok</code>.</li>
+<li>Trening nie musi dochodzić do 100%. Gdy próbki w TensorBoard (niżej) brzmią dobrze, zatrzymaj go
+przyciskiem <strong>Zatrzymaj</strong> i wybierz najlepszy checkpoint. Po wznowieniu pasek liczy dalej od
+miejsca przerwania.</li>
+<li>Pod paskiem są pierścienie GPU (obciążenie, pamięć, temperatura, pobór mocy) odczytywane z
+<code>nvidia-smi</code>. Panel na Macu bez karty NVIDIA ich nie pokazuje.</li>
+</ul>
+<h3 id="na-co-patrzeć">Na co patrzeć</h3>
+<p><strong>Odsłuch w panelu.</strong> W karcie <strong>Trening</strong> (dla głosu) i w <strong>⚒ Narzędzia → Własna baza</strong> (dla bazy)
+jest blok <strong>Odsłuch z treningu</strong>: wybierasz epokę i słuchasz zdań testowych, które trener czyta po
+każdej epoce. Przy każdej epoce jest jej <strong>jakość</strong> (val_mos, UTMOS 1–5: ok. 2 surowy, ok. 3
+zrozumiały, 3,5+ dobry; model rzadko przebija własne nagrania - zob. <strong>Ocena nagrań</strong>) i najlepsza
+epoka do tej pory. Panel zachowuje próbki pierwszej epoki, co 10., 3 najnowszych, 5 z najlepszym
+<code>val_mos</code> i <strong>każdej epoki, która ma checkpoint</strong> (na liście z dopiskiem <code>💾 checkpoint</code>). Plik
+<code>epoch=1273-val_mel=0.3614.ckpt</code> w polu <strong>Checkpoint bazy</strong> to więc „epoka 1273 · 💾 checkpoint”
+w odsłuchu: każdy checkpoint da się posłuchać przed wyborem. <code>last.ckpt</code> ma przed nazwą swój bieg
+(<code>version_1/last.ckpt</code>), bo każde wznowienie ma własny; <strong>↻ Odśwież</strong> dociąga nowe próbki.</p>
+<p><strong>Odsłuch na spokojnie u siebie.</strong> <strong>⬇ Pobierz próbki (ZIP)</strong> pod odsłuchem (bazy albo głosu) pakuje
+próbki wszystkich zachowanych epok do jednego pliku, który przeglądarka zapisze na Twoim
+komputerze (przy bazie z gÅosu kasia około 85 MB). W środku jest folder na epokę z jakością w nazwie
+(<code>epoch01273-mos3.71-checkpoint/00.wav</code>, w Finderze odsłuch spacją), <code>samples.csv</code> i
+<strong><code>index.html</code></strong>: tabela z odtwarzaczami, sortowanie po <code>val_mos</code> i <code>val_mel</code> oraz filtr „only
+epochs with a checkpoint”, czyli tylko epoki, które da się wybrać. To samo z terminala:
+<code>pvc base samples --quality medium</code> albo <code>pvc samples &lt;głos&gt;</code> (plik <code>train/monitor/samples.zip</code>).</p>
+<p><strong>Wykres w panelu.</strong> Pod <strong>Logiem</strong> (prawa kolumna) jest wykres bieżącego treningu: górny pokazuje
+jakość <code>val_mos</code>, dolny błąd <code>val_mel</code> i <code>train_mel</code>, ze wspólną osią epok. Najedź, aby zobaczyć
+wartości; kliknij, aby otworzyć go na całym ekranie. Tam przeciągnięcie po wykresie powiększa ten
+zakres epok (albo wpisz <strong>Od epoki / do</strong>), kliknięcie wybiera epokę i pokazuje jej wartości, a po
+prawej jest opis trzech wartości i najlepsze epoki. Wykres pokazuje trening, który właśnie trwa
+(albo ostatni), w przeciwnym razie wybrany głos lub bazę; odświeża się co 20 s.</p>
+<ul>
+<li><strong>val_mos</strong> - przewidywana naturalność (UTMOS, 1–5) na zdaniach testowych: <strong>im wyżej, tym lepiej</strong>.</li>
+<li><strong>val_mel</strong> - błąd brzmienia na zdaniach, których model nie widział: <strong>im niżej, tym lepiej</strong>.</li>
+<li><strong>train_mel</strong> - ten sam błąd na zdaniach treningowych (średnia z epoki); spada powoli cały czas.</li>
+<li><strong>Najlepszy model:</strong> <code>val_mos</code> nie rośnie od ok. 150–200 epok, <code>val_mel</code> nie rośnie, próbki brzmią
+dobrze - weź checkpoint z najwyższym <code>val_mos</code> z tego okresu.</li>
+<li><strong>Przetrenowanie:</strong> <code>train_mel</code> dalej spada, a <code>val_mel</code> rośnie - weź checkpoint sprzed wzrostu.</li>
+</ul>
+<p><strong>Wykresy w TensorBoard.</strong> Na maszynie działa usługa TensorBoard (instaluje ją <strong>Przygotuj maszynę</strong>,
+port 6006, ustawienie <code>PVC_TB_PORT</code> w <code>~/.config/piper-voice-cloner/env</code>). Link <strong>Wykresy w
+TensorBoard ↗</strong> jest obok odsłuchu. TensorBoard nie ma logowania - jest dostępny tylko w sieci
+lokalnej (z zewnątrz przez VPN). Ręcznie:</p>
+<pre><code class="language-bash">tensorboard --logdir voices/kuba_bajka/train/lightning_logs --bind_all   # http://&lt;komputer&gt;:6006
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Wskaźnik</th>
+<th>Co znaczy</th>
+<th>Czego się spodziewać</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>zakładka <strong>AUDIO</strong></td>
+<td>próbki zdań testowych po każdej epoce</td>
+<td><strong>najważniejsze</strong>: słuchaj, jak głos się zmienia</td>
+</tr>
+<tr>
+<td><code>val_mos</code></td>
+<td>przewidywana naturalność (UTMOS, skala 1–5)</td>
+<td>rośnie i się stabilizuje; górną granicą jest MOS Twoich klipów treningowych (kolumna <code>mos</code> w <code>filter_report.csv</code>)</td>
+</tr>
+<tr>
+<td><code>val_mel</code></td>
+<td>błąd odtworzenia spektrogramu na zbiorze walidacyjnym</td>
+<td>szybko spada i się wypłaszcza; wypłaszczenie <strong>nie</strong> oznacza końca, bo jakość dźwięku rośnie dalej</td>
+</tr>
+<tr>
+<td><code>loss_g</code>, <code>loss_d</code></td>
+<td>generator i dyskryminator (trening GAN)</td>
+<td>wahają się i to normalne; źle, gdy <code>loss_d</code> spada w okolice zera, a <code>loss_g</code> gwałtownie rośnie</td>
+</tr>
+</tbody>
+</table>
+<p>Co słychać w próbkach:</p>
+<ul>
+<li><strong>Na początku fine-tuningu</strong> słychać barwę bazy. Przy 2000 klipów głos zwykle przechodzi w nowy
+po 50–100 epokach.</li>
+<li><strong>Metaliczny, szumiący, „syczący” dźwięk</strong>: za wcześnie, trenuj dalej.</li>
+<li><strong>Połykanie lub powtarzanie słów, zła wymowa konkretnych głosek</strong>: to zwykle problem danych, nie
+czasu. Sprawdź <code>filter_report.csv</code>, zaostrz <code>max_cer</code> i przefiltruj ponownie.</li>
+<li><strong><code>val_mel</code> zaczyna rosnąć, a próbki brzmią płasko albo gorzej</strong>: przeuczenie. Wybierz
+wcześniejszy checkpoint.</li>
+</ul>
+<p>Kiedy przerwać:</p>
+<ul>
+<li><code>val_mos</code> nie rośnie od około 100 epok przy małych głosach albo około 30 epok przy dużych
+zbiorach i bazie, <strong>i</strong> próbki brzmią dobrze.</li>
+<li>Trening można przerwać w każdej chwili (Ctrl+C). <code>pvc train</code> wznawia od najnowszego
+checkpointu (<code>last.ckpt</code> albo nowszego „najlepszego”), więc powtarza najwyżej kilka epok.</li>
+</ul>
+<p>Wybór checkpointu:</p>
+<ol>
+<li>Weź plik z najlepszym <code>val_mos</code> (<code>epoch=…-val_mos=….ckpt</code> w <code>train/lightning_logs/version_*/checkpoints/</code>).</li>
+<li>Porównaj go na słuch z <code>last.ckpt</code>.</li>
+<li>Wyeksportuj wybrany: <code>pvc export kuba_bajka --checkpoint &lt;plik&gt;</code>.</li>
+<li>Posłuchaj kilkunastu zdań spoza zbioru treningowego, także z liczbami i datami (czyta je
+normalizacja <code>pl_tts</code>).</li>
+</ol>
+<h3 id="kolejka-treningów">Kolejka treningów</h3>
+<p>W panelu na maszynie, w kroku <strong>Trening</strong>, ustaw <strong>Start treningu</strong> i liczbę epok. W polu <strong>Kolejka
+treningów</strong> wybierz głosy w kolejności, w jakiej mają się trenować, i kliknij <strong>Uruchom kolejkę</strong>.
+Wybrana kolejność jest widoczna w karcie <strong>Etap</strong>, która pokazuje też stan każdego głosu. Każdy głos dostaje te same ustawienia. Błąd jednego głosu nie zatrzymuje następnych, a <strong>Zatrzymaj
+zadanie</strong> kończy całą kolejkę. Zaznaczone wyłączenie maszyny działa po ostatnim głosie. Filtr jest
+potrzebny tylko dla głosów z wygenerowanymi klipami: zaimportowane mają gotowy <code>dataset/</code>.</p>
+<p>Z terminala:</p>
+<pre><code class="language-bash">pvc train-queue alicja_nowa tomek marek --epochs 500 --base bazowy-pl
+</code></pre>
+<h3 id="jak-czytać-postęp-treningu">Jak czytać postęp treningu</h3>
+<p>Przykład: <code>557 / 1000 epok · epoka modelu 1670 · krok 17/112</code>.</p>
+<ul>
+<li><code>557 / 1000 epok</code>: ile epok głos ma od bazy i jaki jest limit z pola epok.</li>
+<li><code>epoka modelu 1670</code>: licznik łącznie z epokami bazy. Tego numeru używają checkpointy i <strong>Odsłuch</strong>.</li>
+<li><code>krok 17/112</code>: miejsce w bieżącej epoce.</li>
+</ul>
+<p>Aby dotrenować gotowy głos, zwiększ limit, bo liczy się on od bazy. Głos po 500 epokach dostanie
+około 500 kolejnych dopiero przy limicie 1000. Przy limicie 500 trening skończy się prawie od razu.</p>
+<h3 id="wyłączenie-maszyny-po-treningu">Wyłączenie maszyny po treningu</h3>
+<p>W kroku <strong>Trening</strong> w panelu na maszynie zaznacz <strong>Wyłącz maszynę po zakończeniu treningu</strong>. Po
+końcu treningu Ubuntu wyłącza się przez <code>sudo poweroff</code>, także gdy trening zakończył się błędem.
+Przycisk <strong>Zatrzymaj zadanie</strong> nie wyłącza komputera. Gniazdko odcina automatyzacja z
+<code>docs/home-assistant/maszyna_gpu.yaml</code>, gdy pobór spada poniżej 5 W, więc rano wystarczy włączyć
+przełącznik maszyny w Home Assistant.</p>
+<p>Decyzję możesz zmienić w trakcie zadania. Pod kartą <strong>Etap</strong> widać wtedy pole <strong>Wyłącz maszynę po
+zakończeniu tego zadania</strong>. Zaznacz je albo odznacz, a trening nie zostanie przerwany. W kolejce
+treningów pole dotyczy końca całej kolejki, a nie pojedynczego głosu.</p>
+<h2 id="6-eksport-i-użycie">6. Eksport i użycie</h2>
+<p>Eksport zamienia checkpoint w głos Pipera. Powstają dwa pliki i potrzebne są oba: <code>.onnx</code> to model, a
+<code>.onnx.json</code> to jego ustawienia.</p>
+<h3 id="eksport-wytrenowanego-głosu">Eksport wytrenowanego głosu</h3>
+<p>W panelu, w którym trwał trening, otwórz krok <strong>7. Eksport</strong>. Wybierz checkpoint, który najlepiej
+brzmiał w odsłuchu, i uruchom eksport. Bez wyboru <code>pvc</code> użyje najnowszego:</p>
+<pre><code class="language-bash">pvc export kuba_bajka
+</code></pre>
+<p>Pliki trafiają do <code>voices/kuba_bajka/export/</code>, np. <code>pl_PL-kuba_bajka-medium.onnx</code>. Nazwę bierze z
+pola <strong>Nazwa pliku Piper</strong>.</p>
+<h3 id="eksport-głosu-bazowego">Eksport głosu bazowego</h3>
+<p>Modele bazowe są na maszynie z GPU, więc użyj panelu na tej maszynie:</p>
+<ol>
+<li>Otwórz <strong>⚒ Narzędzia → Własna baza bez angielskiego (bazowy-pl)</strong>.</li>
+<li>W polu <strong>Checkpoint bazy</strong> wybierz checkpoint.</li>
+<li>Kliknij <strong>Eksportuj jako głos</strong>.</li>
+</ol>
+<p>Pliki trafiają do <code>bases/export/pl_PL-bazowy-medium.onnx</code> i <code>.onnx.json</code>. Ten sam eksport z terminala
+na maszynie, z własną nazwą pliku:</p>
+<pre><code class="language-bash">cd ~/piper-voice-cloner/repo
+PVC_TRAIN_PYTHON=$PWD/.venv-train/bin/python .venv/bin/pvc --root ~/piper-voice-cloner/data \
+  base export --name pl_PL-moja_baza
+</code></pre>
+<p>Bez <code>--checkpoint</code> eksport bierze model ustawiony jako <code>bazowy-pl</code>.</p>
+<h3 id="wgranie-głosu-do-home-assistant">Wgranie głosu do Home Assistant</h3>
+<p>Przykłady dotyczą Wyoming Piper na osobnym serwerze. Podstaw swoje adresy i katalog z plikami
+<code>*.onnx</code> Pipera.</p>
+<ol>
+<li>
+<p><strong>Pobierz pliki z maszyny z GPU.</strong> Dla wytrenowanego głosu wystarczy <code>make remote-pull</code>. Głos
+bazowy pobierz tak (cudzysłów jest potrzebny w zsh):</p>
+<pre><code class="language-bash">scp '&lt;użytkownik&gt;@&lt;maszyna&gt;:piper-voice-cloner/data/bases/export/pl_PL-bazowy-medium.onnx*' .
+</code></pre>
+</li>
+<li>
+<p><strong>Skopiuj oba pliki na serwer Pipera.</strong> Użyj nowej nazwy głosu. Ta sama nazwa nadpisze działający
+głos, więc najpierw zrób jego kopię.</p>
+<pre><code class="language-bash">scp pl_PL-bazowy-medium.onnx pl_PL-bazowy-medium.onnx.json &lt;użytkownik&gt;@&lt;serwer&gt;:/ścieżka/do/piper/models/
+</code></pre>
+</li>
+<li>
+<p><strong>Odśwież listę głosów w Home Assistant.</strong> Otwórz <strong>Ustawienia → Urządzenia i usługi → Wyoming
+Protocol</strong>, przy wpisie Pipera wybierz <strong>⋮ → Załaduj ponownie</strong>. Starsze wersje Wyoming Piper
+mogą wymagać restartu kontenera Pipera.</p>
+</li>
+<li>
+<p><strong>Wybierz głos.</strong> Otwórz <strong>Ustawienia → Asystenci głosowi</strong>, wybierz asystenta, a w sekcji zamiany
+tekstu na mowę ustaw nowy głos. Ustawienie dotyczy tylko tego asystenta.</p>
+</li>
+<li>
+<p><strong>Sprawdź go.</strong> Zapisz asystenta i posłuchaj odpowiedzi albo użyj <strong>Wypróbuj</strong> przy głosie.</p>
+</li>
+</ol>
+<p>Żeby się wycofać, wybierz w asystencie poprzedni głos. Pliki na serwerze możesz wtedy usunąć.</p>
+<h2 id="nowy-głos-z-krótkiego-nagrania">Nowy głos z krótkiego nagrania</h2>
+<p>Masz jedno nagranie, np. 15 s, i chcesz z niego zrobić głos Piper na około 1500 klipach. Da się,
+ale wynik zależy bardziej od <strong>jakości</strong> nagrania niż od jego długości. Liczby w tym rozdziale
+pochodzą z prawdziwej próby (postać filmowa, dwa nagrania) na MacBooku Pro M1 Max 64 GB.</p>
+<h3 id="czy-15-sekund-wystarczy">Czy 15 sekund wystarczy?</h3>
+<ul>
+<li><strong>Do klonowania tak.</strong> Chatterbox klonuje z około 10 s. <code>pvc reference</code> potnie 15 s na 1–2
+fragmenty i ostrzeże, że nagranie jest krótkie (poniżej 20 s albo tylko 1 fragment).</li>
+<li><strong>Dłuższe nagranie jest lepsze, nie konieczne.</strong> 30–60 s różnorodnej mowy daje więcej
+fragmentów (synteza je rotuje, więc klipy są mniej monotonne) i pewniejszy próg podobieństwa w
+filtrze. Jeśli możesz dograć więcej, zrób to przed generowaniem 2000 klipów, nie po.</li>
+<li><strong>Język nagrania ma znaczenie.</strong> Nagranie po polsku daje wyraźnie lepsze wyniki niż angielskie.
+W próbie 8,8 s polskiej mowy przebiło 33 s angielskiego oryginału (tabela niżej): przy obcym
+języku polskie klipy brzmią mniej jak oryginał i filtr odrzuca je jako <code>speaker_mismatch</code>.</li>
+<li><strong>Efekty dźwiękowe się nie przenoszą.</strong> Pogłos, przetworzenie „robota” czy muzyka w tle albo
+zostaną zgubione, albo zabrudzą każdy klip. Najlepiej czysty głos.</li>
+<li><strong>Klon głosu syntetycznego</strong> (np. z ElevenLabs) działa dobrze technicznie, ale kopiuje też jego
+płaskość: Piper wytrenowany na takim klonie będzie brzmiał jak klon klonu.</li>
+<li><strong>Głosy dzieci</strong> są najtrudniejsze dla każdego modelu klonującego. Tu dłuższe nagranie (60 s)
+naprawdę się opłaca.</li>
+</ul>
+<h3 id="wynik-próby">Wynik próby</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>33 s, oryginał po angielsku</th>
+<th>8,8 s po polsku (ElevenLabs)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fragmenty referencji</td>
+<td>3</td>
+<td>1</td>
+</tr>
+<tr>
+<td>najlepsze ustawienia z odsłuchu</td>
+<td><code>cfg_weight</code> 0,3, <code>exaggeration</code> 0,7</td>
+<td><code>cfg_weight</code> 0, <code>exaggeration</code> 0,7</td>
+</tr>
+<tr>
+<td>przeszło filtr (z 50)</td>
+<td><strong>22 (44%)</strong></td>
+<td><strong>38 (76%)</strong></td>
+</tr>
+<tr>
+<td>odrzucone: inna barwa / błąd tekstu / słaba jakość</td>
+<td>17 / 8 / 3</td>
+<td>0 / 7 / 5</td>
+</tr>
+<tr>
+<td>mediana podobieństwa, CER, UTMOS</td>
+<td>0,52 · 0,4% · 3,16</td>
+<td>0,86 · 0,9% · 3,47</td>
+</tr>
+<tr>
+<td>zdań na 1500 klipów</td>
+<td>~3400 (<code>overgenerate</code> 2,3)</td>
+<td>~1950 (domyślne 1,3)</td>
+</tr>
+</tbody>
+</table>
+<p>Wniosek: z 76% przechodzących klipów wystarczy domyślny zapas zdań. Przy 44% trzeba podnieść
+<code>overgenerate</code> albo, lepiej, poprawić nagranie.</p>
+<h3 id="krok-po-kroku-cel-1500-klipów">Krok po kroku (cel 1500 klipów)</h3>
+<ol>
+<li><strong>Nowy głos</strong>: <code>pvc init &lt;nazwa&gt;</code> i w <code>voice.yaml</code> ustaw <code>target_clips: 1500</code> (panel: krok
+Nowy głos).</li>
+<li><strong>Nagranie</strong>: <code>pvc reference &lt;nazwa&gt; nagranie.wav</code>. Ostrzeżenie o krótkim nagraniu to
+informacja, nie błąd.</li>
+<li><strong>Zdania</strong>: <code>pvc corpus &lt;nazwa&gt;</code> wybiera <code>1500 × 1,3 ≈ 1950</code> zdań (około 2 min).</li>
+<li><strong>Odsłuch ustawień</strong>: <code>pvc audition &lt;nazwa&gt; --apply-best</code> (72 klipy). Posłuchaj
+<code>audition/audition.html</code>. Jeśli żadna kombinacja nie brzmi jak oryginał, popraw nagranie teraz.</li>
+<li><strong>Próba</strong>: <code>pvc synthesize &lt;nazwa&gt; --limit 50</code>, potem <code>pvc filter &lt;nazwa&gt;</code>. Na końcu
+generowania widać prędkość (np. <code>50 clips in 19.4 min on mps: 23.2 s per clip</code>), a filtr pokaże,
+jaki odsetek przechodzi. Z tego policzysz, ile zdań potrzeba.</li>
+<li><strong>Całość</strong>: <code>pvc synthesize &lt;nazwa&gt;</code> (można przerywać i wznawiać) i <code>pvc filter &lt;nazwa&gt;</code>.</li>
+<li><strong>Trening</strong> od <code>bazowy-pl</code> na maszynie z kartą NVIDIA, potem <strong>eksport</strong>.</li>
+</ol>
+<h3 id="mac-czy-ubuntu">Mac czy Ubuntu?</h3>
+<p>Mac z Apple Silicon generuje i filtruje (<code>make setup-mac</code>, GPU Apple przez <code>mps</code>). Trening Pipera
+wymaga karty NVIDIA, więc zostaje na Ubuntu.</p>
+<table>
+<thead>
+<tr>
+<th>krok (1950 zdań)</th>
+<th>Mac M1 Max, zmierzone</th>
+<th>Ubuntu RTX 4090, szacunek</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nagranie + zdania</td>
+<td>~2 min</td>
+<td>~2 min</td>
+</tr>
+<tr>
+<td>odsłuch ustawień (72 klipy)</td>
+<td>50–110 min</td>
+<td>~15 min</td>
+</tr>
+<tr>
+<td>generowanie</td>
+<td>23 s na klip → <strong>~12,5 h</strong></td>
+<td>~3 s na klip → ~1,5–2 h</td>
+</tr>
+<tr>
+<td>filtr (Whisper na CPU na Macu)</td>
+<td>7 s na klip → <strong>~3,8 h</strong></td>
+<td>~1 s na klip → ~0,5 h</td>
+</tr>
+<tr>
+<td>trening od <code>bazowy-pl</code> (1500 klipów)</td>
+<td>nie da się</td>
+<td>3–8 h</td>
+</tr>
+</tbody>
+</table>
+<p>Kolumna Ubuntu to szacunek; zostanie zastąpiona pomiarem, gdy karta będzie wolna od treningu bazy.</p>
+<ul>
+<li><strong>Mac ma sens</strong>, gdy karta trenuje coś innego (np. bazę przez kilka dni): generujesz na Macu w
+nocy, a gotowy zbiór wysyłasz na maszynę (<code>pvc remote push</code>) tylko do treningu.</li>
+<li><strong>Ubuntu jest kilka razy szybsze</strong>, gdy karta jest wolna.</li>
+<li>Nie uruchamiaj dwóch modeli klonujących naraz na Macu: brakuje pamięci i system zabija proces
+(kod 137). Generowanie da się wtedy po prostu wznowić.</li>
+</ul>
+<h3 id="ile-to-trwa-w-sumie">Ile to trwa w sumie</h3>
+<ul>
+<li><strong>Twoja praca</strong>: przygotowanie nagrania i odsłuch to 30–60 min. Reszta idzie sama.</li>
+<li><strong>Mac + Ubuntu</strong>: ~17 h generowania i filtra na Macu, potem 3–8 h treningu, czyli 1–1,5 doby.</li>
+<li><strong>Samo Ubuntu</strong>: ~2–3 h generowania i filtra plus 3–8 h treningu, czyli około doby z zapasem
+na odsłuch i wybór checkpointu.</li>
+</ul>
+<h3 id="ograniczenia-i-prawo">Ograniczenia i prawo</h3>
+<ul>
+<li>Każdy klip Chatterboxa ma niesłyszalny znak wodny Resemble Perth. Służy do rozpoznania, że mowa
+jest wygenerowana; nie zmienia brzmienia i nie przeszkadza w treningu.</li>
+<li>Głos prawdziwej osoby tylko za jej zgodą; głos dziecka za zgodą rodzica lub opiekuna.</li>
+<li>Postacie z filmów i bajek: tylko do prywatnego użytku w domu. Patrz
+<a href="#prywatno%C5%9B%C4%87-i-prawo">Prywatność i prawo</a>.</li>
+</ul>
+<h2 id="przetrenowanie-istniejących-głosów">Przetrenowanie istniejących głosów</h2>
+<p>Stare datasety często mają linie z cyframi, datami albo numeracją list oraz audio MP3 zapisane
+pod nazwą <code>.wav</code>. <code>pvc import</code> czyści je tymi samymi regułami:</p>
+<pre><code class="language-bash">pvc init kasia --piper-name pl_PL-kasia_glos     # ta sama nazwa pliku co wcześniej
+pvc import kasia /stare/pl_PL-kasia_glos-medium \
+  --metadata /stare/pl_PL-kasia_glos-medium/metadata.csv \
+  --persona /stare/pl_PL-kasia_glos-medium/custom_metadata.csv  # numerowane listy: &quot;1. ...&quot;
+pvc train kasia --base bazowy-pl
+pvc export kasia
+</code></pre>
+<ul>
+<li>W plikach <code>--persona</code> numeracja jest usuwana przed sprawdzeniem tekstu.</li>
+<li>Krótkie odpowiedzi („Usiądziesz?”) zostają; długie zdania ogranicza limit 20 s audio.</li>
+<li><code>--verify</code> dodatkowo sprawdza każdy klip Whisperem (wolne).</li>
+<li>Przed podmianą zachowaj stare pliki <code>.onnx</code> jako kopię zapasową.</li>
+</ul>
+<h2 id="dodanie-języka">Dodanie języka</h2>
+<p>Utwórz <code>piper_voice_cloner/languages/&lt;kod&gt;.py</code> z <code>PACK = LanguagePack(...)</code>:</p>
+<ul>
+<li><code>espeak_voice</code>: głos espeak-ng dla Pipera (np. <code>cs</code>);</li>
+<li><code>locale</code>: prefiks nazwy pliku (np. <code>cs_CZ</code>);</li>
+<li><code>synth_language</code>: kod języka dla backendu klonującego i Whispera;</li>
+<li><code>extra_letters</code>: litery poza a–z (np. <code>áčďéěíňóřšťúůýž</code>);</li>
+<li><code>abbreviations</code>: skróty do odrzucenia;</li>
+<li><code>focus_phonemes</code>: głoski do mocniejszego pokrycia;</li>
+<li><code>prompt_files</code>: opcjonalne zdania w <code>languages/data/</code>.</li>
+</ul>
+<p>Potem <code>pvc init &lt;nazwa&gt; --language &lt;kod&gt;</code>. Sprawdź, czy backend klonujący obsługuje dany język;
+Chatterbox ma ich 23.</p>
+<h2 id="faq-i-rozwiązywanie-problemów">FAQ i rozwiązywanie problemów</h2>
+<p>Szukaj po treści komunikatu (Ctrl+F). Pełny log zadania jest w panelu po prawej oraz w
+<code>&lt;dane&gt;/jobs/*.log</code>.</p>
+<h3 id="filtr-no-generated-clips-in-raw-nothing-to-filter">Filtr: <code>no generated clips in …/raw: nothing to filter</code></h3>
+<p>Głos zaimportowany nie ma wygenerowanych klipów, a jego <code>dataset/</code> jest już gotowy do treningu. Pomiń
+Filtr. Starsze wersje czyściły w tym miejscu <code>dataset/</code>. Jeśli tak się stało na maszynie, <strong>⚒ Narzędzia
+→ Przygotuj maszynę</strong> przywróci zestaw z komputera, z którego go wysłano.</p>
+<h3 id="eksport-no-module-named-onnxscript-albo-guardondatadependentsymnode">Eksport: <code>No module named 'onnxscript'</code> albo <code>GuardOnDataDependentSymNode</code></h3>
+<p>Środowisku treningu brakowało pakietów ONNX, a nowy eksporter PyTorch nie obsługuje tego modelu.
+Kliknij <strong>Przygotuj maszynę</strong> i uruchom eksport ponownie: kloner używa starszego eksportera.</p>
+<h3 id="odsłuch-elevenlabsfatalerror-no-api-key-w-panelu-na-maszynie">Odsłuch: <code>ElevenLabsFatalError: no API key</code> w panelu na maszynie</h3>
+<p>Klucz ElevenLabs jest zapisany na komputerze, na którym go wpisano. Klipy generuj na Macu. Krok
+<strong>Odsłuch ustawień</strong> pomiń: dla głosu z ElevenLabs zużywa kredyty i nie jest potrzebny do treningu.</p>
+<h3 id="piotr-is-an-imported-voice-create-a-new-voice-to-generate-clips"><code>'piotr' is an imported voice: create a new voice to generate clips</code></h3>
+<p>Głos zaimportowany to gotowy zestaw nagrań i źródło zdań, więc nie generuje nowych klipów. Utwórz nowy
+głos i tam wybierz model oraz zestaw zdań. Komunikat pod zestawem zawsze podaje nazwę wybranego głosu.</p>
+<h3 id="po-restarcie-make-ui-an-event-handler-run_export-didnt-receive-enough-input-values">Po restarcie <code>make ui</code>: <code>An event handler (run_export) didn't receive enough input values</code></h3>
+<p>Karta otwarta przed aktualizacją panelu wysłała zdarzenia timerów według starego układu, a w nowym te
+numery należą do innych funkcji. Błąd <code>Value: '…' is not in the list of choices: []</code> ma tę samą
+przyczynę. Panel odrzuca takie zdarzenia, a zadanie się nie uruchamia. Odśwież kartę (Cmd+R). Po
+aktualizacji kodu najlepiej zamknąć stare karty przed uruchomieniem panelu.</p>
+<h3 id="generowanie-stopped-http-401--quota_exceeded-invalid_api_key">Generowanie: <code>Stopped: HTTP 401: …</code> (<code>quota_exceeded</code>, <code>invalid_api_key</code>)</h3>
+<p>Kod 401 oznacza błędny klucz albo brak kredytów; treść odpowiedzi mówi który. Zapisz nowy klucz w
+Ustawieniach albo dokup kredyty i uruchom generowanie ponownie. Gotowe klipy zostają.</p>
+<h3 id="wczytaj-głosy-http-401--missing_permissions">Wczytaj głosy: <code>HTTP 401: … missing_permissions</code></h3>
+<p>Klucz z ograniczeniami nie ma dostępu do głosów. W ElevenLabs włącz to uprawnienie dla klucza albo
+utwórz nowy. Sam brak <code>user_read</code> nie jest błędem: głosy się wczytają, tylko bez kredytów.</p>
+<h3 id="generowanie-stopped-raw-holds-clips-of-another-voice-">Generowanie: <code>Stopped: raw/ holds clips of another voice (…)</code></h3>
+<p>W <code>raw/</code> są klipy innego modelu albo innego głosu ElevenLabs. Utwórz nowy głos w panelu albo przenieś
+<code>raw/</code> poza folder głosu.</p>
+<h3 id="użyj-zestawu-raw-already-holds--clips-of-other-sentences">Użyj zestawu: <code>raw/ already holds … clips of other sentences</code></h3>
+<p>Głos ma już klipy innych zdań, a filtr użyłby ich razem z nowymi. Utwórz nowy głos.</p>
+<h3 id="voice-name-lowercase-letters-digits-and-_-only"><code>voice name: lowercase letters, digits and '_' only</code></h3>
+<p>Nazwa głosu może mieć tylko małe litery, cyfry i <code>_</code>. Panel sam zamienia <code>Tomek</code> na <code>tomek</code>, a
+<code>Kuba Bajka</code> na <code>kuba_bajka</code>; ten błąd zobaczysz tylko w starszej wersji albo w <code>pvc init</code>.
+Wpisz nazwę małymi literami.</p>
+<h3 id="make-ui-python311-not-found"><code>make ui</code>: <code>python3.11 not found</code></h3>
+<p>Starszy Makefile po każdej zmianie <code>pyproject.toml</code> odtwarzał środowisko i wymagał
+<code>python3.11</code>, nawet gdy <code>.venv</code> już było (np. na Pythonie 3.12). Poprawione: istniejące <code>.venv</code>
+jest tylko odświeżane jego własnym Pythonem, a nowe powstaje z <code>python3.11</code> albo <code>python3.12</code>.
+Gdy nie ma żadnego: <code>brew install python@3.12</code> (macOS) albo <code>uv python install 3.11</code> (Ubuntu).</p>
+<h3 id="nie-widzę-zakładek-narzędzia-ani-ustawienia">Nie widzę zakładek Narzędzia ani Ustawienia</h3>
+<p>Wszystkie kroki są w pasku u góry; kliknij <strong>⚙ Ustawienia</strong> albo <strong>⚒ Narzędzia</strong> na jego końcu.
+W starszej wersji były schowane pod „⋯” po prawej stronie zakładek.</p>
+<h3 id="co-wpisać-w-plik-metadanych-persony">Co wpisać w „Plik metadanych persony”?</h3>
+<p>Nazwę dodatkowego pliku z kwestiami zapisanymi jako lista numerowana („1. …”), który leży w tym
+samym katalogu co <code>metadata.csv</code>, np. <code>custom_metadata.csv</code>. Jeśli takiego pliku nie ma, zostaw
+pole puste. Plików z samymi godzinami albo datami (np. <code>ha_metadata.csv</code>) nie podawaj: filtr i tak
+odrzuci każdą linię z cyframi.</p>
+<h3 id="import-odrzucił-część-klipów">Import odrzucił część klipów</h3>
+<p>Powód każdego odrzucenia jest w <code>voices/&lt;głos&gt;/dataset/import_report.csv</code>. <code>duration</code> to klip
+krótszy niż ~0,6 s albo za długi, <code>text:digits</code> / <code>text:abbreviation</code> / <code>text:foreign_characters</code>
+to tekst, który psułby wymowę. Kilka odrzuceń na tysiąc jest normalne.</p>
+<h3 id="panel-pokazuje-brak-karty-nvidia">Panel pokazuje „brak karty NVIDIA”</h3>
+<p>Na Macu albo komputerze bez karty NVIDIA to normalne: import, zdania i ustawienia działają, ale
+generowanie, filtr Whisperem i trening wymagają karty. Użyj <a href="#komputer-z-gpu-przez-ssh-praca-z-maca-lub-laptopa">serwera z GPU przez
+SSH</a>.</p>
+<h3 id="ctrlc-nie-zatrzymuje-make-ui">Ctrl+C nie zatrzymuje <code>make ui</code></h3>
+<p>W starszych wersjach serwer czekał, aż przeglądarka zamknie połączenie, czyli w nieskończoność.
+Zaktualizuj kod; teraz kończy się po 2–4 s. Jeśli stara wersja wisi: zamknij kartę z panelem albo
+<code>pkill -f &quot;pvc.*ui&quot;</code>. Zadania w tle (trening) to osobne procesy i nie giną razem z panelem.</p>
+<h3 id="nic-się-nie-dzieje-po-kliknięciu-nie-widać-postępu">Nic się nie dzieje po kliknięciu, nie widać postępu</h3>
+<p>Długie kroki działają w tle. Postęp (pasek i licznik) i log są w karcie po prawej; przycisk
+„Zatrzymaj zadanie” jest aktywny tylko wtedy, gdy coś działa. Po zakończeniu karta pokazuje
+„Ostatnie zadanie … zakończone / błąd” i czas trwania. Naraz działa jedno zadanie.</p>
+<h3 id="value-kasia-is-not-in-the-list-of-choices--w-terminalu-make-ui"><code>Value: kasia is not in the list of choices: []</code> w terminalu <code>make ui</code></h3>
+<p>Karta przeglądarki pamiętała wybrany głos z wcześniejszego uruchomienia panelu (np. sprzed restartu
+<code>make ui</code> albo zmiany folderu danych), a nowa sesja nie miała go na liście. Nic się nie zepsuło: dane
+są na dysku. Odśwież stronę (Cmd+R) albo kliknij <strong>↻ Odśwież</strong> przy liście głosów. Nowsze wersje
+nie wypisują już tego błędu; głos, którego nie ma na dysku, panel traktuje jak niewybrany.</p>
+<h3 id="trwa-jeszcze-zadanie--dawniej-inne-zadanie-jeszcze-trwa--is-still-running">„Trwa jeszcze zadanie: …” (dawniej <code>Inne zadanie jeszcze trwa: … is still running</code>)</h3>
+<p>Naraz działa jedno zadanie, a kliknięto następne, zanim poprzednie się skończyło. Na przykład
+„Wyślij kod i dane” zaraz po „Sprawdź”. Poczekaj, aż karta <strong>Postęp</strong> pokaże „Ostatnie zadanie …”,
+albo zatrzymaj zadanie, i kliknij ponownie. Starsze wersje wypisywały przy tym w terminalu
+<code>make ui</code> długi <code>Traceback … JobBusy</code>; to nie był błąd programu, tylko ten komunikat.</p>
+<h3 id="sprawdź-połączenie-ssh-connect-to-host--port-22-network-is-unreachable-albo-operation-timed-out">Sprawdź połączenie: <code>ssh: connect to host … port 22: Network is unreachable</code> albo <code>Operation timed out</code></h3>
+<p>Maszyna z GPU jest wyłączona albo Mac nie ma do niej drogi. Gdy jesteś poza domem, sprawdź VPN
+(WireGuard); w domu sprawdź, czy maszyna stoi (przycisk maszyny na górnym pasku, jeśli
+skonfigurowałeś Home Assistant). Po włączeniu odczekaj 1–2 minuty i kliknij <strong>Sprawdź</strong> jeszcze raz.</p>
+<p>Na górnym pasku ten błąd widać jako „Serwer: sprawdzanie połączenia nie powiodło się (kod 255)”. To
+wynik ostatniego zadania, a nie bieżący stan. Gdy maszyna znów odpowie przez SSH (panel pyta ją co
+około 10 s), pasek sam zmieni się na „Serwer znów odpowiada przez SSH”. Inne błędy, np. nieudana
+instalacja (kod 1), zostają widoczne do następnego zadania.</p>
+<h3 id="trening-staje-po-pierwszej-epoce-modelcheckpointmonitorval_mos-could-not-find-the-monitored-key">Trening staje po pierwszej epoce: <code>ModelCheckpoint(monitor='val_mos') could not find the monitored key</code></h3>
+<p>W środowisku treningu brakuje <code>torchaudio</code>, więc piper nie liczy jakości (<code>val_mos</code>), a zapis
+checkpointu na nią czeka. W logu wcześniej jest <code>Could not load MOS predictor 'utmos' (No module named 'torchaudio')</code>. Kliknij <strong>Przygotuj maszynę</strong> (lista kontrolna pokaże „Środowisko treningu” do
+zrobienia) albo na maszynie: <code>uv pip install --python .venv-train/bin/python torchaudio</code>. Potem
+uruchom trening ponownie - wznowi się od ostatniego checkpointu.</p>
+<h3 id="odsłuch-albo-generowanie-typeerror-nonetype-object-is-not-callable-perthperthimplicitwatermarker">Odsłuch albo generowanie: <code>TypeError: 'NoneType' object is not callable</code> (<code>perth.PerthImplicitWatermarker()</code>)</h3>
+<p>Chatterbox dodaje do każdego klipu niesłyszalny znak wodny z biblioteki <code>resemble-perth</code>. Ta
+biblioteka importuje <code>pkg_resources</code>, którego nie ma już w <code>setuptools</code> od wersji 81. Przy błędzie
+importu <code>perth</code> po cichu ustawia znak wodny na <code>None</code>, więc model wywraca się przy starcie. Od tej
+wersji zależność <code>chatterbox</code> przypina <code>setuptools&lt;81</code>, a instalacja sprawdza znak wodny. W starym
+środowisku: <code>.venv/bin/pip install 'setuptools&lt;81'</code> (na maszynie: kliknij <strong>Przygotuj maszynę</strong>,
+gdy nic nie trenuje, albo <code>uv pip install --python .venv/bin/python 'setuptools&lt;81'</code>).</p>
+<h3 id="filtr-odrzuca-prawie-wszystko-jako-too_fast_or_cut-w-logu-forcing-eos-token--token_repetitiontrue">Filtr odrzuca prawie wszystko jako <code>too_fast_or_cut</code>, w logu <code>forcing EOS token, … token_repetition=True</code></h3>
+<p>Klipy urywają się po kilku słowach (np. 2 s zamiast 11 s), a w logu generowania widać
+<code>🚨 Detected 2x repetition of token …</code> i <code>forcing EOS token</code>. Chatterbox 0.1.7 kończy wypowiedź,
+gdy dwa jednakowe tokeny mowy wystąpią po sobie w dowolnym miejscu. Niskie, przeciągane głosy
+(np. postać z filmu) trafiają na to prawie zawsze, a odsłuch na 12 zdaniach może tego nie pokazać.
+Od tej wersji aplikacja sprawdza powtórzenia dopiero po wypowiedzeniu całego tekstu, więc pętle na
+końcu nadal są przerywane. Zła partia z wcześniejszej wersji: usuń <code>raw/</code> i <code>dataset/</code> głosu (albo
+przenieś je obok) i wygeneruj klipy ponownie.</p>
+<h3 id="ponowny-trening-po-zakończonym-you-restored-a-checkpoint-with-current_epoch1273-but-you-have-set-trainermax_epochs800">Ponowny trening po zakończonym: <code>You restored a checkpoint with current_epoch=1273, but you have set Trainer(max_epochs=800)</code></h3>
+<p>Trening bazy (albo głosu) skończył zaplanowane epoki, a potem kliknięto <strong>Trenuj bazę</strong> jeszcze
+raz z mniejszą liczbą epok. Wznowienie startuje z najnowszego checkpointu (tu epoka 1273), a
+wcześniejsze wersje liczyły epoki od początku pierwszego biegu (0 + 800 = 800). Lightning nie
+pozwala zakończyć na epoce niższej niż ta w checkpoincie. Od tej wersji, gdy plan jest już
+wykonany, pole <strong>Epoki</strong> oznacza „ile jeszcze”: 800 epok od 1273 do 2073 (w logu <code>The planned … epochs are done …; training 800 more</code>). Przerwany, niedokończony trening nadal wznawia się do
+pierwotnego końca.</p>
+<p>Uwaga: piper zapisuje checkpoint tylko przy poprawie <code>val_mel</code>/<code>val_mos</code>, więc ostatnie epoki bez
+poprawy (np. 1274–1299) nie mają checkpointu i wznowienie zaczyna od ostatniego zapisanego.
+Wybierając wielkość: <strong>medium</strong> kontynuuje ten sam model, <strong>high</strong> zaczyna osobny trening w
+<code>bases/pl-scratch-high</code>.</p>
+<h3 id="trening-przerwany-po-wielu-epokach-torchoutofmemoryerror-cuda-out-of-memory">Trening przerwany po wielu epokach: <code>torch.OutOfMemoryError: CUDA out of memory</code></h3>
+<p>Zabrakło pamięci karty (24 GB). Batch jest dopełniany do najdłuższego klipu, więc zużycie pamięci
+skacze od batcha do batcha. Rzadki batch z kilkoma długimi klipami (15–20 s) razem z pofragmentowaną
+pamięcią podręczną CUDA przekracza limit, czasem dopiero po setkach epok. Nic nie przepada: kliknij
+ponownie <strong>Trenuj bazę</strong> (albo <strong>Trenuj</strong>). Trening wznowi się od najnowszego checkpointu (<code>last.ckpt</code>
+albo nowszego „najlepszego”), więc powtórzy najwyżej kilka epok. Od tej wersji trening działa z <code>PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True</code>,
+co ogranicza fragmentację (po aktualizacji kliknij <strong>Przygotuj maszynę</strong>). Gdy błąd wraca, zmniejsz
+batch: <code>pvc base train --batch-size 24</code>.</p>
+<h3 id="sprawdź-połączenie-permission-denied-publickey-albo-host-key-verification-failed">Sprawdź połączenie: <code>Permission denied (publickey)</code> albo <code>Host key verification failed</code></h3>
+<p>Logowanie do serwera musi działać bez hasła. Raz w terminalu:</p>
+<pre><code class="language-bash">ssh-copy-id uzytkownik@ubuntu.local   # kopiuje Twój klucz na serwer
+ssh uzytkownik@ubuntu.local           # pierwsze połączenie: potwierdź klucz hosta (yes)
+</code></pre>
+<p>Jeśli używasz innego klucza niż domyślny, wybierz go w polu <strong>Klucz SSH</strong>.</p>
+<h3 id="sprawdź-połączenie-ffmpeg-missing-albo-inne-narzędzie">Sprawdź połączenie: <code>ffmpeg: MISSING</code> (albo inne narzędzie)</h3>
+<p>Pakiety systemowe instalujesz raz sam na serwerze (wymagają sudo). Na końcu wyniku jest gotowe
+polecenie, np.:</p>
+<pre><code class="language-bash">ssh uzytkownik@ubuntu.local
+sudo apt install ffmpeg
+</code></pre>
+<p>Brak <code>uv</code>: <code>curl -LsSf https://astral.sh/uv/install.sh | sh</code>.</p>
+<h3 id="instalacja-modulenotfounderror-no-module-named-cython-localbincythonize">Instalacja: <code>ModuleNotFoundError: No module named 'Cython'</code> (<code>~/.local/bin/cythonize</code>)</h3>
+<p>Starszy <code>setup.sh</code> wywoływał <code>cythonize</code> z innego Pythona. Poprawione: kliknij <strong>Wyślij kod i
+dane</strong>, potem <strong>Zainstaluj / aktualizuj</strong>. Drugie uruchomienie trwa kilka minut, bo pakiety są już
+pobrane.</p>
+<h3 id="instalacja-no-module-named-skbuild-albo-cannot-import-name-espeakbridge">Instalacja: <code>No module named 'skbuild'</code> albo <code>cannot import name 'espeakbridge'</code></h3>
+<p>Brakowało kompilacji mostu espeak-ng w środowisku treningu. Poprawione w <code>setup.sh</code> jak wyżej:
+<strong>Wyślij kod i dane</strong> → <strong>Zainstaluj / aktualizuj</strong>. Na końcu instalacja sama sprawdza, czy oba
+moduły piper1-gpl się importują.</p>
+<h3 id="czerwony-status-serwer-instalacja-nie-powiodło-się-kod-1">Czerwony status „Serwer: instalacja nie powiodło się (kod 1)”</h3>
+<p>Status u góry pokazuje <strong>ostatnie</strong> zadanie, więc zostaje czerwony, dopóki nie uruchomisz
+następnego. Przeczytaj koniec logu (po prawej albo <code>&lt;dane&gt;/jobs/*-remote-install.log</code>), znajdź
+komunikat w tym FAQ, a po poprawce uruchom <strong>Wyślij kod i dane</strong> i <strong>Zainstaluj / aktualizuj</strong>
+jeszcze raz. Instalację można powtarzać bez szkody.</p>
+<h3 id="zgubiłem-login-do-panelu-na-serwerze">Zgubiłem login do panelu na serwerze</h3>
+<p>Jest w <code>~/.config/piper-voice-cloner/env</code> na serwerze (<code>PVC_UI_AUTH=admin:hasło</code>). Możesz go
+zmienić i zrestartować usługę:</p>
+<pre><code class="language-bash">nano ~/.config/piper-voice-cloner/env
+systemctl --user restart piper-voice-cloner
+</code></pre>
+<h3 id="maszyna-brak-odczytu-z-ha">„Maszyna: brak odczytu z HA”</h3>
+<p><strong>Objaw</strong>: na górnym pasku czerwony przycisk „Maszyna: brak odczytu z HA”; po najechaniu
+podpowiedź z przyczyną, np. <code>Home Assistant at http://homeassistant.local:8123 cannot be reached: timed out</code> albo <code>Home Assistant 404: Entity not found.</code></p>
+<p><strong>Przyczyna</strong>: panel nie dostał od Home Assistant stanu przełącznika maszyny: Home Assistant jest
+wyłączony lub restartuje się, adres jest zły, token wygasł (401/403, niżej) albo encja z
+ustawień nie istnieje (404, <code>unavailable</code>).</p>
+<p><strong>Rozwiązanie</strong>: sprawdź adres w <strong>⚒ Narzędzia → Home Assistant</strong> i kliknij <strong>Zapisz połączenie</strong>
+(panel od razu mówi, czy Home Assistant odpowiada). Przy 404 kliknij <strong>↻ Podpowiedzi z HA</strong> i
+wybierz istniejący przełącznik i czujnik. Stan odświeża się sam co ~10 s.</p>
+<h3 id="maszyna-token-ha-odrzucony">„Maszyna: token HA odrzucony”</h3>
+<p><strong>Objaw</strong>: na górnym pasku czerwony przycisk „Maszyna: token HA odrzucony”, a w polu tokenu w
+<strong>⚒ Narzędzia → Home Assistant</strong> napis „Home Assistant odrzucił token…”.</p>
+<p><strong>Przyczyna</strong>: Home Assistant odpowiedział 401 (token zły, wygasły albo usunięty). Każda taka
+odpowiedź to dla HA nieudane logowanie, a przy włączonym <code>ip_ban</code> po kilku z nich HA blokuje adres
+(przez VPN może to być adres Jetsona). Dlatego panel <strong>po pierwszym odrzuceniu przestaje pytać HA</strong>:
+stan maszyny, podpowiedzi encji i przełączanie maszyny.</p>
+<p><strong>Rozwiązanie</strong>: wklej nowy token długoterminowy (profil → Bezpieczeństwo) i kliknij <strong>Zapisz
+połączenie</strong>. Jeśli token jest dobry, a HA np. się restartował, wystarczy samo <strong>Zapisz
+połączenie</strong>: panel sprawdzi połączenie jednym zapytaniem.</p>
+<h3 id="home-assistant-401-the-token-is-wrong-or-expired--home-assistant-403-the-token-belongs-to-a-user-who-is-not-an-administrator"><code>Home Assistant 401: the token is wrong or expired</code> / <code>Home Assistant 403: the token belongs to a user who is not an administrator</code></h3>
+<p><strong>Objaw</strong>: komunikat po <strong>Zapisz połączenie</strong>, <strong>↻ Podpowiedzi z HA</strong> albo po kliknięciu
+przycisku maszyny.</p>
+<p><strong>Przyczyna</strong>: 401 – token jest błędny, wygasł albo został usunięty w profilu. 403 – token należy
+do użytkownika, który nie jest administratorem (włączanie przełączników wymaga uprawnień).</p>
+<p><strong>Rozwiązanie</strong>: w Home Assistant zaloguj się na konto administratora → profil → Bezpieczeństwo →
+Tokeny długoterminowe → Utwórz; wklej nowy token w <strong>⚒ Narzędzia → Home Assistant</strong> i zapisz.</p>
+<h3 id="this-does-not-look-like-a-home-assistant-long-lived-token--home-assistant-address-eg-httphomeassistantlocal8123"><code>this does not look like a Home Assistant long-lived token</code> / <code>Home Assistant address: e.g. http://homeassistant.local:8123</code></h3>
+<p><strong>Przyczyna</strong>: wklejony token ma spacje, cudzysłowy albo jest ucięty (token to długi ciąg liter,
+cyfr, <code>.</code>, <code>_</code>, <code>-</code>); adres nie zaczyna się od <code>http://</code> lub <code>https://</code> albo ma ścieżkę.</p>
+<p><strong>Rozwiązanie</strong>: skopiuj token jeszcze raz w całości; adres wpisz jako <code>http://&lt;host&gt;:8123</code> bez
+niczego po porcie. Komunikat celowo nie pokazuje wpisanego tokenu.</p>
+<h3 id="a-job-is-running-on-the-machine----stop-it-first-or-wait-until-it-ends"><code>a job is running on the machine: … - stop it first or wait until it ends</code></h3>
+<p><strong>Objaw</strong>: po kliknięciu „Maszyna: włączona” i potwierdzeniu wyłączenia pojawia się ten błąd i
+maszyna zostaje włączona.</p>
+<p><strong>Przyczyna</strong>: na maszynie trwa zadanie panelu (np. <code>train (kuba)</code>) albo panel na tym komputerze
+właśnie wysyła na nią kod lub instaluje (<code>remote-push</code>, <code>remote-install</code>). Wyłączenie
+przerwałoby je.</p>
+<p><strong>Rozwiązanie</strong>: poczekaj, aż zadanie się skończy, albo zatrzymaj je przyciskiem <strong>Zatrzymaj
+zadanie</strong> (w panelu na maszynie, jeśli zadanie działa tam) i spróbuj ponownie. Trening wznowi się
+później od najnowszego checkpointu.</p>
+<h3 id="panel-długo-się-ładuje-albo-długo-pokazuje-sprawdzam-maszynę">Panel długo się ładuje albo długo pokazuje „Sprawdzam maszynę…”</h3>
+<p><strong>Objaw</strong>: po otwarciu panelu status „Sprawdzam maszynę…” / „Maszyna: sprawdzam…” zostaje dłużej
+niż kilka sekund.</p>
+<p><strong>Przyczyna</strong>: maszyna z GPU jest wyłączona albo nie odpowiada, a Home Assistant odpowiada wolno
+lub wcale. Strona sama nie czeka na nie (pytanie idzie w tle): pierwszy stan pokazuje się po
+około 1,5 s (próba połączenia z portem SSH), stan z Home Assistant najpóźniej po kilku sekundach
+(limit 5 s na zapytanie). Wolne odpowiedzi <code>homeassistant.local</code> na Macu (5 s czekania na
+odpowiedź IPv6 przy każdym zapytaniu) panel omija: nazwę sprawdza raz, najpierw IPv4, i pamięta
+5 minut.</p>
+<p><strong>Rozwiązanie</strong>: zwykle nic – stan pojawi się sam. Jeśli „sprawdzam” nie znika, zrestartuj panel
+i zobacz podpowiedź na statusie (najedź myszą). Gdy podpowiedź mówi <code>The GPU machine did not answer over SSH: …</code>, maszyna jest włączona, ale logowanie SSH nie działa – patrz
+<a href="#sprawd%C5%BA-po%C5%82%C4%85czenie-permission-denied-publickey-albo-host-key-verification-failed">Sprawdź połączenie: Permission denied (publickey)</a>.</p>
+<h2 id="prywatność-i-prawo">Prywatność i prawo</h2>
+<ul>
+<li><strong>Głosy dzieci</strong>: nagrywaj i używaj ich tylko za zgodą rodzica lub opiekuna i trzymaj wszystko
+lokalnie. Domyślny backend działa w całości na Twoim komputerze. ElevenLabs wysyła tekst do
+chmury i narzędzie za każdym razem to zaznacza.</li>
+<li><strong>Postacie z bajek i filmów</strong>: nagrania są chronione prawem autorskim, a aktor ma prawo do
+głosu i do wykonania. Takie głosy zostaw do prywatnego użytku. Nie publikuj modelu ani próbek
+i nigdy nie używaj ich komercyjnie.</li>
+<li><strong>Licencje modeli</strong>: Chatterbox to MIT. XTTS-v2 ma licencję CPML, niekomercyjną, więc jego
+wyniki i wytrenowane na nich głosy też traktuj jako niekomercyjne. Chatterbox dodaje do
+wszystkiego niesłyszalny znak wodny (Resemble Perth).</li>
+<li>Jeśli kiedykolwiek publikujesz syntetyczną mowę, oznacz ją jako wygenerowaną przez AI
+(AI Act, art. 50).</li>
+</ul>
+<p>To nie jest porada prawna.</p>
+
+</article></main>
+</div>
+<script>
+  const links = [...document.querySelectorAll("#toc a")];
+  const heads = links.map((a) => document.getElementById(a.getAttribute("href").slice(1))).filter(Boolean);
+  const mark = () => {
+    let current = heads[0];
+    for (const h of heads) if (h.getBoundingClientRect().top < 120) current = h;
+    links.forEach((a) => a.classList.toggle("active", current && a.getAttribute("href") === "#" + current.id));
+  };
+  addEventListener("scroll", mark, { passive: true });
+  mark();
+</script>
+</body>
+</html>
