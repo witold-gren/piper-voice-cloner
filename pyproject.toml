@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "piper-voice-cloner"
-version = "0.1.0"
+version = "0.2.0"
 description = "Clone a voice from a short recording, generate a checked dataset and train a Piper TTS voice"
 readme = "README.md"
 license = "MIT"
@@ -25,9 +25,10 @@ chatterbox = ["chatterbox-tts>=0.1.4", "setuptools<81"]
 xtts = ["coqui-tts>=0.27"]
 elevenlabs = ["requests>=2.31"]
 quality = ["faster-whisper>=1.1", "sherpa-onnx>=1.10", "torch>=2.4", "torchaudio>=2.4"]
-ui = ["gradio>=5"]
-docs = ["playwright>=1.45"]  # scripts/screenshots.py - uses the installed Google Chrome
-dev = ["pytest>=8", "ruff>=0.6"]
+# the voice editor; python-multipart for uploads and the login form
+editor = ["fastapi>=0.110", "uvicorn>=0.29", "python-multipart>=0.0.9"]
+docs = ["playwright>=1.45"]  # dev/screenshots.py and tests/browser - use the installed Google Chrome
+dev = ["pytest>=8", "ruff>=0.6", "httpx>=0.27"]
 
 [project.scripts]
 pvc = "piper_voice_cloner.cli:app"
@@ -36,7 +37,8 @@ pvc = "piper_voice_cloner.cli:app"
 include = ["piper_voice_cloner*"]
 
 [tool.setuptools.package-data]
-piper_voice_cloner = ["languages/data/*", "webui/static/*"]
+piper_voice_cloner = ["languages/data/*", "editor/www/*", "editor/www/vendor/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["docker: builds and runs the demo image (skipped without Docker)"]

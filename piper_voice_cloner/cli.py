@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
 import sys
 from typing import Annotated
@@ -18,8 +17,6 @@ from .languages import get_language
 app = typer.Typer(no_args_is_help=True, add_completion=False, help=__doc__)
 base_app = typer.Typer(no_args_is_help=True, help="Own base model trained from scratch (no English).")
 app.add_typer(base_app, name="base")
-remote_app = typer.Typer(no_args_is_help=True, help="The GPU machine over SSH: send, install, bring back.")
-app.add_typer(remote_app, name="remote")
 elevenlabs_app = typer.Typer(no_args_is_help=True, help="Voices of your ElevenLabs account.")
 app.add_typer(elevenlabs_app, name="elevenlabs")
 
@@ -155,8 +152,9 @@ def reference(
 def corpus(
     name: str,
     source: Annotated[
-        list[Path], typer.Option("--source", help="Sentence file (txt or id<TAB>text), repeatable.")
-    ],
+        list[Path] | None,
+        typer.Option("--source", help="Sentence file (txt or id<TAB>text), repeatable."),
+    ] = None,
     size: Annotated[
         int | None, typer.Option(help="Prompts to select (default target * overgenerate).")
     ] = None,
@@ -168,7 +166,9 @@ def corpus(
     from .dataset import write_report
 
     directory, cfg, lang = _load(root, name)
-    sources = list(source) + (lang.prompt_paths() if bundled else [])
+    sources = list(source or []) + (lang.prompt_paths() if bundled else [])
+    if not sources:
+        raise typer.BadParameter("no sentences: give --source files or keep the bundled ones")
     size = size or round(cfg.target_clips * cfg.synthesis.overgenerate)
     prompts, report = corpus_mod.build(sources, lang, size, corpus_mod.espeak_phonemizer(lang))
     corpus_mod.write_prompts(directory / corpus_mod.PROMPTS, prompts)
@@ -548,26 +548,34 @@ def export(
 
 
 @app.command()
-def ui(
+def editor(
     host: Annotated[
         str, typer.Option(help="0.0.0.0 = reachable from other computers in the LAN.")
     ] = "0.0.0.0",
-    port: int = 7860,
-    lang: Annotated[str, typer.Option(help="UI language: en or pl.")] = "en",
+    port: Annotated[int, typer.Option(envvar="PVC_UI_PORT")] = 7860,
     auth: Annotated[
         str | None, typer.Option(envvar="PVC_UI_AUTH", help="user:password to protect the page.")
     ] = None,
+    tensorboard_port: Annotated[
+        int | None,
+        typer.Option(envvar="PVC_TB_PORT", help="Port of TensorBoard, for the link in the editor."),
+    ] = None,
 ) -> None:
-    """Web interface for all steps (needs gradio: pip install -e '.[ui]')."""
-    root = _state["root"]
-    from .webui.app import launch
+    """The voice editor in the browser (needs: pip install -e '.[editor]')."""
+    import uvicorn
 
-    credentials = tuple(auth.split(":", 1)) if auth else None
-    if credentials is not None and len(credentials) != 2:
-        raise typer.BadParameter("--auth must be user:password")
+    from .editor.auth import Login, load_secret
+    from .editor.server import create_app
+
+    root = _state["root"]
+    try:
+        login = Login.parse(auth, load_secret() if auth else "")
+    except ValueError as err:
+        raise typer.BadParameter(str(err)) from err
+    app_ = create_app(root, login=login, tensorboard_port=tensorboard_port)
     shown = "localhost" if host in ("127.0.0.1", "0.0.0.0") else host
-    typer.echo(f"Piper Voice Cloner: http://{shown}:{port}/{lang}/   data: {root}   (Ctrl+C stops)")
-    launch(root, lang, host, port, credentials)
+    typer.echo(f"Piper Voice Cloner editor: http://{shown}:{port}/   data: {root}   (Ctrl+C stops)")
+    uvicorn.run(app_, host=host, port=port, log_level="warning", timeout_graceful_shutdown=2)
 
 
 # --- own base model -------------------------------------------------------------------------
@@ -692,191 +700,3 @@ def base_select(checkpoint: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(checkpoint, target)
     typer.echo(f"{checkpoint} -> {target}")
-
-
-# --- GPU machine over SSH -------------------------------------------------------------------------
-
-
-def _remote():
-    from . import remote
-
-    config = remote.load_config(_state["root"])
-    if config is None:
-        raise typer.BadParameter("no server yet: pvc remote configure <host> (or the web UI, Tools)")
-    return remote, remote.Remote(config)
-
-
-def _short_command(command: list[str]) -> str:
-    """The command for the log: without the long SSH options, and the remote script shortened."""
-    import shlex
-
-    shown, skip = [], False
-    for part in command:
-        if skip:
-            skip = False
-            continue
-        if part in ("-o", "-p", "-i", "-e"):
-            skip = True
-            continue
-        part = " ".join(part.split()) if "\n" in part else part  # a remote script on one line
-        shown.append(part if len(part) <= 120 else part[:117] + "...")
-    return shlex.join(shown)
-
-
-def _run_all(commands: list[list[str]]) -> None:
-    """Run one after another with the output in this terminal (or the job log); stop at the first error."""
-    import subprocess
-
-    for command in commands:
-        typer.echo("$ " + _short_command(command))
-        code = subprocess.run(command, check=False).returncode
-        if code != 0:
-            typer.secho(f"failed (exit code {code})", fg=typer.colors.RED, err=True)
-            raise typer.Exit(code)
-
-
-@remote_app.command("configure")
-def remote_configure(
-    host: str,
-    user: str = "",
-    port: int = 22,
-    key: Annotated[str, typer.Option(help="Private key file (default: ssh-agent, ~/.ssh/config).")] = "",
-    remote_dir: Annotated[str, typer.Option(help="Folder in the home directory on the machine.")] = (
-        "piper-voice-cloner"
-    ),
-    ui_port: int = 7860,
-) -> None:
-    """Save the GPU machine (server.json in the data folder, no secrets)."""
-    from . import remote
-
-    config = remote.ServerConfig(host, user, port, key, remote_dir, ui_port)
-    try:
-        typer.echo(f"Saved {remote.save_config(_state['root'], config)}")
-    except ValueError as err:
-        raise typer.BadParameter(str(err)) from err
-
-
-@remote_app.command("check")
-def remote_check() -> None:
-    """Connect and list the GPU, free disk and the tools the setup needs."""
-    _remote_mod, server = _remote()
-    _run_all(server.check())
-
-
-def _check_status(remote, server, *, echo: bool = True) -> list | None:
-    """Ask the machine, save the answer for the web UI checklist and print the checklist."""
-    import subprocess
-
-    root = _state["root"]
-    if echo:
-        typer.echo("$ " + _short_command(server.status()))
-    done = subprocess.run(server.status(), capture_output=True, text=True, check=False)
-    try:
-        status = remote.parse_status(done.stdout)
-    except RuntimeError as err:
-        error = (done.stderr.strip().splitlines() or [str(err)])[-1]
-        remote.save_status(root, None, error)
-        typer.secho(f"no answer from the machine: {error}", fg=typer.colors.RED, err=True)
-        return None
-    remote.save_status(root, status)
-    items = remote.evaluate(status, server.config, remote.local_voices(root), remote.code_stamp())
-    if echo:
-        for item in items:
-            line = f"[{item.state:>6}] {item.key}" + (f": {item.detail}" if item.detail else "")
-            typer.echo(line + (f"\n         run yourself: {item.command}" if item.command else ""))
-        typer.echo(f"=> {remote.summary(items)}")
-    return items
-
-
-def _refresh_status(remote, server) -> None:
-    """After push/install: the checklist shows the new state (a failure here changes nothing)."""
-    import contextlib
-
-    with contextlib.suppress(OSError):
-        _check_status(remote, server, echo=False)
-
-
-@remote_app.command("status")
-def remote_status() -> None:
-    """The checklist: what the machine has and what is still to do (also shown in the web UI)."""
-    remote, server = _remote()
-    if _check_status(remote, server) is None:
-        raise typer.Exit(255)
-
-
-@remote_app.command("prepare")
-def remote_prepare() -> None:
-    """Do everything the checklist allows: packages (sudo without password), uv, push, install."""
-    import subprocess
-
-    remote, server = _remote()
-    items = _check_status(remote, server)
-    if items is None:
-        raise typer.Exit(255)
-    by_key = {item.key: item for item in items}
-    manual = [item for item in items if item.state == "manual"]
-    for item in manual:
-        typer.secho(f"do this yourself first ({item.key}): {item.command}", fg=typer.colors.YELLOW)
-    if by_key["tools"].state == "manual":
-        raise typer.Exit(1)  # setup.sh cannot build without them
-    status = remote.load_status(_state["root"])["status"]
-    commands = []
-    if by_key["tools"].state == "todo":
-        commands.append(server.apt_install(remote.apt_packages(status)))
-    if by_key["uv"].state == "todo":
-        commands.append(server.install_uv())
-    commands += server.push(_state["root"])
-    needs_install = any(
-        by_key[key].state != "ok" for key in ("code", "venv", "train", "service", "tensorboard")
-    )
-    if needs_install:
-        job = remote.parse_job_state(
-            subprocess.run(server.job_state(), capture_output=True, text=True, check=False).stdout
-        )
-        if job["running"]:
-            typer.secho(
-                f"a job is running on the machine: {job['kind']} - the install waits until it ends "
-                "(it would change the environment under it); code and data are sent now and the web "
-                "UI restarts with the new code (the job keeps running)",
-                fg=typer.colors.YELLOW,
-            )
-            needs_install = False
-            if status.get("service") == "active":
-                commands.append(server.restart_ui())
-    if needs_install:
-        commands += server.install()
-    try:
-        _run_all(commands)
-    finally:
-        typer.echo("")
-        _check_status(remote, server)
-    typer.echo(f"Web UI on the machine: {server.config.ui_url}")
-
-
-@remote_app.command("push")
-def remote_push() -> None:
-    """Send the code and the voice data (only changes; nothing is deleted on the machine)."""
-    remote, server = _remote()
-    _run_all(server.push(_state["root"]))
-    _refresh_status(remote, server)
-    typer.echo("progress push 1/1")
-
-
-@remote_app.command("install")
-def remote_install() -> None:
-    """Install or update the environments and the web UI service on the machine (after push)."""
-    remote, server = _remote()
-    _run_all(server.install())
-    _refresh_status(remote, server)
-    typer.echo(f"Web UI on the machine: {server.config.ui_url}")
-
-
-@remote_app.command("pull")
-def remote_pull() -> None:
-    """Bring the exported voices (voices/*/export/) back to this computer."""
-    _remote_mod, server = _remote()
-    _run_all(server.pull(_state["root"]))
-
-
-if __name__ == "__main__":
-    app(prog_name=os.path.basename(sys.argv[0]))

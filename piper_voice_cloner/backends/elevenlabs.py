@@ -92,7 +92,8 @@ def _get(path: str, session: Any, api_key: str | None) -> dict:
         import requests
 
         session = requests.Session()
-    response = session.get(f"{BASE_URL}{path}", headers={"xi-api-key": key}, timeout=30)
+    # shorter than the page's 15 s limit, so the page always gets an answer
+    response = session.get(f"{BASE_URL}{path}", headers={"xi-api-key": key}, timeout=12)
     if response.status_code != 200:
         raise ElevenLabsError(f"HTTP {response.status_code}: {response.text[:200]}")
     return response.json()

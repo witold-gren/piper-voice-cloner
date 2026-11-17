@@ -19,3 +19,19 @@ third_party/
 backup/
 
 .DS_Store
+
+# downloaded once by dev/icons.py
+.cache/
+
+# the editor on the GPU machine: folders, login, Home Assistant connection, keys, data
+docker/.env
+docker/config/
+docker/data/
+
+# made by dev/docs_site.py on every docs build
+docs/changelog.md
+docs/changelog.pl.md
+site/
+
+# your GPU machine for make install / deploy
+Makefile.local

@@ -77,3 +77,41 @@ def machine_state(client: ha.Client, settings: PowerSettings, reachable: bool | 
 
 def switch_machine(client: ha.Client, settings: PowerSettings, on: bool) -> None:
     client.call_service(settings.switch.split(".")[0], "turn_on" if on else "turn_off", settings.switch)
+
+
+def switch_off_machine() -> str:
+    """Switch the machine off through Home Assistant: what the editor runs after a training.
+
+    The machine's switch in Home Assistant does it safely (``docs/home-assistant/maszyna_gpu.yaml``:
+    shutdown over SSH, then the plug off once it draws less than the threshold). Used inside Docker,
+    where the container cannot power the host off itself; the editor calls it after its countdown.
+    """
+    settings = load_power()
+    if not ha.load_connection().ready or not settings.switch:
+        raise RuntimeError("no Home Assistant connection or machine switch (editor: Settings)")
+    switch_machine(ha.Client(), settings, on=False)
+    return settings.switch
+
+
+# the editor and `python -m piper_voice_cloner.power off` call this name: the tests put a harmless one here
+power_off = switch_off_machine
+
+
+def main(argv: list[str] | None = None) -> int:
+    import sys
+
+    args = sys.argv[1:] if argv is None else argv
+    if args != ["off"]:
+        print("usage: python -m piper_voice_cloner.power off", file=sys.stderr)
+        return 2
+    try:
+        switch = power_off()
+    except (RuntimeError, ha.HaError) as err:
+        print(f"Powering off failed: {err}", file=sys.stderr)
+        return 1
+    print(f"Asked Home Assistant to switch {switch} off")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

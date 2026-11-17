@@ -1,5 +1,60 @@
 # Changelog
 
+## 0.2.0 (2026-11-17)
+
+The voice editor replaces the Gradio panel. It runs only on the GPU machine, in Docker, and starts with
+it; it follows the gpu-studio standard shared with the wake word studio and the Assist Router trainer.
+
+Added:
+- The voice editor (`pvc editor`): the look of the Home Dashboard and Assist Router editors (tree,
+  search, columns, light/dark, PL/EN, icons offline), a login with one password (30-day session, five
+  wrong passwords wait a minute), the guide built in at `/docs/`.
+- Two ways to a voice, chosen when it is made: cloning (recording or ElevenLabs → sentences → audition
+  → generating → filter) or own recordings (import from the import folder, a ZIP or a path); then
+  training and export. The tree shows only the steps of the way, with their state.
+- Every step runs as a job, also preparing the recording, choosing the sentences and using another
+  voice's sentences (they held the old panel up). Job history with every log.
+- Training says exactly what resuming will do (finish the plan or train more epochs) and shows the
+  chart (zoom, pinned epoch, how to read it), listening to epochs and the checkpoints.
+- Voice settings as a form or YAML: a draft kept on the machine, undo/redo, Save with the changed lines,
+  a note and a conflict check, 30 earlier versions. Changing a field changes exactly one line.
+- Top bar: menu (guide, who is logged in, log out), job chip, machine chip (GPU, temperature, memory,
+  plug power) with power-off, the countdown before powering off with Cancel.
+- Powering off when a job ends goes through Home Assistant after 120 s that can be cancelled; never
+  after Stop (also when Stop came during Python's start), waits for a job running beside, a job started
+  meanwhile or a restart of the editor drops it.
+- Docker (`docker/`): Dockerfile with the environments in `/opt`, the guide built in its own stage and
+  the code as the last layer; torch pinned for driver 580; `docker/compose.yaml` (`studio` +
+  `tensorboard`); `docker/install-ubuntu.sh` (checks, login, the old panel's services off,
+  `--show-login`, `--remove`); `GET /api/health`.
+- Try it on a Mac with only Docker Desktop: `make demo` builds a small demo image (no torch, no CUDA;
+  arm64 and amd64) and runs it at http://localhost:7861 (`demo` / `demo`); Ctrl+C removes the container,
+  `make demo-clean` the image. The demo from `.venv` is now `make demo-local` and removes its temporary
+  folder on Ctrl+C. README and guide: "Try it on a Mac".
+- `make help` in the three groups of the gpu-studio standard. 1. Start (`help`, `demo`, `demo-clean`,
+  `docs`, `docs-serve`, `doctor`) and 2. The GPU machine (`install`, `deploy`, `login`, `logs`, `status`,
+  `docker-*`) need only Docker Desktop. 3. Development (`setup`, `demo-local`, `test`, `test-browser`,
+  `test-docker`, `test-all`, `lint`, `format`, `docs-build`, `screenshots`, `icons`, `clean`). The GPU
+  machine shared in `~/.config/gpu-studio/host.mk`.
+- The guide builds in the `docs` stage of the Dockerfile: `make docs` / `docs-build` copy `site/` out of
+  it, `make docs-serve` previews it live at http://127.0.0.1:8861/piper-voice-cloner/ (no `.venv-docs`).
+- `make doctor` says what is there and what is missing (Docker, Chrome, uv, `GPU_HOST` and SSH) and
+  installs nothing. `make setup` makes `.venv` with uv (`PYTHON_VERSION = 3.12`, uv fetches it).
+- `make test` never builds images; `make test-docker` (marker `docker`) builds and runs the demo image;
+  `make test-all` = lint + test + test-browser + test-docker. CI tests 3.11 (the image) and 3.12.
+- The guide: MkDocs Material site in Polish and English with screenshots (installation, the screen,
+  both ways, training well with every parameter, the base model, export to Home Assistant, law, FAQ),
+  also on GitHub Pages.
+- `voice.yaml` has `workflow: clone | import`.
+
+Removed:
+- The Gradio panel (`pvc ui`), driving the GPU machine from the Mac over SSH (`pvc remote …`, the
+  machine checklist), the systemd services (`scripts/install-service.sh`), `scripts/setup.sh`,
+  `make setup-mac` and the old HTML guides. The runner no longer powers anything off.
+
+Fixes:
+- Tests can never power a computer off and never reach a computer other than this one.
+
 ## 0.1.0 (2026-11-13)
 
 Added:

@@ -1,0 +1,116 @@
+# The documentation site, published on GitHub Pages by .github/workflows/docs.yml and built into the
+# Docker image (the editor's "?" opens it at /docs/ even without the internet).
+# Pages: docs/*.md in English, docs/*.pl.md in Polish beside them.
+site_name: Piper Voice Cloner
+site_description: A voice editor for the GPU machine - clone a voice or use your own recordings and train a Piper voice.
+site_url: https://witold-gren.github.io/piper-voice-cloner/
+repo_url: https://github.com/witold-gren/piper-voice-cloner
+repo_name: witold-gren/piper-voice-cloner
+edit_uri: edit/main/docs/
+docs_dir: docs
+strict: true
+
+exclude_docs: |
+  /design/
+  /home-assistant/
+
+extra_css:
+  - stylesheets/extra.css
+
+hooks:
+  - dev/docs_site.py
+
+theme:
+  name: material
+  logo: assets/icon.svg
+  favicon: assets/icon.svg
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tracking
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: pl
+          name: Polski
+          build: true
+          site_description: Edytor głosów na maszynę z GPU - sklonuj głos albo użyj własnych nagrań i wytrenuj głos Piper.
+          nav_translations:
+            Start: Start
+            Installation: Instalacja
+            The screen: Ekran
+            "Way A: cloning": "Ścieżka A: klonowanie"
+            "Way B: own recordings": "Ścieżka B: własne nagrania"
+            Training: Trening
+            Base model: Model bazowy
+            Export and Home Assistant: Eksport i Home Assistant
+            Law and consent: Prawo i zgoda
+            FAQ: FAQ
+            The common standard: Wspólny standard
+            Changelog: Lista zmian
+
+nav:
+  - Start: index.md
+  - Installation: installation.md
+  - The screen: screen.md
+  - "Way A: cloning": path-clone.md
+  - "Way B: own recordings": path-import.md
+  - Training: training.md
+  - Base model: base-model.md
+  - Export and Home Assistant: export.md
+  - Law and consent: legal.md
+  - FAQ: faq.md
+  - The common standard: standard.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+
+validation:
+  links:
+    absolute_links: ignore

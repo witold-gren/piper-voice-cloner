@@ -82,7 +82,51 @@ def isolated_elevenlabs_key(tmp_path, monkeypatch):
 
 @pytest.fixture(autouse=True)
 def no_real_poweroff(monkeypatch):
-    """Jobs started by the tests must never power the computer off (CI runners have sudo)."""
-    from piper_voice_cloner.webui import runner
+    """No test ever powers a computer off: switching the machine off through Home Assistant is
+    replaced by a list of calls (a CI runner once really powered off). Returns that list."""
+    from piper_voice_cloner import power
 
-    monkeypatch.setenv(runner.POWEROFF_ENV, "true")
+    calls: list[str] = []
+    monkeypatch.setattr(power, "power_off", lambda: calls.append("power_off") or "switch.test")
+    return calls
+
+
+LOCAL_HOSTS = {"127.0.0.1", "localhost", "::1", "testserver"}
+
+
+class OutsideNetwork(RuntimeError):
+    """A test tried to reach a computer other than this one (a real Home Assistant would ban us)."""
+
+
+def _local(url: str) -> bool:
+    from urllib.parse import urlsplit
+
+    return (urlsplit(url).hostname or "") in LOCAL_HOSTS
+
+
+@pytest.fixture(autouse=True)
+def no_outside_network(monkeypatch):
+    """Tests never leave 127.0.0.1: urllib and requests refuse any other address."""
+    from urllib import request as urllib_request
+
+    real_urlopen = urllib_request.urlopen
+
+    def urlopen(url, *args, **kwargs):
+        target = url if isinstance(url, str) else url.full_url
+        if not _local(target):
+            raise OutsideNetwork(target)
+        return real_urlopen(url, *args, **kwargs)
+
+    monkeypatch.setattr(urllib_request, "urlopen", urlopen)
+    try:
+        import requests
+    except ImportError:
+        return
+    real_request = requests.Session.request
+
+    def session_request(self, method, url, *args, **kwargs):
+        if not _local(url):
+            raise OutsideNetwork(url)
+        return real_request(self, method, url, *args, **kwargs)
+
+    monkeypatch.setattr(requests.Session, "request", session_request)

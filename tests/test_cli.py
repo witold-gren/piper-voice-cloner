@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 
-import numpy as np
 from typer.testing import CliRunner
 
 from piper_voice_cloner import config
@@ -228,25 +227,6 @@ def test_progress_printer_reports_about_every_percent(capsys):
     assert capsys.readouterr().out.splitlines() == [f"progress filter {n}/3" for n in (1, 2, 3)]
 
 
-def test_remote_configure_and_short_command(tmp_path):
-    from typer.testing import CliRunner
-
-    from piper_voice_cloner.cli import _short_command, app
-
-    runner = CliRunner()
-    result = runner.invoke(app, ["--root", str(tmp_path), "remote", "check"])
-    assert result.exit_code != 0 and "no server yet" in result.output
-    result = runner.invoke(
-        app, ["--root", str(tmp_path), "remote", "configure", "ubuntu.local", "--user", "u"]
-    )
-    assert result.exit_code == 0, result.output
-    assert (tmp_path / "server.json").is_file()
-    result = runner.invoke(app, ["--root", str(tmp_path), "remote", "configure", "bad host"])
-    assert result.exit_code != 0
-    shown = _short_command(["ssh", "-p", "22", "-o", "BatchMode=yes", "u@h", "x" * 200])
-    assert shown.startswith("ssh u@h ") and "BatchMode" not in shown and len(shown) < 140
-
-
 def test_init_picks_bazowy_pl_only_once_it_exists(tmp_path):
     from piper_voice_cloner import train
 
@@ -256,38 +236,6 @@ def test_init_picks_bazowy_pl_only_once_it_exists(tmp_path):
     (tmp_path / "bases" / train.SCRATCH_BASE).write_bytes(b"x")
     invoke(tmp_path, "init", "ola")
     assert config.load(tmp_path / "voices" / "ola").train.base == "bazowy-pl"
-
-
-def test_prepare_while_training_sends_code_and_restarts_only_the_ui(tmp_path, monkeypatch):
-    import subprocess
-
-    from piper_voice_cloner import remote
-
-    remote.save_config(tmp_path, remote.ServerConfig(host="gpu.lan", user="tomek"))
-    status = {
-        "gpu": "RTX 4090, 24564, 580", "tools": dict.fromkeys(remote.SETUP_TOOLS, True), "uv": True,
-        "free_gb": 900, "stamp": "old", "venv": True, "train": "cuda", "voices": {}, "service": "active",
-        "ui": True, "tensorboard": 6006,
-    }  # fmt: skip
-    ran = []
-
-    def fake_run(command, **kwargs):
-        script = command[-1]
-        ran.append(script)
-        if "PVC-STATUS" in script:
-            out = "PVC-STATUS " + json.dumps(status)
-        elif "current.json" in script:
-            out = json.dumps({"running": True, "kind": "base-train", "voice": ""})
-        else:
-            out = ""
-        return subprocess.CompletedProcess(command, 0, stdout=out, stderr="")
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-    output = invoke(tmp_path, "remote", "prepare")
-    assert "a job is running on the machine: base-train" in output
-    assert any(script == "systemctl --user restart piper-voice-cloner" for script in ran)
-    assert not any("setup.sh" in script for script in ran)  # the environments stay as they are
-    assert any(script.endswith("pvc/repo/") or "repo/" in script for script in ran)  # the code went over
 
 
 def test_samples_zip_of_the_base_and_of_a_voice(tmp_path):
@@ -343,26 +291,6 @@ def test_elevenlabs_voices_and_pick(tmp_path, monkeypatch):
     )
     unknown = runner.invoke(app, ["--root", str(tmp_path), "elevenlabs", "pick", "alicja", "x"])
     assert unknown.exit_code != 0
-
-
-def test_synthesize_elevenlabs_needs_no_recording(tmp_path, monkeypatch):
-    from piper_voice_cloner import backends
-    from piper_voice_cloner.synthesis import read_manifest
-
-    class Fake:
-        name, remote, source = "elevenlabs", True, "elevenlabs:o"
-
-        def synthesize(self, text, reference, seed):
-            return np.zeros(2400, dtype=np.float32), 24000
-
-    elevenlabs_voice(tmp_path)
-    monkeypatch.setattr(backends, "create", lambda *args, **kwargs: Fake())
-    output = invoke(tmp_path, "synthesize", "alicja", "--limit", "1")
-    assert "Generated 1 new clips" in output
-    invoke(tmp_path, "synthesize", "alicja")
-    manifest = read_manifest(tmp_path / "voices" / "alicja" / "raw")
-    assert len(manifest) == 10
-    assert {row["backend"] for row in manifest.values()} == {"elevenlabs:o"}
 
 
 def test_synthesize_says_why_it_stopped(tmp_path):

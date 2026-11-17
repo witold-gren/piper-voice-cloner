@@ -1,0 +1,16 @@
+# only pyproject, the package, the docs and the demo's three files go into the images
+*
+!pyproject.toml
+!README.md
+!LICENSE
+!piper_voice_cloner/
+!docs/
+!mkdocs.yml
+!requirements_docs.txt
+!CHANGELOG.md
+!dev/docs_site.py
+!dev/demo.py
+!dev/fake_pvc.py
+!dev/tfevents.py
+**/__pycache__
+**/*.pyc

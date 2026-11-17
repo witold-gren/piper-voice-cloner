@@ -1,0 +1,49 @@
+# The voice editor on the GPU machine: starts with the machine (restart: unless-stopped).
+#
+#   make install (from the Mac) or docker/install-ubuntu.sh (on the machine): login, folders, start
+#   make deploy  (from the Mac) or make docker-up (on the machine): every update
+#
+# docker/.env (written by install-ubuntu.sh): UID, GID, PVC_DATA (the data folder, also an existing one).
+# docker/config/ (mode 600): env with PVC_UI_AUTH, the Home Assistant connection, the ElevenLabs key,
+# the session secret. Backup = the data folder + docker/config.
+
+x-common: &common
+  image: piper-voice-cloner:latest
+  restart: unless-stopped
+  user: "${UID:-1000}:${GID:-1000}"
+  volumes:
+    - ${PVC_DATA:-./data}:/data
+    - ./config:/config
+    - /etc/localtime:/etc/localtime:ro
+
+services:
+  studio:
+    <<: *common
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: piper-voice-cloner
+    env_file: config/env
+    environment:
+      PVC_TB_PORT: ${PVC_TB_PORT:-6006}
+    # data loader processes of a training share memory
+    shm_size: "8gb"
+    ports:
+      - "${PVC_UI_PORT:-7860}:7860"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # the training charts; no login - home network (or VPN) only
+  tensorboard:
+    <<: *common
+    container_name: piper-voice-cloner-tensorboard
+    command: ["/opt/train/venv/bin/tensorboard", "--logdir", "/data", "--bind_all", "--port", "6006", "--reload_interval", "60"]
+    healthcheck:
+      disable: true
+    ports:
+      - "${PVC_TB_PORT:-6006}:6006"

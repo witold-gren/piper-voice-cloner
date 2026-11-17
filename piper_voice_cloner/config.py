@@ -74,6 +74,8 @@ class VoiceConfig(_Section):
     language: str = "pl"
     # file name in Piper style without quality, e.g. pl_PL-kuba_bajka -> pl_PL-kuba_bajka-medium (or -high)
     piper_name: str | None = None
+    # clone: recording/ElevenLabs -> sentences -> clips -> filter; import: ready clips with text
+    workflow: Literal["clone", "import"] = "clone"
     target_clips: int = Field(2000, ge=10)
     synthesis: SynthesisConfig = Field(default_factory=SynthesisConfig)
     quality: QualityConfig = Field(default_factory=QualityConfig)
