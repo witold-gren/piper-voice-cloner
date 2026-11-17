@@ -146,7 +146,7 @@ def test_help_in_both_languages(language):
 @pytest.mark.skipif(not shutil.which("make"), reason="make not installed")
 @pytest.mark.parametrize("target", ["demo", "docs", "docs-serve", "docs-build"])
 def test_without_docker_a_clear_message(target):
-    out = make(target, path="/usr/bin:/bin")  # no docker on PATH
+    out = make(target, "DOCKER=docker-that-is-not-there")  # also where docker sits in /usr/bin (CI)
     assert out.returncode != 0
     assert "install and start Docker Desktop" in out.stdout + out.stderr
     assert "Traceback" not in out.stdout + out.stderr

@@ -18,6 +18,8 @@ DEMO_PORT ?= 7861
 DOCS_PORT ?= 8861
 DEMO_IMAGE ?= piper-voice-cloner-demo
 DOCS_IMAGE ?= piper-voice-cloner-docs
+# the docker command checked by need-docker (tests point it at a missing one)
+DOCKER ?= docker
 # the programmer's Python, fetched by uv (the image on the machine stays on 3.11 for torch)
 PYTHON_VERSION ?= 3.12
 
@@ -35,8 +37,8 @@ need-host = @test -n "$(GPU_HOST)" || { echo 'save GPU_HOST in ~/.config/gpu-stu
         docker-logs docker-shell setup demo-local test test-browser test-docker test-all lint format docs-build \
         screenshots icons clean
 
-need-docker = @command -v docker >/dev/null 2>&1 || { echo 'Docker not found: install and start Docker Desktop | Brak Dockera: zainstaluj i uruchom Docker Desktop'; exit 1; }; \
-  docker info >/dev/null 2>&1 || { echo 'Docker is not running: start Docker Desktop | Docker nie działa: uruchom Docker Desktop'; exit 1; }
+need-docker = @command -v $(DOCKER) >/dev/null 2>&1 || { echo 'Docker not found: install and start Docker Desktop | Brak Dockera: zainstaluj i uruchom Docker Desktop'; exit 1; }; \
+  $(DOCKER) info >/dev/null 2>&1 || { echo 'Docker is not running: start Docker Desktop | Docker nie działa: uruchom Docker Desktop'; exit 1; }
 
 ##@ 1. Start | 1. Start
 
