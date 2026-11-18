@@ -16,7 +16,7 @@ SCRIPT = REPO / "docker" / "install-ubuntu.sh"
 # the ordinary tools the script uses; the machine-specific ones are fakes below
 TOOLS = [
     *("bash", "sh", "sed", "grep", "head", "tail", "tr", "mkdir"),
-    *("chmod", "cat", "id", "cp", "seq", "dirname", "awk", "env", "rm"),
+    *("chmod", "cat", "id", "cp", "seq", "dirname", "awk", "env", "rm", "mv"),
 ]
 
 pytestmark = pytest.mark.skipif(shutil.which("bash") is None, reason="bash not installed")
@@ -219,3 +219,20 @@ def test_uninstall_never_removes_a_folder_that_is_not_the_editor(tmp_path, insta
     out, _ = run(tmp_path, "--uninstall", "--yes")
     assert out.returncode == 0, out.stdout + out.stderr
     assert (tmp_path / "repo" / "pyproject.toml").exists() and "left as it is" in out.stdout
+
+
+def test_trusted_networks_are_written_replaced_and_removed(tmp_path):
+    machine(tmp_path)
+    env_file = tmp_path / "repo" / "docker" / "config" / "env"
+    login = env_file.read_text()
+    out, _ = run(tmp_path, STUDIO_TRUSTED_NETWORKS="192.168.1.0/24")
+    assert out.returncode == 0, out.stdout + out.stderr
+    assert env_file.read_text() == login + "STUDIO_TRUSTED_NETWORKS=192.168.1.0/24\n"
+    assert "no login from: 192.168.1.0/24" in out.stdout
+    run(tmp_path, STUDIO_TRUSTED_NETWORKS="192.168.1.0/24,10.8.0.0/24")
+    assert env_file.read_text() == login + "STUDIO_TRUSTED_NETWORKS=192.168.1.0/24,10.8.0.0/24\n"
+    run(tmp_path)  # not given: left as it is
+    assert "STUDIO_TRUSTED_NETWORKS=192.168.1.0/24,10.8.0.0/24" in env_file.read_text()
+    out, _ = run(tmp_path, STUDIO_TRUSTED_NETWORKS="")  # empty: the login is needed again
+    assert env_file.read_text() == login and "login always" in out.stdout
+    assert stat.S_IMODE(env_file.stat().st_mode) == 0o600

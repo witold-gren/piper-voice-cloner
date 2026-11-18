@@ -506,7 +506,11 @@ export class PvcEditor extends LitElement {
             <button class="ghost" data-menu-docs @click=${() => window.open(this._docsUrl(), "_blank", "noopener")}>
               <pvc-icon icon="mdi:book-open-variant"></pvc-icon>${this._t("docs")}
             </button>
-            ${this._state.login
+            ${this._state.trusted
+              ? html`<div class="menu-user" data-menu-trusted>
+                    <pvc-icon icon="mdi:shield-home"></pvc-icon>${this._t("trusted_network")}
+                  </div>`
+              : this._state.login
               ? html`<div class="menu-user" data-menu-user>
                     <pvc-icon icon="mdi:account"></pvc-icon>${this._t("logged_in_as", { user: this._state.user })}
                   </div>

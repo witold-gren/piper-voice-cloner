@@ -3,6 +3,7 @@
 # the Mac with `make install`).
 #
 #   docker/install-ubuntu.sh                checks, login, folders, autostart, build, start
+#   STUDIO_TRUSTED_NETWORKS=192.168.1.0/24 docker/install-ubuntu.sh   ... and no login from that network
 #   docker/install-ubuntu.sh --show-login   the editor's user and password
 #   docker/install-ubuntu.sh --remove       stops and removes the containers (data and settings stay)
 #   docker/install-ubuntu.sh --stop         stops the containers; they stay off after a reboot
@@ -119,6 +120,14 @@ if [ ! -f "$CONFIG/env" ]; then
   password="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 20 || true)"
   (umask 077 && printf 'PVC_UI_AUTH=admin:%s\n' "$password" >"$CONFIG/env")
   echo "login written to docker/config/env (make login shows it)"
+fi
+# STUDIO_TRUSTED_NETWORKS=192.168.1.0/24 (the same name in every studio): no login from these networks;
+# set: written or replaced in config/env, set but empty: removed (login always), not set: left as it is
+if [ -n "${STUDIO_TRUSTED_NETWORKS+set}" ]; then
+  (umask 077 && grep -v '^STUDIO_TRUSTED_NETWORKS=' "$CONFIG/env" >"$CONFIG/env.new" || true)
+  [ -z "$STUDIO_TRUSTED_NETWORKS" ] || printf 'STUDIO_TRUSTED_NETWORKS=%s\n' "$STUDIO_TRUSTED_NETWORKS" >>"$CONFIG/env.new"
+  mv "$CONFIG/env.new" "$CONFIG/env"
+  echo "no login from: ${STUDIO_TRUSTED_NETWORKS:-nowhere (login always)}"
 fi
 # the Home Assistant connection and the ElevenLabs key of the old panel come along (small files)
 for file in home_assistant.json elevenlabs.json; do

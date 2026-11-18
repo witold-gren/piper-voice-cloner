@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.2 (2026-11-18)
+
+Added:
+- `STUDIO_TRUSTED_NETWORKS` (in `docker/config/env`, set by `make install STUDIO_TRUSTED_NETWORKS=…`):
+  no login from these networks, by the address of the connection only (never a header); the ☰ menu
+  and the editor settings say the network is trusted instead of offering to log out. Empty by default:
+  the login is needed from everywhere.
+
+Changed:
+- The last leftovers of the Gradio panel are gone (lint exceptions, a docstring).
+
 ## 0.2.1 (2026-11-18)
 
 The first run on the real GPU machine: install, deploy, a training, the export and Home Assistant were

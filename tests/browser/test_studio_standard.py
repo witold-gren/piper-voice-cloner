@@ -12,7 +12,7 @@ REPO_DEV = __import__("pathlib").Path(__file__).resolve().parents[2] / "dev"
 
 
 @pytest.fixture
-def login_demo(tmp_path, monkeypatch):
+def login_demo(tmp_path, monkeypatch, request):
     """The demo editor with a password: (base url)."""
     import socket
     import threading
@@ -22,11 +22,14 @@ def login_demo(tmp_path, monkeypatch):
     import demo as demo_mod
     import uvicorn
 
-    from piper_voice_cloner.editor.auth import Login
+    from piper_voice_cloner.editor.auth import Login, parse_networks
     from piper_voice_cloner.editor.server import create_app
 
     root = demo_mod.build(tmp_path / "data")
-    app = create_app(root, login=Login("demo", "demo", "secret"), gpu=False, countdown=False)
+    networks = parse_networks(getattr(request, "param", ""))
+    app = create_app(
+        root, login=Login("demo", "demo", "secret"), gpu=False, countdown=False, trusted_networks=networks
+    )
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
@@ -54,6 +57,22 @@ def test_login_card_then_the_editor_and_the_menu(browser, login_demo):
     expect(page.locator("[data-menu-user]")).to_contain_text("demo")
     page.locator("[data-logout]").click()
     expect(page).to_have_url(re.compile("/login"))
+    page.close()
+
+
+@pytest.mark.parametrize("login_demo", ["127.0.0.0/8"], indirect=True)
+def test_a_trusted_network_opens_without_login_and_has_no_log_out(browser, login_demo):
+    page = browser.new_page()
+    page.goto(f"{login_demo}/login")
+    expect(page).not_to_have_url(re.compile("/login"))
+    page.wait_for_function("window.editorReady === true")
+    page.locator("[data-menu]").click()
+    expect(page.locator("[data-menu-trusted]")).to_contain_text("STUDIO_TRUSTED_NETWORKS")
+    expect(page.locator("[data-logout]")).to_have_count(0)
+    page.goto(f"{login_demo}/#settings/editor")
+    page.wait_for_function("window.editorReady === true")
+    expect(page.locator("[data-trusted-settings]")).to_be_visible()
+    expect(page.locator("[data-logout-settings]")).to_have_count(0)
     page.close()
 
 

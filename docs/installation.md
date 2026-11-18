@@ -106,6 +106,21 @@ One user: `PVC_UI_AUTH=admin:<password>` in `docker/config/env` (`make login` sh
 30 days; after 5 wrong passwords from one address it waits a minute. Change the password in that file and
 `docker compose -f docker/compose.yaml restart` – every browser is logged out.
 
+#### No login on the home network {#trusted-networks}
+
+A machine reached only from home (and a VPN into it) can skip the login:
+
+```bash
+make install STUDIO_TRUSTED_NETWORKS=192.168.1.0/24          # your home network; several: a,b
+make install STUDIO_TRUSTED_NETWORKS=                         # empty: the login is needed again
+```
+
+The value goes to `docker/config/env` (the same name in every studio of the GPU machine). A browser from
+such a network opens the editor at once, and the ☰ menu says "No login – this network is trusted". Only the
+address of the connection counts, never a header such as `X-Forwarded-For`. On the machine itself
+(`localhost`) the connection comes from Docker's gateway, so the login stays there. A machine in the
+cloud leaves it empty.
+
 ### After a restart of the machine
 
 Nothing to do: Docker starts both containers. A job cut by powering off shows as **Interrupted**; start the

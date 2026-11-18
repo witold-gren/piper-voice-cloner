@@ -26,6 +26,8 @@ PYTHON_VERSION ?= 3.12
 VENV := .venv
 HELP_LANG ?= $(if $(filter pl%,$(LANG)),pl,en)
 COMPOSE := docker compose -f docker/compose.yaml
+# make install STUDIO_TRUSTED_NETWORKS=192.168.1.0/24: no login from that network (empty value: login always)
+TRUSTED := $(if $(filter-out undefined,$(origin STUDIO_TRUSTED_NETWORKS)),STUDIO_TRUSTED_NETWORKS='$(STUDIO_TRUSTED_NETWORKS)')
 RSYNC_CODE := rsync -az --delete --exclude .git --exclude '.venv*' --exclude backup --exclude __pycache__ \
   --exclude .pytest_cache --exclude .ruff_cache --exclude '*.egg-info' --exclude .cache --exclude site \
   --exclude docker/config --exclude docker/data --exclude docker/.env --exclude Makefile.local \
@@ -99,7 +101,7 @@ doctor: ## What is there and what is missing (Docker, Chrome, uv, the machine); 
 install: ## First install on GPU_HOST: code, checks, login, start with the machine | Pierwsza instalacja na GPU_HOST: kod, kontrole, login, start z maszyną
 	$(need-host)
 	$(RSYNC_CODE) ./ $(GPU_HOST):$(GPU_DIR)/
-	ssh -t $(GPU_HOST) 'cd $(GPU_DIR) && docker/install-ubuntu.sh'
+	ssh -t $(GPU_HOST) 'cd $(GPU_DIR) && $(TRUSTED) docker/install-ubuntu.sh'
 
 deploy: ## Every update: send the code to GPU_HOST and rebuild the editor there | Każda aktualizacja: wyślij kod na GPU_HOST i przebuduj tam edytor
 	$(need-host)

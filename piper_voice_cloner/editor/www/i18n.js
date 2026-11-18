@@ -473,6 +473,7 @@ export const STRINGS = {
     // gpu-studio standard: menu, countdown, draft
     menu: "Menu",
     logged_in_as: "Logged in as {user}",
+    trusted_network: "No login — this network is trusted (STUDIO_TRUSTED_NETWORKS)",
     password_change: "The password is in docker/config/env on the machine (make login shows it); change it there and restart the editor.",
     power_off_in: "Power-off in {time}",
     power_off_failed: "Powering off failed",
@@ -960,6 +961,7 @@ export const STRINGS = {
     logout_hint: "Wyloguj z edytora w tej przeglądarce.",
     menu: "Menu",
     logged_in_as: "Zalogowany: {user}",
+    trusted_network: "Bez logowania — ta sieć jest zaufana (STUDIO_TRUSTED_NETWORKS)",
     password_change: "Hasło jest w docker/config/env na maszynie (pokaże je make login); zmień je tam i uruchom edytor ponownie.",
     power_off_in: "Wyłączenie za {time}",
     power_off_failed: "Wyłączenie się nie udało",

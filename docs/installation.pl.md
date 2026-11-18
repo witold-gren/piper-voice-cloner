@@ -108,6 +108,21 @@ Sesja trwa 30 dni. Po 5 złych hasłach z jednego adresu trzeba odczekać minut�
 a potem uruchomisz `docker compose -f docker/compose.yaml restart`. Zmiana hasła wylogowuje wszystkie
 przeglądarki.
 
+#### Bez logowania w sieci domowej {#trusted-networks}
+
+Maszyna dostępna tylko z domu (i przez VPN do domu) może pominąć logowanie:
+
+```bash
+make install STUDIO_TRUSTED_NETWORKS=192.168.1.0/24          # Twoja sieć domowa; kilka: a,b
+make install STUDIO_TRUSTED_NETWORKS=                         # pusta: logowanie wraca
+```
+
+Wartość trafia do `docker/config/env`. Ta sama nazwa obowiązuje we wszystkich studiach maszyny z GPU.
+Przeglądarka z takiej sieci od razu otwiera edytor, a menu ☰ pokazuje „Bez logowania – ta sieć jest
+zaufana”. Liczy się wyłącznie adres połączenia, nigdy nagłówek w rodzaju `X-Forwarded-For`. Na samej
+maszynie (`localhost`) połączenie przychodzi z bramy Dockera, więc tam logowanie zostaje. Maszyna
+w chmurze zostawia tę wartość pustą.
+
 ### Po restarcie maszyny
 
 Nic nie trzeba robić, bo Docker uruchamia oba kontenery sam. Zadanie przerwane wyłączeniem maszyny ma stan

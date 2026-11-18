@@ -153,7 +153,7 @@ def save_config_yaml(root: Path, name: str, text: str) -> config_mod.VoiceConfig
 
 
 def save_uploads(target_dir: Path, files: list[str | Path]) -> list[Path]:
-    """Copy uploaded files (Gradio temp paths) into the voice folder, keeping their names."""
+    """Copy uploaded files (temporary paths of an upload) into the voice folder, keeping their names."""
     target_dir.mkdir(parents=True, exist_ok=True)
     saved = []
     for file in files:

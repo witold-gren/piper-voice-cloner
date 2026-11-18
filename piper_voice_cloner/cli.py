@@ -562,19 +562,27 @@ def editor(
         int | None,
         typer.Option(envvar="PVC_TB_PORT", help="Port of TensorBoard, for the link in the editor."),
     ] = None,
+    trusted_networks: Annotated[
+        str | None,
+        typer.Option(
+            envvar="STUDIO_TRUSTED_NETWORKS",
+            help="Networks that need no login, e.g. 192.168.1.0/24 (comma-separated; empty: login always).",
+        ),
+    ] = None,
 ) -> None:
     """The voice editor in the browser (needs: pip install -e '.[editor]')."""
     import uvicorn
 
-    from .editor.auth import Login, load_secret
+    from .editor.auth import Login, load_secret, parse_networks
     from .editor.server import create_app
 
     root = _state["root"]
     try:
         login = Login.parse(auth, load_secret() if auth else "")
+        networks = parse_networks(trusted_networks)
     except ValueError as err:
         raise typer.BadParameter(str(err)) from err
-    app_ = create_app(root, login=login, tensorboard_port=tensorboard_port)
+    app_ = create_app(root, login=login, tensorboard_port=tensorboard_port, trusted_networks=networks)
     shown = "localhost" if host in ("127.0.0.1", "0.0.0.0") else host
     typer.echo(f"Piper Voice Cloner editor: http://{shown}:{port}/   data: {root}   (Ctrl+C stops)")
     uvicorn.run(app_, host=host, port=port, log_level="warning", timeout_graceful_shutdown=2)

@@ -19,7 +19,7 @@ from pydantic import BaseModel
 from .. import __version__, power
 from ..jobs import JobBusy, JobManager
 from . import api, service
-from .auth import COOKIE, SESSION_DAYS, Guard, Login
+from .auth import COOKIE, SESSION_DAYS, Guard, Login, Network, trusted
 from .clone import add_clone_routes
 from .poweroff import PowerOffTimer
 from .routes import add_step_routes
@@ -58,6 +58,7 @@ def create_app(
     gpu: bool = True,
     docs_dir: Path | None = None,
     countdown: bool = True,
+    trusted_networks: tuple[Network, ...] = (),
 ) -> FastAPI:
     root = Path(root)
     jobs = {slot: JobManager(root, pvc=pvc, slot=slot) for slot in SLOTS}
@@ -74,11 +75,16 @@ def create_app(
     async def api_error(_request: Request, err: ApiError):
         return JSONResponse({"error": err.code, "message": str(err), **err.values}, status_code=err.status)
 
+    def from_trusted(request: Request) -> bool:
+        """Only the address of the connection itself counts, never X-Forwarded-For or another header."""
+        address = request.client.host if request.client else None
+        return login is not None and trusted(address, trusted_networks)
+
     @app.middleware("http")
     async def need_login(request: Request, call_next):
         path = request.url.path
         open_paths = path in ("/login", "/api/health") or path.startswith(("/static/icon", "/favicon"))
-        if login is None or open_paths or login.valid(request.cookies.get(COOKIE)):
+        if login is None or open_paths or from_trusted(request) or login.valid(request.cookies.get(COOKIE)):
             return await call_next(request)
         if path.startswith(("/api/", "/docs")):
             return JSONResponse({"error": "login"}, status_code=401)
@@ -107,6 +113,8 @@ def create_app(
 
     @app.get("/login")
     def login_page(request: Request, failed: int = 0):
+        if from_trusted(request):
+            return RedirectResponse("/", status_code=303)
         return HTMLResponse(login_html(request.headers.get("accept-language", ""), failed))
 
     @app.post("/login")
@@ -138,10 +146,11 @@ def create_app(
     # --- state ------------------------------------------------------------------------------------
 
     @app.get("/api/state")
-    def state():
+    def state(request: Request):
         payload = api.state_payload(root, jobs, gpu=gpu)
         payload["tensorboard_port"] = tensorboard_port
         payload["login"] = login is not None
+        payload["trusted"] = from_trusted(request)  # no login from this network: nothing to log out of
         # the machine's power and switching it off after a job: through Home Assistant
         payload["machine"] = app.state.machine.view()
         payload["can_power_off"] = app.state.machine.ready()

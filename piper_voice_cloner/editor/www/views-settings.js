@@ -652,7 +652,10 @@ class PvcSettingsEditor extends StepView {
             </div></div>
         </div>
       </section>
-      ${this.state?.login
+      ${this.state?.trusted
+        ? html`<section class="card"><div class="row"><pvc-icon icon="mdi:shield-home"></pvc-icon>
+            <span class="hint grow" data-trusted-settings>${this._t("trusted_network")}</span></div></section>`
+        : this.state?.login
         ? html`<section class="card"><div class="row"><span class="hint grow">${this._t("logout_hint")}</span>
             <button data-logout-settings @click=${() => this.editor._logout()}><pvc-icon icon="mdi:logout"></pvc-icon>${this._t("logout")}</button></div></section>`
         : nothing}
