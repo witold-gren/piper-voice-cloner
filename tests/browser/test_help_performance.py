@@ -137,3 +137,21 @@ def test_every_view_on_big_data_without_a_long_task(page, demo):
     page.wait_for_timeout(300)
     longest = max(page.evaluate("window.longTasks") or [0])
     assert longest < 500, f"a long task of {longest:.0f} ms"
+
+
+def test_the_help_window_stays_open_when_the_step_data_comes(page):
+    """The head was drawn once without data and again with it, so "?" opened right after opening a
+    step closed by itself (the cause of a flaky test)."""
+    held = []
+    page.route("**/api/voices/kasia/train", lambda route: held.append(route))  # answered later
+    page.open("voice/kasia/train")
+    page.locator("pvc-step-train [data-step-help] [data-help-button]").click()
+    window = page.locator("pvc-step-train [data-help-pop]")
+    expect(window).to_be_visible()
+    expect(page.locator("pvc-step-train [data-run-train]")).to_have_count(0)  # no data yet
+    for route in held:
+        route.continue_()
+    expect(window).to_be_visible()
+    expect(page.locator("pvc-step-train [data-run-train]")).to_be_visible(timeout=10000)  # the data came
+    expect(window).to_be_visible()
+    expect(window.locator("[data-help-more]")).to_have_count(1)

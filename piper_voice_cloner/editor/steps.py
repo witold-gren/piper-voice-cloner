@@ -15,6 +15,7 @@ import zipfile
 
 from .. import config as config_mod, train_monitor
 from ..jobs import JobManager
+from ..runner import STOPPED_CODES, exit_path
 from . import service
 
 EPOCH_IN_NAME = re.compile(r"epoch=(\d+)")
@@ -308,6 +309,7 @@ def job_history(root: Path, limit: int = 100) -> list[dict]:
     if not folder.is_dir():
         return []
     found = []
+    running = running_logs(folder)
     for path in sorted(folder.glob("*.log"), reverse=True)[:limit]:
         match = LOG_NAME.match(path.name)
         if not match:
@@ -316,17 +318,71 @@ def job_history(root: Path, limit: int = 100) -> list[dict]:
         kind = next((k for k in KINDS if rest == k or rest.startswith(f"{k}-")), None)
         if kind is None:
             continue
-        voice = rest[len(kind) + 1 :]
+        voice = rest[len(kind) + 1 :] or queue_voices(path)
+        started = datetime.strptime(stamp, "%Y%m%d-%H%M%S")
+        status, code, took = job_end(path, started, running)
         found.append(
             {
                 "file": path.name,
                 "kind": kind,
-                "voice": voice or "",
-                "started": datetime.strptime(stamp, "%Y%m%d-%H%M%S").strftime("%Y-%m-%d %H:%M:%S"),
+                "voice": voice,
+                "started": started.strftime("%Y-%m-%d %H:%M:%S"),
                 "size": path.stat().st_size,
+                "status": status,
+                "code": code,
+                "took": took,
             }
         )
     return found
+
+
+def running_logs(folder: Path) -> set[str]:
+    """Log names of the jobs that run now (current and side slot, no exit code yet)."""
+    names = set()
+    for slot in folder.glob("*.json"):
+        try:
+            state = json.loads(slot.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(state, dict) and state.get("log") and state.get("returncode") is None:
+            names.add(Path(state["log"]).name)
+    return names
+
+
+def job_end(path: Path, started: datetime, running: set[str]) -> tuple[str, int | None, float | None]:
+    """How the job of this log ended: ok, failed, stopped, running or unknown (a log from before the
+    exit files, or a job cut off by a restart)."""
+    if path.name in running:
+        return "running", None, None
+    try:
+        end = json.loads(exit_path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return "unknown", None, None
+    code = end.get("returncode")
+    took = max(0.0, float(end.get("finished", 0)) - started.timestamp()) if end.get("finished") else None
+    if code == 0:
+        return "ok", 0, took
+    if code in STOPPED_CODES:
+        return "stopped", code, took
+    return "failed", code, took
+
+
+def queue_voices(path: Path) -> str:
+    """The voices of a training queue, from the command in its log's first line."""
+    try:
+        with path.open(encoding="utf-8", errors="replace") as handle:
+            first = handle.readline()
+    except OSError:
+        return ""
+    words = first.split()
+    if "train-queue" not in words:
+        return ""
+    names = []
+    for word in words[words.index("train-queue") + 1 :]:
+        if word.startswith("-"):
+            break
+        names.append(word)
+    return ", ".join(names)
 
 
 def job_log(root: Path, file: str) -> str:

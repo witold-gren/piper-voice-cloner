@@ -619,3 +619,21 @@ def test_status_reads_the_whole_queue_from_the_log(tmp_path):
         handle.write("Epoch 2: 90%|#| 1/2\nqueue 2/4: tomek\n")
     assert "queue 2/4: tomek" in manager.status().queue_log
     assert manager.status().queue_log.count("queue 1/4") == 1
+
+
+def test_the_default_command_really_runs_the_cli(tmp_path):
+    """Jobs run `python -m piper_voice_cloner.cli`; without its __main__ block that did nothing and
+    exited 0, so on the machine every job "succeeded" in 0.1 s (0.2.0 bug, the tests used fake_pvc)."""
+    import subprocess
+
+    manager = JobManager(tmp_path)
+    out = subprocess.run(
+        [*manager.pvc, "--root", str(tmp_path), "train", "nobody"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert out.returncode != 0  # no such voice: the CLI ran and said so
+    assert "nobody" in out.stdout + out.stderr
+    helped = subprocess.run([*manager.pvc, "--help"], capture_output=True, text=True, timeout=120)
+    assert helped.returncode == 0 and "train" in helped.stdout and "export" in helped.stdout

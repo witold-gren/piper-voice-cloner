@@ -33,7 +33,7 @@ RSYNC_CODE := rsync -az --delete --exclude .git --exclude '.venv*' --exclude bac
 need-host = @test -n "$(GPU_HOST)" || { echo 'save GPU_HOST in ~/.config/gpu-studio/host.mk (e.g. GPU_HOST = user@192.168.1.21)'; exit 1; }
 
 .DEFAULT_GOAL := help
-.PHONY: help demo demo-clean docs docs-serve doctor install deploy login logs status docker-up docker-down \
+.PHONY: help demo demo-clean docs docs-serve doctor install deploy login logs status stop uninstall docker-up docker-down \
         docker-logs docker-shell setup demo-local test test-browser test-docker test-all lint format docs-build \
         screenshots icons clean
 
@@ -120,6 +120,14 @@ status: ## Does the editor answer, the GPU in the container, the version | Czy e
 	  echo "health:  $$(curl -sf http://127.0.0.1:$${port:-7860}/api/health || echo "no answer")"; \
 	  echo "GPU:     $$($(COMPOSE) exec -T studio nvidia-smi --query-gpu=name,memory.used,temperature.gpu --format=csv,noheader 2>&1 | head -1)"; \
 	  $(COMPOSE) ps --format "table {{.Service}}\t{{.State}}\t{{.Status}}"'
+
+stop: ## Stop the editor and TensorBoard on GPU_HOST; off also after a reboot (make deploy starts them) | Zatrzymaj edytor i TensorBoard na GPU_HOST; wyłączone także po restarcie (make deploy je uruchamia)
+	$(need-host)
+	ssh $(GPU_HOST) 'cd $(GPU_DIR) && docker/install-ubuntu.sh --stop'
+
+uninstall: ## Remove the editor from GPU_HOST: containers, image, login, settings, code; the voices stay (asks first; CONFIRM=yes) | Usuń edytor z GPU_HOST: kontenery, obraz, login, ustawienia, kod; głosy zostają (najpierw pyta; CONFIRM=yes)
+	$(need-host)
+	ssh -t $(GPU_HOST) 'cd $(GPU_DIR) && docker/install-ubuntu.sh --uninstall $(if $(filter yes,$(CONFIRM)),--yes)'
 
 # on the machine itself (a clone there, without the Mac)
 docker-up: ## Build and start the editor and TensorBoard (first time: docker/install-ubuntu.sh) | Zbuduj i uruchom edytor i TensorBoard (za pierwszym razem: docker/install-ubuntu.sh)

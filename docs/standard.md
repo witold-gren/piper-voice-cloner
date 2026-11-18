@@ -40,7 +40,7 @@ The same names as in the other applications; `make help` in Polish or English (f
 groups:
 
 - **1. Start:** `help`, `demo`, `demo-clean`, `docs`, `docs-serve`, `doctor`. Docker Desktop is enough.
-- **2. The GPU machine:** `install`, `deploy`, `login`, `logs`, `status`, `docker-up`, `docker-down`,
+- **2. The GPU machine:** `install`, `deploy`, `login`, `logs`, `status`, `stop`, `uninstall`, `docker-up`, `docker-down`,
   `docker-logs`, `docker-shell`. Docker plus `ssh` and `rsync` from macOS are enough.
 - **3. Development:** `setup`, `demo-local`, `test`, `test-browser`, `test-docker`, `test-all`, `lint`,
   `format`, `docs-build`, `screenshots`, `icons`, `clean`.
@@ -77,7 +77,7 @@ What else changed:
   - makes the password;
   - carries over the existing Home Assistant and ElevenLabs connections;
   - builds and starts the editor.
-  - Options: `--show-login` and `--remove`.
+  - Options: `--show-login`, `--stop`, `--remove` and `--uninstall`.
 - `GET /api/health` serves the container and `make status`.
 - A container restart does not leave a job "running": a job without its process becomes "interrupted".
 
@@ -185,12 +185,14 @@ their state, and in a narrow window the right column starts folded.
 - No `migrate` and `migrate-finish` (optional in the standard). The installer switches the old services
   off and the data stays in its folder.
 
-## Still to do
+## Checked on the real machine (0.2.1)
 
-A check on the real machine:
+- `make install` and `make deploy` on Ubuntu 24.04 with an RTX 4090 and driver 580;
+- the GPU in the container (torch for training and for the editor);
+- the editor and TensorBoard start by themselves after a reboot;
+- a test training of two epochs from `lessac`, the export and a sentence spoken by the exported voice;
+- the Home Assistant connection, the plug power and the countdown with Cancel;
+- `make stop` and starting again with `make deploy`.
 
-- `make install`;
-- the GPU in a container;
-- a test training of two epochs on a copy of a voice;
-- export;
-- powering off through Home Assistant with the countdown.
+Still to do: powering the machine off through Home Assistant for real, and `make uninstall` on the
+machine.

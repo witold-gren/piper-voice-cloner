@@ -157,3 +157,49 @@ def test_a_narrow_window_starts_with_the_right_column_folded(browser, demo):
     page.wait_for_function("window.editorReady === true")
     expect(page.locator("[data-fold-bar='right']")).to_be_visible()
     context.close()
+
+
+def test_the_gear_opens_a_box_with_the_look_and_the_language(page):
+    """⚙ opens a small box under it (the gpu-studio standard), not a view in the middle."""
+    page.open()
+    before = page.evaluate("location.hash")
+    page.locator("[data-editor-settings]").click()
+    box = page.locator("[data-gear-box]")
+    expect(box).to_be_visible()
+    assert page.evaluate("location.hash") == before  # the middle stays where it was
+    box.locator("[data-theme-option='dark']").click()
+    expect(page.locator("pvc-editor")).to_have_attribute("data-theme", "dark")
+    expect(box).to_be_visible()  # choosing keeps it open
+    page.keyboard.press("Escape")
+    expect(box).to_be_hidden()
+    page.locator("[data-editor-settings]").click()
+    page.locator("header h1").click()  # a click beside it
+    expect(box).to_be_hidden()
+    page.locator("[data-editor-settings]").click()
+    page.locator("[data-editor-settings]").click()  # ⚙ again
+    expect(box).to_be_hidden()
+    page.locator("[data-editor-settings]").click()
+    page.locator("[data-gear-more]").click()
+    expect(box).to_be_hidden()
+    assert "settings" in page.evaluate("location.hash")
+
+
+def test_the_menu_closes_with_escape_and_a_click_beside_it(page):
+    page.open()
+    page.locator("[data-menu]").click()
+    expect(page.locator("[data-menu-box]")).to_be_visible()
+    page.keyboard.press("Escape")
+    expect(page.locator("[data-menu-box]")).to_be_hidden()
+    page.locator("[data-menu]").click()
+    page.locator("header h1").click()
+    expect(page.locator("[data-menu-box]")).to_be_hidden()
+
+
+def test_the_gear_box_labels_stay_on_one_line(page):
+    """ "Jak system" broke onto two lines (the gpu-studio standard: nowrap, every button the same height)."""
+    page.open()
+    page.locator("[data-editor-settings]").click()
+    heights = page.locator("[data-gear-box] .seg button").evaluate_all(
+        "(buttons) => buttons.map((b) => Math.round(b.getBoundingClientRect().height))"
+    )
+    assert len(heights) == 5 and len(set(heights)) == 1, heights

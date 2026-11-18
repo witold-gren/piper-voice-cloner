@@ -43,6 +43,8 @@ Z Twojego komputera, z adresem maszyny w `~/.config/gpu-studio/host.mk` (`GPU_HO
 make install    # pierwszy raz: kod, kontrole, login, budowa, start (potem startuje razem z maszyną)
 make login      # użytkownik i hasło edytora
 make deploy     # każda aktualizacja
+make stop       # zatrzymaj edytor (make deploy uruchamia go znowu)
+make uninstall  # usuń go z maszyny; głosy zostają
 ```
 
 Albo na samej maszynie: `git clone … && docker/install-ubuntu.sh`. Potem otwórz `http://<maszyna>:7860`.

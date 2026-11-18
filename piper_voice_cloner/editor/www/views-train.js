@@ -3,7 +3,15 @@ import { css, html, nothing } from "./vendor/lit-all.min.js";
 import { VIEWS } from "./editor-app.js";
 import { StepView, clipStyles, clips } from "./parts.js";
 import { call, fileUrl, get } from "./api.js";
-import { duration, number } from "./format.js";
+import { duration, durationRange, number } from "./format.js";
+
+const HISTORY_ICONS = {
+  ok: "mdi:check-circle",
+  failed: "mdi:alert-circle",
+  stopped: "mdi:stop-circle-outline",
+  running: "mdi:progress-clock",
+  unknown: "mdi:help-circle-outline",
+};
 import "./chart.js";
 import "./job-panel.js";
 
@@ -153,23 +161,33 @@ class PvcStepTrain extends StepView {
     this._chart = await get(`/api/chart?voice=${encodeURIComponent(this.voice.name)}`).catch(() => this._chart);
   }
 
-  _run() {
+  /** A new run from the chosen base; the earlier checkpoints stay on disk (and in the list). */
+  _startOver() {
+    if (!window.confirm(this._t("train_start_over_confirm", { base: this._base }))) return;
+    return this._run(true);
+  }
+
+  _run(fresh = false) {
     return this.run(`/api/voices/${encodeURIComponent(this.voice.name)}/train`, {
       base: this._base,
       epochs: Number(this._epochs),
+      fresh,
       poweroff: Boolean(this.renderRoot.querySelector("[data-train-poweroff]")?.checked),
     });
   }
 
+  // the head (and its "?" window) stays the same element before and after the data comes
   render() {
+    return html`${this.head("mdi:school-outline", this._t("step_train"), this._t("train_info"), "train")}${this.data ? this._renderLoaded() : nothing}`;
+  }
+
+  _renderLoaded() {
     const data = this.data;
-    if (!data) return html`${this.head("mdi:school-outline", this._t("step_train"), this._t("train_info"), "train")}`;
     const epochs = Number(this._epochs) || 0;
     const est = data.estimate;
     const resume = data.resume;
     const chartName = this._chart?.target?.startsWith("voice:") ? this._t("chart_voice", { voice: this._chart.target.slice(6) }) : this._t("chart_base");
     return html`
-      ${this.head("mdi:school-outline", this._t("step_train"), this._t("train_info"), "train")}
       ${data.clips ? nothing : html`<p class="warn" data-train-no-dataset>${this._t("train_no_dataset")}</p>`}
       ${data.wanted_base === "bazowy-pl" && !data.base_ready ? html`<p class="warn" data-base-missing>${this._t("base_not_ready")}</p>` : nothing}
       <section class="card">
@@ -181,6 +199,7 @@ class PvcStepTrain extends StepView {
               ${data.base_choices.map((choice) => html`<option value=${choice} ?selected=${choice === this._base}>${choice}</option>`)}
             </select>
             <span class="hint">${this._t("train_base_hint")}</span>
+            ${data.checkpoints.length ? html`<span class="hint" data-train-base-resume>${this._t("train_base_resume_hint")}</span>` : nothing}
           </label>
           <label class="field">
             <span>${this._t("train_epochs")}</span>
@@ -196,8 +215,7 @@ class PvcStepTrain extends StepView {
                 low: Math.round(est.low),
                 high: Math.round(est.high),
                 epochs,
-                time_low: duration(est.low * epochs),
-                time_high: duration(est.high * epochs),
+                time: durationRange(est.low * epochs, est.high * epochs, this.language),
               })}
             </p>`
           : nothing}
@@ -207,7 +225,12 @@ class PvcStepTrain extends StepView {
             ? html`<label class="check"><input type="checkbox" data-train-poweroff />${this._t("job_poweroff")}</label>`
             : html`<span class="hint" data-poweroff-off>${this._t("poweroff_needs_ha")}</span>`}
           <span class="grow"></span>
-          <button class="primary" data-run-train ?disabled=${this.busy || this.running || !data.clips} @click=${this._run}>
+          ${data.checkpoints.length
+            ? html`<button data-train-fresh ?disabled=${this.busy || this.running || !data.clips} @click=${this._startOver}>
+                <pvc-icon icon="mdi:restart"></pvc-icon>${this._t("train_start_over")}
+              </button>`
+            : nothing}
+          <button class="primary" data-run-train ?disabled=${this.busy || this.running || !data.clips} @click=${() => this._run()}>
             <pvc-icon icon="mdi:play"></pvc-icon>${data.checkpoints.length ? this._t("train_resume") : this._t("train_run")}
           </button>
         </div>
@@ -382,6 +405,14 @@ class PvcJobsHistory extends StepView {
   load() {
     return get("/api/history");
   }
+  _historyStatus(item) {
+    if (item.status === "ok") return this._t("job_state_ok");
+    if (item.status === "failed") return this._t("job_state_failed", { code: item.code });
+    if (item.status === "stopped") return this._t("job_state_stopped");
+    if (item.status === "running") return this._t("job_state_running");
+    return "—"; // an older log or a restart: the title says so
+  }
+
 
   async _open(file) {
     this._file = file;
@@ -394,10 +425,14 @@ class PvcJobsHistory extends StepView {
       <section class="card">
         ${this.data?.length
           ? html`<table data-history>
-              <tr><th>${this._t("history_started")}</th><th>${this._t("history_job")}</th><th>${this._t("history_voice")}</th><th></th></tr>
+              <tr><th>${this._t("history_started")}</th><th>${this._t("history_job")}</th><th>${this._t("history_voice")}</th><th>${this._t("history_status")}</th><th>${this._t("history_took")}</th><th></th></tr>
               ${this.data.map(
                 (item) => html`<tr class=${item.file === this._file ? "sel" : ""}>
-                  <td class="mono">${item.started}</td><td>${this._t(`kind_${item.kind}`, {}, item.kind)}</td><td>${item.voice}</td>
+                  <td class="mono nowrap">${item.started}</td><td>${this._t(`kind_${item.kind}`, {}, item.kind)}</td><td>${item.voice}</td>
+                  <td class="status ${item.status}" data-history-status=${item.status} title=${item.status === "unknown" ? this._t("history_unknown") : ""}>
+                    <pvc-icon icon=${HISTORY_ICONS[item.status] ?? "mdi:help-circle-outline"}></pvc-icon>${this._historyStatus(item)}
+                  </td>
+                  <td class="mono">${item.took != null ? duration(item.took) : "—"}</td>
                   <td><button class="ghost" data-history-open=${item.file} @click=${() => this._open(item.file)}>${this._t("history_log")}</button></td>
                 </tr>`,
               )}
@@ -411,6 +446,26 @@ class PvcJobsHistory extends StepView {
   static styles = [
     StepView.styles,
     css`
+      td.nowrap,
+      td.status {
+        white-space: nowrap;
+        --icon-size: 16px;
+      }
+      td.status pvc-icon {
+        vertical-align: -3px;
+        margin-right: 4px;
+      }
+      td.status.ok {
+        color: var(--green);
+      }
+      td.status.failed {
+        color: var(--red);
+        font-weight: 600;
+      }
+      td.status.stopped,
+      td.status.unknown {
+        color: var(--muted);
+      }
       tr.sel td {
         background: rgba(79, 140, 255, 0.12);
       }

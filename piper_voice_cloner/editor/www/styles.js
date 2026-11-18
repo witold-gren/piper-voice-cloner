@@ -126,6 +126,7 @@ export const base = css`
   label.field {
     display: grid;
     gap: 4px;
+    align-content: start; /* in a row with a taller field the input keeps its own height */
   }
   label.field > span {
     font-weight: 600;

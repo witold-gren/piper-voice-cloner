@@ -52,6 +52,8 @@ make login      # użytkownik i hasło edytora
 make deploy     # po każdej zmianie: kod na maszynę i przebudowa (zwykle kilkanaście sekund)
 make status     # czy edytor odpowiada, karta w kontenerze, wersja
 make logs       # log edytora
+make stop       # zatrzymaj edytor; po restarcie zostaje wyłączony (make deploy go uruchamia)
+make uninstall  # usuń go z maszyny: kontenery, obraz, login, ustawienia, kod (najpierw pyta)
 ```
 
 ## Albo na samej maszynie
@@ -68,6 +70,18 @@ git pull && make docker-up             # aktualizacja
 usługi dawnego panelu (zajmowały te same porty), buduje obraz i uruchamia edytor. Na końcu pokazuje kartę
 widzianą z kontenera i adres edytora. `--remove` zatrzymuje i usuwa kontenery, ale dane i ustawienia
 zostają.
+
+## Zatrzymanie i usunięcie {#remove}
+
+- `make stop` (na maszynie: `docker/install-ubuntu.sh --stop`) zatrzymuje edytor i TensorBoard. Zostają
+  wyłączone także po restarcie, aż do `make deploy` (albo `make docker-up` na maszynie).
+- `make uninstall` (`docker/install-ubuntu.sh --uninstall`) wypisuje, co usunie, i prosi o wpisanie
+  `yes`. Usuwa kontenery, obraz, login i ustawienia (`docker/config`, `docker/.env`: połączenie z Home
+  Assistant i klucz ElevenLabs) oraz folder z kodem. `CONFIRM=yes` pomija pytanie. Głosy zostają na
+  miejscu (polecenie wypisuje ich folder), usuń je ręcznie, jeśli chcesz. Gdy głosy są w folderze kodu
+  (`docker/data`), zostaje też folder kodu.
+- Samej maszyny polecenie nie rusza: sterownik NVIDIA, Docker i zestaw NVIDIA zostają zainstalowane.
+  `make install` przywraca wszystko.
 
 ## Co jest gdzie {#folders}
 

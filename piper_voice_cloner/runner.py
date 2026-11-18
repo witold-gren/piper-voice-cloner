@@ -35,8 +35,18 @@ def run(state_path: Path, log_path: Path, cmd: list[str]) -> int:
         process = subprocess.Popen(cmd, stdout=log, stderr=subprocess.STDOUT, env=env)
         update_state(state_path, child_pid=process.pid)
         returncode = process.wait()
-    update_state(state_path, returncode=returncode, finished=time.time())
+    finished = time.time()
+    update_state(state_path, returncode=returncode, finished=finished)
+    # the job history shows how every job ended, also after the next job replaced the state file
+    exit_path(log_path).write_text(
+        json.dumps({"returncode": returncode, "finished": finished}), encoding="utf-8"
+    )
     return returncode
+
+
+def exit_path(log_path: Path) -> Path:
+    """`<job>.exit` next to `<job>.log`: the exit code and the end time of that job."""
+    return log_path.with_suffix(".exit")
 
 
 def update_state(path: Path, **values) -> None:

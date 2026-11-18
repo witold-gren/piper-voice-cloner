@@ -139,7 +139,8 @@ class PvcStepCorpus extends StepView {
           <label class="check"><input type="checkbox" data-corpus-bundled checked />${this._t("corpus_bundled")}</label>
           <label class="field"><span>${this._t("corpus_size")}</span>
             <input type="number" min="0" data-corpus-size placeholder=${String(data?.default_size ?? "")} />
-            <span class="hint">${this._t("corpus_size_hint", { target: data?.target_clips ?? "", over: data?.overgenerate ?? "", size: data?.default_size ?? "" })}</span>
+            <span class="hint" data-corpus-size-hint>${this._t(Number(data?.overgenerate) > 1 ? "corpus_size_hint" : "corpus_size_hint_exact", {
+              target: data?.target_clips ?? "", over: number(data?.overgenerate ?? 1, this.language, 1), size: data?.default_size ?? "" })}</span>
           </label>
         </div>
         <div class="row" style="margin-top: 12px">

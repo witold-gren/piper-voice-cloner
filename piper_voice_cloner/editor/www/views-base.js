@@ -222,6 +222,16 @@ customElements.define("pvc-base-compare", PvcBaseCompare);
 class PvcBaseSelect extends BaseView {
   static properties = { ...BaseView.properties, _checkpoint: { state: true } };
 
+  /** "medium · Epoch 735 · val_mos 3.770 · version_1/epoch=735-val_mos=3.7698.ckpt", as in a voice's export. */
+  _label(item) {
+    const parts = [item.quality];
+    if (item.epoch != null) parts.push(`${this._t("chart_epoch")} ${item.epoch}`);
+    if (item.metric) parts.push(`${item.metric} ${number(item.value, this.language, 3)}`);
+    else if (item.name === "last.ckpt") parts.push(this._t("checkpoint_last"));
+    parts.push(item.run && item.name ? `${item.run}/${item.name}` : item.label);
+    return parts.join(" · ");
+  }
+
   render() {
     const data = this.data;
     const checkpoints = data?.checkpoints ?? [];
@@ -232,7 +242,7 @@ class PvcBaseSelect extends BaseView {
       <section class="card">
         <label class="field"><span>${this._t("export_checkpoint")}</span>
           <select data-base-checkpoint @change=${(event) => (this._checkpoint = event.target.value)}>
-            ${checkpoints.map((item) => html`<option value=${item.path} ?selected=${item.path === chosen}>${item.label}</option>`)}
+            ${checkpoints.map((item) => html`<option value=${item.path} ?selected=${item.path === chosen}>${this._label(item)}</option>`)}
           </select></label>
         ${checkpoints.length ? nothing : html`<p class="muted">${this._t("checkpoints_none")}</p>`}
         <div class="row" style="margin-top: 12px">

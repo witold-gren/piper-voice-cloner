@@ -17,7 +17,8 @@ From the left:
 4. **Countdown** after a job with the wish: "Power-off in 1:45" with <span class="ui">Cancel</span>; when
    powering off fails, a red pill with the reason.
 5. **Theme**, **?** (this guide – only this "?" opens the guide; the "?" of steps and cards show a small
-   window), **⚙** (<span class="ui">Look and language</span>).
+   window), **⚙**: a box under the icon with the theme and the language, which change at once. Esc, a click
+   beside it or ⚙ again close it; <span class="ui">All of look and language</span> opens the full view.
 
 ![The menu](assets/screens/en/14-menu.png){ .shot }
 

@@ -52,6 +52,8 @@ make login      # the editor's user and password
 make deploy     # after every change: code to the machine and a rebuild (usually seconds)
 make status     # does the editor answer, the GPU in the container, the version
 make logs       # the editor's log
+make stop       # stop the editor; it stays off after a reboot (make deploy starts it)
+make uninstall  # remove it from the machine: containers, image, login, settings, code (asks first)
 ```
 
 ## Or on the machine itself
@@ -68,6 +70,18 @@ git pull && make docker-up             # update
 password, switches the old panel's services off (same ports), builds and starts, and ends with the card
 as seen from the container and the address. `--remove` stops and removes the containers (data and
 settings stay).
+
+## Stopping and removing {#remove}
+
+- `make stop` (on the machine: `docker/install-ubuntu.sh --stop`) stops the editor and TensorBoard.
+  They stay off also after a reboot, until `make deploy` (or `make docker-up` on the machine).
+- `make uninstall` (`docker/install-ubuntu.sh --uninstall`) lists what it removes and asks you to type
+  `yes`: the containers, the image, the login and the settings (`docker/config`, `docker/.env`: the
+  Home Assistant connection and the ElevenLabs key) and the code folder. `CONFIRM=yes` skips the
+  question. The voices stay where they are (it prints the folder); delete them by hand if you want.
+  When the voices are inside the code folder (`docker/data`), the code folder stays too.
+- The machine itself is not touched: the NVIDIA driver, Docker and the NVIDIA toolkit stay installed.
+  `make install` puts everything back.
 
 ## What is where {#folders}
 

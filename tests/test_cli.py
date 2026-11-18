@@ -195,8 +195,11 @@ def test_run_json_written_once(tmp_path, monkeypatch):
     own = tmp_path / "epoch=10.ckpt"
     own.write_bytes(b"x")
     calls = []
+    prepared = []
     monkeypatch.setattr(train, "run", lambda cmd: calls.append(cmd))
+    monkeypatch.setattr(train, "make_loadable", lambda path, python: prepared.append(path) or "ok")
     output = invoke(tmp_path, "train", "kuba", "--base", f"ckpt:{own}")
+    assert prepared == [own]  # the starting checkpoint opens in Lightning 2.6
     assert "training epochs 10-1010" in output  # read by the web UI progress bar
     info = json.loads((voice / "train" / "run.json").read_text())
     assert info["start_epoch"] == 10
@@ -210,6 +213,14 @@ def test_run_json_written_once(tmp_path, monkeypatch):
     assert second[second.index("--ckpt_path") + 1] == str(last)
     assert second[second.index("--trainer.max_epochs") + 1] == "1010"
     assert cli is not None
+
+    # start over: a new run from another checkpoint, with its own start in run.json
+    other = tmp_path / "epoch=20.ckpt"
+    other.write_bytes(b"x")
+    invoke(tmp_path, "train", "kuba", "--base", f"ckpt:{other}", "--no-resume")
+    third = calls[-1]
+    assert third[third.index("--ckpt_path") + 1] == str(other)
+    assert json.loads((voice / "train" / "run.json").read_text())["start_epoch"] == 20
 
 
 def test_progress_printer_reports_about_every_percent(capsys):

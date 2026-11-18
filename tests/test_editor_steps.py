@@ -147,6 +147,14 @@ def test_training_view_estimates_and_starts_with_the_chosen_epochs(setup):
     assert config_mod.load(root / "voices" / "kasia").train.max_epochs == 700
 
 
+def test_start_over_trains_from_the_base_instead_of_resuming(setup):
+    root, app, client = setup
+    voice(root, "kasia", clips=1500)
+    body = {"base": "lessac", "epochs": 10, "fresh": True}
+    client.post("/api/voices/kasia/train", json=body)
+    assert last_call(root, app) == ["train", "kasia", "--base", "lessac", "--no-resume"]
+
+
 def test_training_without_a_dataset_is_refused(setup):
     root, _app, client = setup
     voice(root, "pusty", clips=0)

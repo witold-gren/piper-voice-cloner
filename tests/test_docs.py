@@ -17,8 +17,17 @@ TEXT = re.compile(r'^\s{4}"?[\w-]+"?:\s*\n?\s*"((?:[^"\\]|\\.)*)"', re.M)
 
 
 def nav_pages() -> list[str]:
+    """Every page of the menu, also the ones inside a section (e.g. "Step by step")."""
     config = yaml.load((REPO / "mkdocs.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
-    return [next(iter(item.values())) for item in config["nav"]]
+
+    def walk(items) -> list[str]:
+        found = []
+        for item in items:
+            value = next(iter(item.values())) if isinstance(item, dict) else item
+            found.extend(walk(value) if isinstance(value, list) else [value])
+        return found
+
+    return walk(config["nav"])
 
 
 def pages(language: str) -> dict[str, str]:
@@ -101,3 +110,25 @@ def test_the_parameter_table_is_the_code():
             assert shown.strip() == expected, (
                 f"{language}: {path} is {expected} in the code, {shown.strip()} in the guide"
             )
+
+
+def test_every_step_by_step_screenshot_is_shown():
+    """The screenshots of the "Step by step" pages (assets/screens/<lang>/guide-NN-*.png) are all used."""
+    for language in ("en", "pl"):
+        shown = {picture for text in pages(language).values() for picture in PICTURE.findall(text)}
+        taken = {
+            f"assets/screens/{language}/{path.name}"
+            for path in (DOCS / "assets" / "screens" / language).glob("guide-*.png")
+        }
+        assert taken, language
+        assert taken <= shown, f"{language}: not in the guide: {sorted(taken - shown)}"
+
+
+def test_the_step_by_step_section_is_in_the_menu_in_both_languages():
+    config = yaml.load((REPO / "mkdocs.yml").read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+    section = next(item["Step by step"] for item in config["nav"] if "Step by step" in item)
+    titles = [next(iter(item)) for item in section]
+    plugin = next(p["i18n"] for p in config["plugins"] if isinstance(p, dict) and "i18n" in p)
+    polish = next(lang for lang in plugin["languages"] if lang["locale"] == "pl")["nav_translations"]
+    for title in ["Step by step", *titles]:
+        assert title in polish, title

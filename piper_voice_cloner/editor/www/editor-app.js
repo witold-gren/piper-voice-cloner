@@ -10,6 +10,9 @@ import "./job-panel.js";
 import "./new-voice.js";
 
 const THEMES = ["auto", "light", "dark"];
+// steps a voice can skip: not counted in "6/7" until done, never the next step
+const OPTIONAL_STEPS = new Set(["audition"]);
+const counted = (steps) => steps.filter((step) => step.done || !OPTIONAL_STEPS.has(step.key));
 const THEME_ICONS = { auto: "mdi:theme-light-dark", light: "mdi:weather-sunny", dark: "mdi:weather-night" };
 // remembered per browser (<app>-studio-*); a private window may refuse it: then nothing is kept
 const THEME_KEY = "pvc-studio-theme";
@@ -111,6 +114,7 @@ export class PvcEditor extends LitElement {
     _busy: { state: true },
     _notice: { state: true },
     _menu: { state: true },
+    _gear: { state: true },
     _folded: { state: true },
   };
 
@@ -124,7 +128,22 @@ export class PvcEditor extends LitElement {
     this._expanded = new Set(readJson(EXPANDED_KEY, []));
     this._widths = { left: COLUMNS.left.start, right: COLUMNS.right.start, ...readJson(WIDTHS_KEY, {}) };
     this._folded = { left: false, right: window.innerWidth < NARROW, ...readJson(FOLDED_KEY, {}) };
-    this._onKeys = (event) => this._foldKeys(event);
+    this._onKeys = (event) => {
+      if (event.key === "Escape" && (this._menu || this._gear)) {
+        this._menu = false;
+        this._gear = false;
+        return;
+      }
+      this._foldKeys(event);
+    };
+    // a click anywhere outside the ☰ or ⚙ box closes it
+    this._onOutside = (event) => {
+      if (!this._menu && !this._gear) return;
+      const path = event.composedPath();
+      if (path.some((el) => el.classList?.contains("menu-wrap"))) return;
+      this._menu = false;
+      this._gear = false;
+    };
     this._theme = THEMES.includes(recall(THEME_KEY)) ? recall(THEME_KEY) : "auto";
     this._language = pickLanguage(recall(LANG_KEY));
     this._dialog = null;
@@ -144,6 +163,7 @@ export class PvcEditor extends LitElement {
     };
     document.addEventListener("visibilitychange", this._onVisible);
     window.addEventListener("keydown", this._onKeys);
+    window.addEventListener("click", this._onOutside);
     this._alive = true;
     this._poll();
   }
@@ -155,6 +175,7 @@ export class PvcEditor extends LitElement {
     this._media.removeEventListener("change", this._onMedia);
     document.removeEventListener("visibilitychange", this._onVisible);
     window.removeEventListener("keydown", this._onKeys);
+    window.removeEventListener("click", this._onOutside);
     clearTimeout(this._timer);
   }
 
@@ -265,12 +286,13 @@ export class PvcEditor extends LitElement {
 
   _outline() {
     const voices = (this._state?.voices ?? []).map((voice) => {
-      const done = voice.steps.filter((step) => step.done).length;
+      const needed = counted(voice.steps);
+      const done = needed.filter((step) => step.done).length;
       return {
         key: `voice/${voice.name}`,
         label: voice.name,
         icon: voice.workflow === "import" ? "mdi:folder-music" : "mdi:account-voice",
-        count: voice.steps.length ? `${done}/${voice.steps.length}` : "",
+        count: needed.length ? `${done}/${needed.length}` : "",
         warn: voice.error,
         children: [
           ...voice.steps.map((step) => ({
@@ -278,6 +300,7 @@ export class PvcEditor extends LitElement {
             label: this._t(`step_${step.key}`),
             icon: STEP_ICONS[step.key],
             done: step.done,
+            optional: !step.done && OPTIONAL_STEPS.has(step.key),
             count: step.detail,
             children: [],
           })),
@@ -440,16 +463,42 @@ export class PvcEditor extends LitElement {
       <button class="ghost" data-docs title=${this._t("docs")} aria-label=${this._t("docs")} @click=${() => window.open(this._docsUrl(), "_blank", "noopener")}>
         <pvc-icon icon="mdi:help-circle-outline"></pvc-icon>
       </button>
-      <button class="ghost" data-editor-settings title=${this._t("settings_editor")} aria-label=${this._t("settings_editor")} @click=${() => this._select("settings/editor")}>
+      ${this._renderGear()}
+    </header>`;
+  }
+
+  /** ⚙: the look and the language right there, in a box under the button. */
+  _renderGear() {
+    return html`<div class="menu-wrap">
+      <button class="ghost" data-editor-settings title=${this._t("settings_editor")} aria-label=${this._t("settings_editor")}
+        aria-expanded=${this._gear ? "true" : "false"} @click=${() => { this._gear = !this._gear; this._menu = false; }}>
         <pvc-icon icon="mdi:cog-outline"></pvc-icon>
       </button>
-    </header>`;
+      ${this._gear
+        ? html`<div class="menu-box gear-box" data-gear-box>
+            <strong>${this._t("settings_editor")}</strong>
+            <span class="hint">${this._t("theme")}</span>
+            <div class="seg" data-gear-theme>
+              ${THEMES.map((theme) => html`<button class=${this._theme === theme ? "on" : ""} data-theme-option=${theme}
+                @click=${() => this._setTheme(theme)}>${this._t(`theme_short_${theme}`)}</button>`)}
+            </div>
+            <span class="hint">${this._t("language_choice")}</span>
+            <div class="seg" data-gear-language>
+              ${[["pl", "Polski"], ["en", "English"]].map(([code, name]) => html`<button class=${this._language === code ? "on" : ""}
+                data-language-option=${code} @click=${() => this._setLanguage(code)}>${name}</button>`)}
+            </div>
+            <button class="ghost" data-gear-more @click=${() => { this._gear = false; this._select("settings/editor"); }}>
+              <pvc-icon icon="mdi:palette-outline"></pvc-icon>${this._t("gear_more")}
+            </button>
+          </div>`
+        : nothing}
+    </div>`;
   }
 
   /** ☰: the guide, who is logged in and how to change the password, log out. */
   _renderMenu() {
     return html`<div class="menu-wrap">
-      <button class="ghost menu" data-menu aria-label=${this._t("menu")} title=${this._t("menu")} @click=${() => (this._menu = !this._menu)}>
+      <button class="ghost menu" data-menu aria-label=${this._t("menu")} title=${this._t("menu")} @click=${() => { this._menu = !this._menu; this._gear = false; }}>
         <pvc-icon icon="mdi:menu"></pvc-icon>
       </button>
       ${this._menu
@@ -572,7 +621,8 @@ export class PvcEditor extends LitElement {
           <pvc-icon class="icon" icon=${item.warn ? "mdi:alert-outline" : item.icon}></pvc-icon>
           <span class="label">${item.label}</span>
           ${item.done !== undefined
-            ? html`<pvc-icon class="mark ${item.done ? "done" : ""}" icon=${item.done ? "mdi:check-circle" : "mdi:circle-outline"}></pvc-icon>`
+            ? html`<pvc-icon class="mark ${item.done ? "done" : ""}" data-optional=${item.optional ? "true" : "false"} title=${item.optional ? this._t("step_optional") : ""}
+                icon=${item.done ? "mdi:check-circle" : item.optional ? "mdi:circle-small" : "mdi:circle-outline"}></pvc-icon>`
             : nothing}
           ${item.count ? html`<span class="count">${item.count}</span>` : nothing}
         </div>
@@ -585,11 +635,11 @@ export class PvcEditor extends LitElement {
         <button class="ghost fold-column" data-fold-column="left" title=${fold} aria-label=${fold} @click=${() => this._fold("left", true)}>
           <pvc-icon icon="mdi:chevron-left"></pvc-icon>
         </button>
-        <button class="ghost" data-fold-all @click=${() => this._foldAll(true)}>
-          <pvc-icon icon="mdi:unfold-less-horizontal"></pvc-icon>${this._t("fold_all")}
+        <button class="ghost" data-fold-all title=${this._t("fold_all")} aria-label=${this._t("fold_all")} @click=${() => this._foldAll(true)}>
+          <pvc-icon icon="mdi:unfold-less-horizontal"></pvc-icon>${this._t("fold_all_short")}
         </button>
-        <button class="ghost" data-unfold-all @click=${() => this._foldAll(false)}>
-          <pvc-icon icon="mdi:unfold-more-horizontal"></pvc-icon>${this._t("unfold_all")}
+        <button class="ghost" data-unfold-all title=${this._t("unfold_all")} aria-label=${this._t("unfold_all")} @click=${() => this._foldAll(false)}>
+          <pvc-icon icon="mdi:unfold-more-horizontal"></pvc-icon>${this._t("unfold_all_short")}
         </button>
       </div>
       <label class="search">
@@ -669,7 +719,7 @@ export class PvcEditor extends LitElement {
 
   _renderVoiceOverview(voice) {
     // the first step not done yet (audition is a check that may be skipped)
-    const next = voice.steps.find((step) => !step.done && step.key !== "audition");
+    const next = voice.steps.find((step) => !step.done && !OPTIONAL_STEPS.has(step.key));
     return html`<div class="pane" data-voice-overview=${voice.name}>
       <div class="phead">
         <pvc-icon icon=${voice.workflow === "import" ? "mdi:folder-music" : "mdi:account-voice"}></pvc-icon>
@@ -690,7 +740,7 @@ export class PvcEditor extends LitElement {
             <pvc-icon icon=${STEP_ICONS[step.key]}></pvc-icon>
             <span class="label">${this._t(`step_${step.key}`)}</span>
             <span class="hint">${step.detail}</span>
-            <span class="state">${step.done ? this._t("step_done") : step === next ? this._t("step_now") : this._t("step_todo")}</span>
+            <span class="state">${step.done ? this._t("step_done") : step === next ? this._t("step_now") : OPTIONAL_STEPS.has(step.key) ? this._t("step_optional") : this._t("step_todo")}</span>
           </li>`,
         )}
       </ol>
@@ -804,6 +854,18 @@ export class PvcEditor extends LitElement {
         border: 1px solid var(--line);
         box-shadow: 0 20px 50px var(--shadow);
       }
+      .gear-box {
+        left: auto;
+        right: 0;
+        min-width: 280px;
+      }
+      .gear-box .seg {
+        width: 100%;
+      }
+      .gear-box .seg button {
+        flex: 1;
+        white-space: nowrap;
+      }
       .menu-box .hint {
         margin: 0;
       }
@@ -873,6 +935,7 @@ export class PvcEditor extends LitElement {
       .tree-tools button {
         padding: 4px 8px;
         font-size: 12px;
+        white-space: nowrap; /* "Zwiń wszystko" broke onto two lines */
       }
       .group {
         display: flex;

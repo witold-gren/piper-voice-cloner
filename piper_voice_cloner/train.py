@@ -139,6 +139,62 @@ _INFO_CODE = (
 )
 
 
+# Lightning 2.6 opens the starting checkpoint with torch.load(weights_only=True), which refuses
+# pathlib paths, and passes its hyper_parameters to the model as options. Older checkpoints (the lessac
+# base from Hugging Face) keep paths and options of the old trainer (sample_bytes, gpus, ...) there.
+_LOADABLE_CODE = """
+import inspect, os, pathlib, sys, torch
+path = sys.argv[1]
+try:
+    from piper.train.vits.lightning import VitsModel
+    # only named options: LightningCLI refuses others although VitsModel takes **kwargs
+    params = inspect.signature(VitsModel.__init__).parameters.values()
+    allowed = {p.name for p in params if p.kind not in (p.VAR_KEYWORD, p.VAR_POSITIONAL)} - {"self"}
+except ImportError:
+    allowed = None
+found = []
+def clean(value, where):
+    if isinstance(value, pathlib.PurePath):
+        found.append(where)
+        return str(value)
+    if isinstance(value, dict):
+        return type(value)((k, clean(v, f"{where}.{k}")) for k, v in value.items())
+    if isinstance(value, (list, tuple)):
+        return type(value)(clean(v, f"{where}[{i}]") for i, v in enumerate(value))
+    return value
+data = torch.load(path, map_location="cpu", weights_only=False)
+data = {k: v if k in ("state_dict", "optimizer_states") else clean(v, k) for k, v in data.items()}
+hparams = data.get("hyper_parameters") or {}
+dropped = sorted(set(hparams) - allowed) if allowed is not None else []
+if not found and not dropped:
+    print("ok")
+    sys.exit(0)
+data["hyper_parameters"] = {k: v for k, v in hparams.items() if k not in dropped}
+tmp = path + ".loadable"
+torch.save(data, tmp)
+torch.load(tmp, map_location="cpu", weights_only=True)
+os.replace(tmp, path)
+print("cleaned " + " ".join(found) + (" dropped " + " ".join(dropped) if dropped else ""))
+"""
+
+
+def make_loadable(path: Path, *, python: str = sys.executable) -> str:
+    """Make a starting checkpoint open in Lightning 2.6, in place and once per file: paths become text
+    and options the current VitsModel does not take leave hyper_parameters.
+
+    Only for checkpoints we trust: our own runs and the bases this tool downloads.
+    """
+    result = subprocess.run(
+        [python, "-c", _LOADABLE_CODE, str(path)], capture_output=True, text=True, check=False
+    )
+    lines = result.stdout.strip().splitlines()
+    if result.returncode != 0 or not lines:
+        raise TrainError(f"cannot prepare {path} for training: {result.stderr.strip()[-400:]}")
+    if lines[-1] != "ok":
+        _LOGGER.info("%s: %s (now opens with weights_only=True)", path.name, lines[-1])
+    return lines[-1]
+
+
 def checkpoint_info(path: Path, *, python: str = sys.executable) -> CheckpointInfo:
     """Epoch and model size of a Lightning checkpoint, read by the training Python (it has torch).
 

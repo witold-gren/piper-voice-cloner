@@ -63,11 +63,10 @@ def test_top_bar_order_and_the_job_chip(page, demo):
         """() => [...document.querySelector('pvc-editor').shadowRoot.querySelector('header.top').children]
               .map((el) => el.dataset ? Object.keys(el.dataset)[0] || el.className : '')"""
     )
-    assert (
-        order.index("menuWrap" if "menuWrap" in order else "menu-wrap")
-        < order.index("docs")
-        < order.index("editorSettings")
-    )
+    # ☰ first, then "?", then ⚙ last (⚙ sits in its own .menu-wrap with the box under it)
+    wraps = [i for i, name in enumerate(order) if name == "menu-wrap"]
+    assert wraps[0] < order.index("docs") < wraps[-1] == len(order) - 1
+    expect(page.locator("header.top > .menu-wrap:last-child [data-editor-settings]")).to_have_count(1)
     import os
 
     os.environ["FAKE_PVC_SPEED"] = "1"

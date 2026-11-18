@@ -1,5 +1,62 @@
 # Changelog
 
+## 0.2.1 (2026-11-18)
+
+The first run on the real GPU machine: install, deploy, a training, the export and Home Assistant were
+checked there, and what failed is fixed. Plus a step-by-step guide with pictures of the real editor.
+
+Added:
+- The guide has a "Step by step" section in Polish and English: first steps (every part of the screen),
+  a new voice, rating recordings, training a voice, training the base voice and the export to Home
+  Assistant, with pictures of the real editor (`dev/screenshots_machine.py`: never starts a job and
+  replaces the Home Assistant address and room names before each picture).
+- `make stop`: stops the editor and TensorBoard on the machine; they stay off after a reboot until
+  `make deploy`.
+- `make uninstall`: removes the containers, the image, the login, the settings and the code folder from
+  the machine after typing `yes` (`CONFIRM=yes`); the voices stay. Both also as
+  `docker/install-ubuntu.sh --stop` / `--uninstall`.
+
+Changed:
+- Training: "Start over" next to "Resume training" trains the voice again from the base chosen in
+  "Start from" (it asks first; the earlier checkpoints stay). A hint says that "Resume training" ignores
+  "Start from".
+- The training time reads as a duration ("16–21 h", "25–40 min", "3.1–4.2 days"), not like a clock.
+- Job history: a Result column (finished, failed with its code, stopped, running) and how long each
+  job took; the runner keeps `<job>.exit` next to the log. A training queue lists its voices.
+- Audition is an optional step: it counts in "6/6" only once done and is never the next step.
+- The base's checkpoint list shows the size, epoch and val_mos, like a voice's export list.
+- The Sentences hint no longer says "more than needed" when "Generate ×" is 1.
+- The tree's buttons are "Fold" / "Unfold" (the full text on hover), so they fit the column; fields in a
+  row keep their own height.
+- ⚙ in the top bar opens a box under it with the theme and the language (it opened a view in the
+  middle); Esc, a click beside it or ⚙ again close it, and the ☰ menu closes the same way.
+
+Fixed:
+- The "?" window of Training and Voice settings closed by itself when it was opened before the step's
+  data came (the head was drawn twice).
+- Starting a voice over kept the earlier run's start epoch in run.json, so the progress bar was wrong.
+- An older imported voice showed "Cloning" as its way in Voice settings (the tree said "Own
+  recordings"), and saving the form could keep it. Opening the settings writes `workflow: import` into
+  voice.yaml once; the previous file stays in History.
+- On the machine no job did anything: the editor runs them as `python -m piper_voice_cloner.cli`,
+  which lacked its `__main__` block, so each one ended in a moment with success and an empty log.
+- Training from the lessac base stopped at once with `Weights only load failed … pathlib.PosixPath`:
+  Lightning 2.6 opens checkpoints with `weights_only=True`, and the downloaded lessac checkpoint keeps
+  paths in its settings. Before training, the starting checkpoint is turned into one that opens (once,
+  in place).
+- `make install` and `make deploy` built the demo image on the machine (the last stage of the
+  Dockerfile): the editor did not answer on 7860 and TensorBoard restarted forever. `compose.yaml`
+  builds the `app` stage.
+- The installer checks the NVIDIA driver: it must answer and be 580 or newer (the torch of the image);
+  before, an old driver showed only when training started.
+- The installer's hint for missing Docker access no longer breaks when `$USER` is not set.
+
+Tests:
+- The installer runs on a pretend machine: no driver, driver not loaded, old driver, no Docker, no
+  compose, no access, no NVIDIA toolkit, a failed image build, a second run, stop and uninstall.
+- A test runs the real CLI the way jobs do (not the fake one); a test with real torch checks that an
+  old checkpoint opens after the change.
+
 ## 0.2.0 (2026-11-17)
 
 The voice editor replaces the Gradio panel. It runs only on the GPU machine, in Docker, and starts with

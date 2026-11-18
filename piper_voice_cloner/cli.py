@@ -448,7 +448,7 @@ def _train(
     if not paths.metadata.is_file():
         raise typer.BadParameter(f"{paths.metadata} missing - run `pvc filter` or `pvc import` first")
     paths.work_dir.mkdir(parents=True, exist_ok=True)
-    if not info:
+    if not (last is not None and info):  # a new run (also "start over"): its own start, not the last one's
         (paths.work_dir / "run.json").write_text(
             json.dumps(
                 {"start_epoch": start_epoch, "base": str(ckpt) if ckpt else "random", "quality": quality}
@@ -457,6 +457,8 @@ def _train(
         )
     # the web UI reads this line for the whole-run progress bar and the time left
     typer.echo(f"training epochs {start_epoch}-{start_epoch + train_cfg.max_epochs}")
+    if ckpt is not None:
+        train_mod.make_loadable(ckpt, python=python)
     train_mod.run(cmd)
 
 
@@ -700,3 +702,7 @@ def base_select(checkpoint: Path) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(checkpoint, target)
     typer.echo(f"{checkpoint} -> {target}")
+
+
+if __name__ == "__main__":  # the editor runs every job as `python -m piper_voice_cloner.cli`
+    app()

@@ -12,6 +12,7 @@ from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
+import re
 import threading
 import time
 
@@ -19,10 +20,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field, ValidationError
 import yaml
 
-from .. import config as config_mod, dataset_quality, ha, power
+from .. import config as config_mod, dataset_quality, ha, power, train as train_mod
 from ..jobs import JobManager
-from . import service
-from .steps import rel
+from . import api, service
+from .steps import checkpoint_list, rel
 
 HISTORY = 30
 HISTORY_DIR = ".history"
@@ -157,6 +158,27 @@ def save_voice_yaml(root: Path, name: str, text: str, note: str = "") -> config_
     return cfg
 
 
+def with_workflow(text: str, workflow: str) -> str:
+    """The text of voice.yaml with `workflow:` set: the one line changed, or added after `name:`."""
+    line = f"workflow: {workflow}"
+    if re.search(r"^workflow:.*$", text, re.M):
+        return re.sub(r"^workflow:.*$", line, text, count=1, flags=re.M)
+    match = re.search(r"^name:.*$", text, re.M)
+    if not match:
+        return f"{line}\n{text}"
+    return f"{text[: match.end()]}\n{line}{text[match.end() :]}"
+
+
+def match_workflow(root: Path, name: str) -> None:
+    """An older imported voice has no `workflow: import` in voice.yaml, so the settings form showed
+    "Cloning" while the tree showed "Own recordings"; the import report decides, once, in the file."""
+    cfg = service.load_config(root, name)
+    found = api.workflow(root, name, cfg)
+    if found != cfg.workflow:
+        text = with_workflow(service.config_yaml(root, name), found)
+        save_voice_yaml(root, name, text, f"workflow: {found} (the voice has an import report)")
+
+
 def voice_history(root: Path, name: str) -> list[dict]:
     folder = history_dir(root, name)
     found = sorted(folder.glob("voice-*.yaml"), reverse=True) if folder.is_dir() else []
@@ -190,6 +212,19 @@ def validation_message(err: Exception) -> str:
     return str(err)
 
 
+def base_checkpoints(root: Path) -> list[dict]:
+    """Every base checkpoint with its size, epoch and metric (like a voice's export list)."""
+    details = {
+        item["path"]: item
+        for quality in train_mod.QUALITIES
+        for item in checkpoint_list(root, service.base_work_dir(root, quality))
+    }
+    return [
+        {**details.get(path, {}), "label": label, "path": path, "quality": label.split(" · ")[0]}
+        for label, path in service.base_checkpoint_choices(root)
+    ]
+
+
 def add_settings_routes(app: FastAPI, root: Path, need_voice, start, error) -> Machine:
     jobs: dict[str, JobManager] = app.state.jobs
     machine = Machine()
@@ -207,9 +242,7 @@ def add_settings_routes(app: FastAPI, root: Path, need_voice, start, error) -> M
             "sources": [{"name": n, "clips": c, "folder": str(f)} for n, c, f in service.base_sources(root)],
             "runs": service.base_runs(root),
             "latest": service.latest_base_run(root),
-            "checkpoints": [
-                {"label": label, "path": path} for label, path in service.base_checkpoint_choices(root)
-            ],
+            "checkpoints": base_checkpoints(root),
             "score": score_payload(root, report),
             "compare": {
                 "common": common,
@@ -366,6 +399,7 @@ def add_settings_routes(app: FastAPI, root: Path, need_voice, start, error) -> M
     @app.get("/api/voices/{name}/settings")
     def voice_settings(name: str):
         need_voice(name)
+        match_workflow(root, name)
         cfg = service.load_config(root, name)
         saved = service.config_yaml(root, name)
         return {

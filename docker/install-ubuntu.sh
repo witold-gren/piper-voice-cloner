@@ -5,18 +5,69 @@
 #   docker/install-ubuntu.sh                checks, login, folders, autostart, build, start
 #   docker/install-ubuntu.sh --show-login   the editor's user and password
 #   docker/install-ubuntu.sh --remove       stops and removes the containers (data and settings stay)
+#   docker/install-ubuntu.sh --stop         stops the containers; they stay off after a reboot
+#                                           (make deploy or docker compose up -d starts them again)
+#   docker/install-ubuntu.sh --uninstall [--yes]
+#                                           removes the containers, the image, the login, the settings
+#                                           and the code folder; the voices (PVC_DATA) stay
 #
 # PVC_DATA=<folder> keeps the data in an existing folder (default: ~/piper-voice-cloner/data when it
 # exists, else docker/data). Nothing is copied: big data stays where it is.
 set -euo pipefail
 
 DOCKER_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(dirname "$DOCKER_DIR")"
 cd "$DOCKER_DIR"
 CONFIG="$DOCKER_DIR/config"
 ENV_FILE="$DOCKER_DIR/.env"
 OLD_CONFIG="$HOME/.config/piper-voice-cloner"
 
+uninstall() {
+  local data
+  data="$(sed -n 's/^PVC_DATA=//p' "$ENV_FILE" 2>/dev/null || true)"
+  echo "This removes from $(hostname):"
+  echo "  the editor's and TensorBoard's containers and the image piper-voice-cloner"
+  echo "  the login and the settings: $CONFIG, $ENV_FILE (Home Assistant connection, ElevenLabs key)"
+  echo "  the code folder: $REPO_DIR"
+  echo "The voices stay: ${data:-$DOCKER_DIR/data}"
+  if [ "${1:-}" != "--yes" ]; then
+    read -r -p "Type yes to remove: " answer || answer=""
+    [ "$answer" = "yes" ] || { echo "Nothing removed."; exit 1; }
+  fi
+  if command -v docker >/dev/null; then
+    docker compose down --rmi all --remove-orphans || echo "WARNING: docker compose down failed (already removed?)"
+  fi
+  rm -rf -- "$CONFIG" "$ENV_FILE"
+  echo "Login and settings removed."
+  case "${data:-$DOCKER_DIR/data}/" in
+    "$REPO_DIR"/*)
+      echo "The voices are inside the code folder, so the code folder stays: $REPO_DIR"
+      echo "Move them out (PVC_DATA) or remove the folder by hand."
+      exit 0
+      ;;
+  esac
+  # only a folder that really is this application's code, never HOME or /
+  if [ -f "$REPO_DIR/pyproject.toml" ] && grep -q '^name = "piper-voice-cloner"' "$REPO_DIR/pyproject.toml" \
+    && [ "$REPO_DIR" != "$HOME" ] && [ "$REPO_DIR" != "/" ]; then
+    cd /
+    rm -rf -- "$REPO_DIR"
+    echo "Code folder removed: $REPO_DIR"
+  else
+    echo "WARNING: $REPO_DIR does not look like the editor's code, left as it is"
+  fi
+  echo "Done. Install again: make install"
+  exit 0
+}
+
 case "${1:-}" in
+  --stop)
+    docker compose stop
+    echo "Stopped; stays off after a reboot. Start again: make deploy (or docker compose up -d here)."
+    exit 0
+    ;;
+  --uninstall)
+    uninstall "${2:-}"
+    ;;
   --show-login)
     test -f "$CONFIG/env" || { echo "not installed yet: make install"; exit 1; }
     sed -n 's/^PVC_UI_AUTH=\([^:]*\):\(.*\)$/user: \1\npassword: \2/p' "$CONFIG/env"
@@ -28,14 +79,22 @@ case "${1:-}" in
     exit 0
     ;;
   "") ;;
-  *) echo "usage: $0 [--show-login | --remove]"; exit 2 ;;
+  *) echo "usage: $0 [--show-login | --stop | --remove | --uninstall [--yes]]"; exit 2 ;;
 esac
 
 echo "== checks"
-command -v nvidia-smi >/dev/null || { echo "no nvidia-smi: install the NVIDIA driver first"; exit 1; }
+MIN_DRIVER=580  # the torch in the image is built for CUDA 13.0 (docker/Dockerfile, TRAIN_TORCH)
+command -v nvidia-smi >/dev/null || { echo "no nvidia-smi: install the NVIDIA driver first (sudo ubuntu-drivers install), then reboot"; exit 1; }
+driver="$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -1 | tr -d ' ' || true)"
+[ -n "$driver" ] || { echo "nvidia-smi does not see the card: reboot after installing the driver (nvidia-smi shows why)"; exit 1; }
+[ "${driver%%.*}" -ge "$MIN_DRIVER" ] 2>/dev/null || {
+  echo "NVIDIA driver $driver is too old: the image needs $MIN_DRIVER or newer: sudo apt install -y nvidia-driver-$MIN_DRIVER, then reboot"
+  exit 1
+}
+echo "NVIDIA driver $driver"
 command -v docker >/dev/null || { echo "Docker is missing: sudo apt install -y docker.io docker-compose-v2"; exit 1; }
 docker compose version >/dev/null || { echo "docker compose is missing: sudo apt install -y docker-compose-v2"; exit 1; }
-docker info >/dev/null 2>&1 || { echo "no access to Docker: sudo usermod -aG docker $USER, then log in again"; exit 1; }
+docker info >/dev/null 2>&1 || { echo "no access to Docker: sudo usermod -aG docker $(id -un), then log in again"; exit 1; }
 docker info 2>/dev/null | grep -qi nvidia || {
   echo "Docker does not know the NVIDIA runtime: install nvidia-container-toolkit, then"
   echo "  sudo nvidia-ctk runtime configure --runtime=docker && sudo systemctl restart docker"

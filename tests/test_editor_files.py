@@ -57,6 +57,18 @@ def test_compose_starts_with_the_machine_and_reaches_the_gpu():
     assert tensorboard["restart"] == "unless-stopped" and "6006" in tensorboard["ports"][0]
 
 
+def test_compose_builds_the_machine_image_not_the_demo():
+    """Without `target`, compose builds the last stage of the Dockerfile, which is the demo (0.2.0 bug:
+    the machine ran the demo on 7861 and TensorBoard restarted forever)."""
+    compose = yaml.safe_load((REPO / "docker" / "compose.yaml").read_text(encoding="utf-8"))
+    dockerfile = (REPO / "docker" / "Dockerfile").read_text(encoding="utf-8")
+    stages = re.findall(r"^FROM \S+ AS (\S+)", dockerfile, re.M)
+    target = compose["services"]["studio"]["build"]["target"]
+    assert target == "app" and target in stages and stages[-1] != target
+    assert "demo" not in compose["services"]["studio"]["build"].values()
+    assert "--target demo" in (REPO / "Makefile").read_text(encoding="utf-8")  # only make demo builds it
+
+
 def test_image_is_layered_pinned_and_checks_itself():
     dockerfile = (REPO / "docker" / "Dockerfile").read_text(encoding="utf-8")
     assert "ARG PIPER_REF=v1.8.0" in dockerfile

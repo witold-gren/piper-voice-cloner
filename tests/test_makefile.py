@@ -16,7 +16,8 @@ MAKEFILE = (REPO / "Makefile").read_text(encoding="utf-8")
 # the gpu-studio standard, section 2: the groups in this order with their targets
 GROUPS = {
     "1. Start": "help demo demo-clean docs docs-serve doctor",
-    "2. The GPU machine": "install deploy login logs status docker-up docker-down docker-logs docker-shell",
+    "2. The GPU machine": "install deploy login logs status stop uninstall docker-up docker-down docker-logs"
+    " docker-shell",
     "3. Development": "setup demo-local test test-browser test-docker test-all lint format docs-build"
     " screenshots icons clean",
 }

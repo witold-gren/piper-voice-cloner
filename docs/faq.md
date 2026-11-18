@@ -5,6 +5,33 @@ Every error met so far, with its exact message, the cause and the fix. The job's
 
 ## Docker and the machine
 
+### `the editor does not answer` and TensorBoard `demo.py: error: unrecognized arguments`
+
+Version 0.2.0 built the demo image on the machine. Update to 0.2.1 and `make deploy`.
+
+### `NVIDIA driver 535.… is too old: the image needs 580 or newer`
+
+The torch in the image is built for CUDA 13.0, which needs driver 580. Install it
+(`sudo apt install -y nvidia-driver-580`), reboot, and run `make install` again. Several drivers in
+`dpkg -l` are fine; what counts is the version `nvidia-smi` shows.
+
+### `nvidia-smi does not see the card` / `no nvidia-smi: install the NVIDIA driver first`
+
+The driver is not installed or not loaded (often right after installing it, before a reboot). Install
+it with `sudo ubuntu-drivers install`, reboot, and check `nvidia-smi` before `make install`.
+
+### `Docker is missing`, `docker compose is missing`, `no access to Docker`
+
+The installer installs nothing on the machine itself and prints the command to run:
+`sudo apt install -y docker.io docker-compose-v2`, `sudo usermod -aG docker <user>` (then log out and
+in). Every library the editor needs is installed inside the image.
+
+### `Weights only load failed` … `Unsupported global: GLOBAL pathlib.PosixPath`
+
+Training stopped at once. Lightning 2.6 opens checkpoints in a safe mode, and older ones (the lessac
+base downloaded from Hugging Face) keep folder paths inside. From version 0.2.1 the editor changes
+such a checkpoint once before training. In 0.2.0: update and train again; nothing else to do.
+
 ### `could not select device driver "nvidia" with capabilities: [[gpu]]`
 
 Docker does not see the card: `nvidia-container-toolkit` is missing or not set up for Docker. Do step 1

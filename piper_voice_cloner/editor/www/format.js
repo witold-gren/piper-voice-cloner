@@ -10,6 +10,19 @@ export function duration(seconds) {
   return days ? `${days} d ${clock}` : clock;
 }
 
+/** "25–40 min", "15–21 h" or "3.1–4.2 days": how long, never a time of day. */
+export function durationRange(low, high, language) {
+  if (low == null || high == null || Number.isNaN(low) || Number.isNaN(high)) return "—";
+  const pl = language === "pl";
+  const fmt = (value, digits) => number(value, language, digits);
+  if (high < 3600) return `${fmt(Math.max(1, Math.round(low / 60)))}–${fmt(Math.max(1, Math.round(high / 60)))} min`;
+  if (high < 72 * 3600) {
+    const digits = high < 10 * 3600 ? 1 : 0;
+    return `${fmt(low / 3600, digits)}–${fmt(high / 3600, digits)} h`;
+  }
+  return `${fmt(low / 86400, 1)}–${fmt(high / 86400, 1)} ${pl ? "dni" : "days"}`;
+}
+
 export function number(value, language, digits = 0) {
   return Number(value).toLocaleString(language === "pl" ? "pl-PL" : "en-GB", {
     minimumFractionDigits: digits,

@@ -6,6 +6,35 @@ zobaczysz po prawej (<span class="ui">Powiększ</span>, <span class="ui">Kopiuj<
 
 ## Docker i maszyna
 
+### `the editor does not answer`, a TensorBoard pokazuje `demo.py: error: unrecognized arguments`
+
+Wersja 0.2.0 budowała na maszynie obraz demo. Zaktualizuj do 0.2.1 i uruchom `make deploy`.
+
+### `NVIDIA driver 535.… is too old: the image needs 580 or newer`
+
+torch w obrazie jest zbudowany dla CUDA 13.0, a ta wymaga sterownika 580. Zainstaluj go
+(`sudo apt install -y nvidia-driver-580`), uruchom maszynę ponownie i powtórz `make install`. Kilka
+sterowników w `dpkg -l` nie przeszkadza: liczy się wersja, którą pokazuje `nvidia-smi`.
+
+### `nvidia-smi does not see the card` / `no nvidia-smi: install the NVIDIA driver first`
+
+Sterownik nie jest zainstalowany albo nie jest załadowany (często zaraz po instalacji, przed
+restartem). Zainstaluj go przez `sudo ubuntu-drivers install`, uruchom maszynę ponownie i przed
+`make install` sprawdź `nvidia-smi`.
+
+### `Docker is missing`, `docker compose is missing`, `no access to Docker`
+
+Instalator niczego nie instaluje na samej maszynie, tylko wypisuje polecenie do wykonania:
+`sudo apt install -y docker.io docker-compose-v2` albo `sudo usermod -aG docker <użytkownik>` (potem
+wyloguj się i zaloguj ponownie). Wszystkie biblioteki potrzebne edytorowi instalują się w obrazie.
+
+### `Weights only load failed` … `Unsupported global: GLOBAL pathlib.PosixPath`
+
+Trening zatrzymał się od razu. Lightning 2.6 otwiera checkpointy w trybie bezpiecznym, a starsze
+checkpointy (baza lessac pobrana z Hugging Face) mają w środku ścieżki folderów. Od wersji 0.2.1
+edytor raz zmienia taki checkpoint przed treningiem. W 0.2.0: zaktualizuj i trenuj ponownie, nic więcej
+nie trzeba robić.
+
 ### `could not select device driver "nvidia" with capabilities: [[gpu]]`
 
 Docker nie widzi karty, bo brakuje `nvidia-container-toolkit` albo nie skonfigurowano go dla Dockera.

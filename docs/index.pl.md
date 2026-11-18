@@ -45,3 +45,14 @@ Zadania działają dalej po zamknięciu przeglądarki, więc możesz wrócić na
    Nowe głosy uczą się od niego szybciej i brzmią naturalniej niż od angielskiego `lessac`.
 3. Utwórz głos (<span class="ui">Nowy głos</span>) i przejdź kroki wybranej ścieżki.
 4. [Wyeksportuj głos i wybierz go w Home Assistant](export.md).
+
+## Krok po kroku
+
+Pierwszy raz w edytorze? Te strony prowadzą przez każde zadanie z obrazkami, krok po kroku:
+
+1. [Pierwsze kroki](guide-first-steps.md) – logowanie, ekran, Home Assistant i ElevenLabs.
+2. [Dodaj nowy głos](guide-new-voice.md) – ścieżka, nazwa, ustawienia głosu.
+3. [Oceń nagrania](guide-rate.md) – odsłuch, filtr i ocena nagrań bazy.
+4. [Wytrenuj głos](guide-train.md) – dataset, trening, wykres, wybór checkpointu, kolejka.
+5. [Wytrenuj głos bazowy](guide-base.md) – `bazowy-pl` od zera i korzystanie z niego.
+6. [Eksport do Home Assistant](guide-export.md) – pliki, Wyoming Piper, wybór i test głosu.

@@ -44,3 +44,14 @@ running when the browser is closed – come back tomorrow.
    new voices learn from it faster and sound more natural than from the English `lessac`.
 3. Make a voice (<span class="ui">New voice</span>) and follow the steps of its way.
 4. [Export it and choose it in Home Assistant](export.md).
+
+## Step by step
+
+New to the editor? These pages walk through every task with pictures, one step at a time:
+
+1. [First steps](guide-first-steps.md) – logging in, the screen, Home Assistant and ElevenLabs.
+2. [Add a new voice](guide-new-voice.md) – the way, the name, the voice settings.
+3. [Rate recordings](guide-rate.md) – audition, filter and the rating of the base recordings.
+4. [Train a voice](guide-train.md) – the dataset, the training, the chart, choosing the checkpoint, the queue.
+5. [Train the base voice](guide-base.md) – `bazowy-pl` from scratch, and using it.
+6. [Export to Home Assistant](guide-export.md) – the files, Wyoming Piper, choosing and testing the voice.

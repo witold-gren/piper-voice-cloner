@@ -22,6 +22,7 @@ class TrainRun(BaseModel):
     base: str
     epochs: int = Field(ge=1)
     poweroff: bool = False
+    fresh: bool = False  # start over from the base instead of resuming the voice's last checkpoint
 
 
 class QueueRun(TrainRun):
@@ -77,7 +78,8 @@ def add_step_routes(app: FastAPI, root: Path, need_voice, start, error) -> None:
         if not service.dataset_size(root, name):
             raise error("train_no_dataset")
         service.set_max_epochs(root, name, run.epochs)
-        return start("train", name, ["train", name, "--base", run.base], poweroff=run.poweroff)
+        args = ["train", name, "--base", run.base] + (["--no-resume"] if run.fresh else [])
+        return start("train", name, args, poweroff=run.poweroff)
 
     @app.post("/api/queue")
     def queue_run(run: QueueRun):

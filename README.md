@@ -43,6 +43,8 @@ From your computer, with the machine in `~/.config/gpu-studio/host.mk` (`GPU_HOS
 make install    # first time: code, checks, login, build, start (starts with the machine afterwards)
 make login      # the editor's user and password
 make deploy     # every update
+make stop       # stop the editor (make deploy starts it again)
+make uninstall  # remove it from the machine; the voices stay
 ```
 
 Or on the machine: `git clone … && docker/install-ubuntu.sh`. Then open `http://<machine>:7860`.

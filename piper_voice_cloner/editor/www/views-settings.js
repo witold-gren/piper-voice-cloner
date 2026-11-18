@@ -273,12 +273,15 @@ class PvcVoiceSettings extends StepView {
     }
   }
 
+  // the head (and its "?" window) stays the same element before and after the data comes
   render() {
-    if (!this.data) return this.head("mdi:cog-outline", this._t("voice_settings"), this._t("voice_settings_info"), "settings");
+    return html`${this.head("mdi:cog-outline", this._t("voice_settings"), this._t("voice_settings_info"), "settings")}${this.data ? this._renderLoaded() : nothing}`;
+  }
+
+  _renderLoaded() {
     const parsed = yamlError(this._text);
     const state = ["saving", "error"].includes(this._draftState) ? this._draftState : this.changed ? "draft" : "clean";
     return html`
-      ${this.head("mdi:cog-outline", this._t("voice_settings"), this._t("voice_settings_info"), "settings")}
       <div class="bar">
         <span class="pill ${state === "clean" ? "" : state === "error" ? "failed" : "draft"}"
           data-settings-state=${state === "clean" ? "clean" : state === "error" ? "error" : "draft"}

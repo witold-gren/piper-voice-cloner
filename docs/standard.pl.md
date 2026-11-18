@@ -41,7 +41,7 @@ Te same nazwy co w pozostałych aplikacjach, a `make help` po polsku albo po ang
 grupy:
 
 - **1. Start:** `help`, `demo`, `demo-clean`, `docs`, `docs-serve`, `doctor`. Wystarczy Docker Desktop.
-- **2. Maszyna z GPU:** `install`, `deploy`, `login`, `logs`, `status`, `docker-up`, `docker-down`,
+- **2. Maszyna z GPU:** `install`, `deploy`, `login`, `logs`, `status`, `stop`, `uninstall`, `docker-up`, `docker-down`,
   `docker-logs`, `docker-shell`. Wystarczą Docker oraz `ssh` i `rsync` z macOS.
 - **3. Rozwój:** `setup`, `demo-local`, `test`, `test-browser`, `test-docker`, `test-all`, `lint`,
   `format`, `docs-build`, `screenshots`, `icons`, `clean`.
@@ -78,7 +78,7 @@ Co jeszcze dostosowano:
   - tworzy hasło;
   - przenosi istniejące połączenia z Home Assistant i ElevenLabs;
   - buduje i uruchamia edytor.
-  - Opcje: `--show-login` i `--remove`.
+  - Opcje: `--show-login`, `--stop`, `--remove` i `--uninstall`.
 - `GET /api/health` służy kontenerowi i `make status`.
 - Restart kontenera nie zostawia zadania w stanie „trwa”: zadanie bez procesu dostaje stan „przerwane”.
 
@@ -185,12 +185,13 @@ pamięta ich stan, a w wąskim oknie prawa kolumna jest zwinięta od startu.
 - Nie ma poleceń `migrate` i `migrate-finish` (w standardzie są opcjonalne). Stare usługi wyłącza
   instalator, a dane zostają w dotychczasowym folderze.
 
-## Co jeszcze czeka
+## Sprawdzone na prawdziwej maszynie (0.2.1)
 
-Sprawdzenie na prawdziwej maszynie:
+- `make install` i `make deploy` na Ubuntu 24.04 z RTX 4090 i sterownikiem 580;
+- karta w kontenerze (torch treningu i edytora);
+- edytor i TensorBoard same wstają po restarcie maszyny;
+- próbny trening dwóch epok od `lessac`, eksport i zdanie wypowiedziane wyeksportowanym głosem;
+- połączenie z Home Assistant, moc z gniazdka i odliczanie z Anuluj;
+- `make stop` i ponowne uruchomienie przez `make deploy`.
 
-- `make install`;
-- karta w kontenerze;
-- próbny trening dwóch epok na kopii głosu;
-- eksport;
-- wyłączenie przez Home Assistant z odliczaniem.
+Zostało: prawdziwe wyłączenie maszyny przez Home Assistant i `make uninstall` na maszynie.

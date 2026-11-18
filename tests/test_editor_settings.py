@@ -82,7 +82,10 @@ def test_base_choice_only_from_its_own_checkpoints(setup):
     best = ckpt / "epoch=1093-step=1-val_mos=3.7507.ckpt"
     best.write_bytes(b"")
     view = client.get("/api/base").json()
-    assert view["checkpoints"] == [{"label": f"medium · {best.name}", "path": str(best)}]
+    (item,) = view["checkpoints"]
+    assert item["label"] == f"medium · {best.name}" and item["path"] == str(best)
+    assert item["quality"] == "medium" and item["epoch"] == 1093  # shown like a voice's export list
+    assert item["metric"] == "val_mos" and item["value"] == 3.7507
     client.post("/api/base/select", json={"checkpoint": str(best)})
     assert last_call(root, app) == ["base", "select", str(best)]
     client.post("/api/base/export", json={"checkpoint": str(best)})
@@ -241,3 +244,33 @@ def test_rename_moves_the_voice_but_not_while_it_trains(setup):
     assert busy.status_code == 409 and busy.json()["error"] == "rename_busy"
     app.state.jobs["current"].stop()
     app.state.jobs["current"].wait()
+
+
+def test_an_older_imported_voice_gets_its_way_in_voice_yaml_once(setup):
+    """The tree said "Own recordings" (import report), the form said "Cloning" (voice.yaml without
+    `workflow`); saving the form could keep the wrong way. Opening the settings fixes the one line."""
+    root, _, client = setup
+    voice = root / "voices" / "kasia"
+    path = voice / config_mod.CONFIG_FILE
+    text = "# Kasia, imported from the old set\n" + path.read_text(encoding="utf-8").replace(
+        "workflow: clone\n", ""
+    )
+    path.write_text(text, encoding="utf-8")
+    (voice / "dataset").mkdir()
+    (voice / "dataset" / "import_report.csv").write_text("id,status\n", encoding="utf-8")
+    view = client.get("/api/voices/kasia/settings").json()
+    assert view["config"]["workflow"] == "import"
+    saved = path.read_text(encoding="utf-8")
+    assert "workflow: import" in saved and saved.startswith("# Kasia, imported from the old set\n")
+    assert saved.replace("workflow: import\n", "") == text  # only that line
+    history = view["history"]
+    assert len(history) == 1 and "import report" in json.dumps(history)
+    client.get("/api/voices/kasia/settings")
+    assert len(client.get("/api/voices/kasia/settings").json()["history"]) == 1  # once
+
+
+def test_with_workflow_changes_or_adds_one_line():
+    assert settings.with_workflow("name: a\nworkflow: clone\n", "import") == "name: a\nworkflow: import\n"
+    assert settings.with_workflow("# c\nname: a\nlanguage: pl\n", "import") == (
+        "# c\nname: a\nworkflow: import\nlanguage: pl\n"
+    )
