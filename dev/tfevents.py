@@ -63,9 +63,11 @@ def record(data: bytes) -> bytes:
     return struct.pack("<Q", len(data)) + b"\0" * 4 + data + b"\0" * 4  # crcs are not checked
 
 
-def training(work: Path, first: int, last: int, sentences: list[str], *, every: int = 5) -> Path:
+def training(
+    work: Path, first: int, last: int, sentences: list[str], *, every: int = 5, version: int = 0
+) -> Path:
     """Epochs first..last: val_mos rises to ~3.6 and flattens, val_mel and train_mel fall."""
-    path = work / "lightning_logs" / "version_0" / "events.out.tfevents.1.demo"
+    path = work / "lightning_logs" / f"version_{version}" / "events.out.tfevents.1.demo"
     path.parent.mkdir(parents=True, exist_ok=True)
     clips = [tone(1.0, 180 + 30 * i) for i in range(len(sentences))]
     with path.open("wb") as out:

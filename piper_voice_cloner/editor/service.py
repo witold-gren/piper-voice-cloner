@@ -425,13 +425,15 @@ def base_dataset_dir(root: Path) -> Path:
 
 def base_runs(root: Path) -> list[str]:
     """Model sizes with a base training run (logs written), medium first."""
-    return [q for q in train_mod.QUALITIES if train_monitor.event_files(base_work_dir(root, q))]
+    return [
+        q for q in train_mod.QUALITIES if train_monitor.event_files(base_work_dir(root, q), every_run=True)
+    ]
 
 
 def latest_base_run(root: Path) -> str | None:
     """The base run written to last (the one training now, or the last one trained)."""
     newest = {
-        q: max(p.stat().st_mtime for p in train_monitor.event_files(base_work_dir(root, q)))
+        q: max(p.stat().st_mtime for p in train_monitor.event_files(base_work_dir(root, q), every_run=True))
         for q in base_runs(root)
     }
     return max(newest, key=newest.get) if newest else None

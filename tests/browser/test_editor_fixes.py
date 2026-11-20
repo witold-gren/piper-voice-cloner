@@ -69,3 +69,24 @@ def test_base_checkpoints_name_their_epoch_and_quality(page):
     options = page.locator("[data-base-checkpoint] option").all_inner_texts()
     assert options and any(re.search(r"Epoka \d+ · val_mos \d,\d{3}", o) for o in options), options
     assert all(o.split(" · ")[0] in ("medium", "high") for o in options), options
+
+
+def test_an_earlier_training_can_be_shown_and_heard(page):
+    """kasia was started over once: the run before (from lessac) is kept whole in train/runs/0."""
+    page.open("voice/kasia/train")
+    pick = page.locator("[data-train-run]")
+    expect(pick.locator("option")).to_have_count(2)
+    expect(pick.locator("option").nth(1)).to_contain_text("od lessac, epoki 2164–2295")
+    expect(page.locator("[data-listen-zip]")).to_be_visible()
+    pick.select_option("0")
+    epochs = page.locator("[data-listen-epoch] option")
+    expect(epochs.first).to_contain_text("epoka 2290")
+    expect(page.locator("[data-listen-zip]")).to_have_count(0)  # a kept run is only listened to
+    expect(page.locator("pvc-chart")).to_be_visible()
+    pick.select_option("")
+    expect(epochs.first).not_to_contain_text("epoka 2290")
+
+
+def test_the_export_says_the_name_the_next_file_gets(page):
+    page.open("voice/kasia/export")
+    expect(page.locator("pvc-step-export")).to_contain_text("pl_PL-kasia_glos_2-medium.onnx")

@@ -70,6 +70,10 @@ def page(browser, demo):
     """A page of the editor in Polish; fails the test on any error in the page."""
     context = browser.new_context(viewport={"width": 1440, "height": 900})
     context.add_init_script("localStorage.getItem('pvc-lang') || localStorage.setItem('pvc-lang', 'pl')")
+    # the tour starts by itself the first time; the tests of other things open the editor as seen before
+    context.add_init_script(
+        "localStorage.getItem('pvc-studio-tour') || localStorage.setItem('pvc-studio-tour', 'done')"
+    )
     page = context.new_page()
     errors: list[str] = []
     page.on("pageerror", lambda err: errors.append(str(err)))

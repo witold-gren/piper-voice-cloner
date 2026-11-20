@@ -101,14 +101,19 @@ def add_step_routes(app: FastAPI, root: Path, need_voice, start, error) -> None:
         }
 
     @app.get("/api/chart")
-    def chart(voice: str = ""):
+    def chart(voice: str = "", run: str = ""):
         target = steps.chart_target(root, jobs["current"], voice or None)
-        return steps.chart_view(root, target) if target else {"target": None, "rows": []}
+        if not target:
+            return {"target": None, "rows": []}
+        try:
+            return steps.chart_view(root, target, run or None)
+        except ValueError as err:
+            raise error("unknown_run", str(err), status=404) from err
 
     @app.get("/api/listen")
-    def listen(target: str, epoch: int | None = None):
+    def listen(target: str, epoch: int | None = None, run: str = ""):
         try:
-            return steps.listen_view(root, steps.work_dir(root, target), epoch)
+            return steps.listen_view(root, steps.work_dir(root, target), epoch, run or None)
         except ValueError as err:
             raise error("unknown_run", str(err), status=404) from err
 

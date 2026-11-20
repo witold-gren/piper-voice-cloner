@@ -113,7 +113,7 @@ def test_a_zip_is_unpacked_into_the_import_folder(setup):
         "/api/voices/tomek/import/upload", files={"file": ("x.zip", zip_bytes({"a.txt": b"x"}))}
     )
     assert bad.status_code == 400 and bad.json()["error"] == "import_zip_failed"
-    assert not target.exists()
+    assert (target / "metadata.csv").read_text() == "a|Ala.\n"  # the earlier upload stays, nothing deleted
     escape = zip_bytes({"metadata.csv": b"a|A.\n", "../../evil.txt": b"x"})
     client.post("/api/voices/tomek/import/upload", files={"file": ("e.zip", escape)})
     assert not (root / "evil.txt").exists() and not (root.parent / "evil.txt").exists()
@@ -186,6 +186,17 @@ def test_resume_plan_explains_what_resuming_does(tmp_path):
         "end": 2005,
         "done": True,
     }
+    # started over (version_1, from lessac at 2164): the plan is of the new run, never of the old one
+    (directory / "train" / "run.json").write_text(
+        '{"start_epoch": 2164, "first_version": 1}', encoding="utf-8"
+    )
+    assert steps.resume_plan(root, "kasia", 500) is None  # no checkpoint of the new run yet
+    newer = directory / "train" / "lightning_logs" / "version_1" / "checkpoints" / "epoch=2200-step=1.ckpt"
+    newer.parent.mkdir(parents=True)
+    newer.write_bytes(b"x")
+    assert steps.resume_plan(root, "kasia", 500)["reached"] == 2200
+    newer.unlink()
+    (directory / "train" / "run.json").write_text('{"start_epoch": 1113}', encoding="utf-8")
     listed = steps.checkpoint_list(root, "kasia")
     assert {item["name"]: (item["epoch"], item["metric"], item["value"]) for item in listed} == {
         "epoch=1605-step=9000-val_mos=3.6123.ckpt": (1605, "val_mos", 3.6123),
@@ -232,7 +243,7 @@ def test_export_lists_checkpoints_and_files_and_runs(setup):
     (directory / "export").mkdir()
     (directory / "export" / "pl_PL-kasia_glos-medium.onnx").write_bytes(b"x" * 2000)
     view = client.get("/api/voices/kasia/export").json()
-    assert view["stem"] == "pl_PL-kasia_glos-medium"
+    assert view["stem"] == "pl_PL-kasia_glos_2-medium"  # that name is taken: the next export gets a number
     assert [c["path"] for c in view["checkpoints"]] == [str(best)]
     assert view["files"] == [
         {

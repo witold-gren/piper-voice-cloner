@@ -11,6 +11,7 @@ The next pages go one task at a time:
 4. [Train a voice](guide-train.md)
 5. [Train the base voice](guide-base.md)
 6. [Export to Home Assistant](guide-export.md)
+7. [Tour and lessons in the editor](guide-tour.md)
 
 ## 1. Log in {#login}
 

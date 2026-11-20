@@ -175,6 +175,21 @@ W logu zadania jest `Powering off failed: …`. Najczęściej brakuje połączen
 w <span class="ui">Home Assistant i maszyna</span>, albo HA odrzucił token. Po <span class="ui">Zatrzymaj</span>
 maszyna celowo się nie wyłącza.
 
+## Przewodnik i samouczki {#tour}
+
+### Przewodnik po edytorze się nie pokazuje
+
+Startuje sam tylko za pierwszym razem w danej przeglądarce. Po „Pomiń”, Esc albo „Gotowe” edytor zapamiętuje,
+że został obejrzany. W oknie prywatnym przeglądarka nie pozwala niczego zapamiętać, więc edytor uznaje
+przewodnik za obejrzany, żeby nie wracał za każdym razem. Otworzysz go zawsze z ⚙ →
+<span class="ui">Przewodnik po edytorze</span>.
+
+### Samouczek nie idzie dalej
+
+Dymek z napisem „Kliknij to, co jest w ramce, aby przejść dalej” czeka na kliknięcie przycisku w ramce. Kliknij
+go albo <span class="ui">Dalej</span> w dymku. Reszta ekranu jest wtedy zablokowana, a Esc kończy samouczek.
+Przycisk na liście samouczków jest wyszarzony, gdy brakuje głosu danego rodzaju. Najpierw utwórz taki głos.
+
 ## make na Macu {#make}
 
 ### `Docker not found: install and start Docker Desktop` / `Docker is not running: start Docker Desktop`

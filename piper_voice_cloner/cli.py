@@ -412,7 +412,8 @@ def _train(
     quality: str = "medium",
 ) -> None:
     info = _run_info(paths.work_dir)
-    last = train_mod.resume_checkpoint(paths.work_dir) if resume else None
+    # only a checkpoint of the current run: never one of a run before a "start over"
+    last = train_mod.resume_checkpoint(paths.work_dir, current_run=True) if resume else None
     if last is not None and info:
         start_epoch, quality = int(info["start_epoch"]), info.get("quality", "medium")
         ckpt = last
@@ -449,12 +450,21 @@ def _train(
         raise typer.BadParameter(f"{paths.metadata} missing - run `pvc filter` or `pvc import` first")
     paths.work_dir.mkdir(parents=True, exist_ok=True)
     if not (last is not None and info):  # a new run (also "start over"): its own start, not the last one's
-        (paths.work_dir / "run.json").write_text(
-            json.dumps(
-                {"start_epoch": start_epoch, "base": str(ckpt) if ckpt else "random", "quality": quality}
-            ),
-            encoding="utf-8",
-        )
+        from . import train_monitor
+
+        # the new run is the next lightning_logs/version_N; the samples and the chart of the run before
+        # go whole to runs/ (nothing of it is deleted), its checkpoints stay where they are
+        new = {
+            "start_epoch": start_epoch,
+            "base": str(ckpt) if ckpt else "random",
+            "quality": quality,
+            "first_version": train_monitor.next_version(paths.work_dir),
+        }
+        (paths.work_dir / "run.json").write_text(json.dumps(new), encoding="utf-8")
+        if info:
+            kept = train_monitor.archive_monitor(paths.work_dir, info)
+            if kept:
+                typer.echo(f"The earlier run is kept in {kept}")
     # the web UI reads this line for the whole-run progress bar and the time left
     typer.echo(f"training epochs {start_epoch}-{start_epoch + train_cfg.max_epochs}")
     if ckpt is not None:
@@ -543,7 +553,8 @@ def export(
     if checkpoint is None:
         raise typer.BadParameter("no checkpoint found - train first or pass --checkpoint")
     quality = train_mod.checkpoint_info(checkpoint, python=python).quality
-    onnx_file = directory / "export" / f"{cfg.file_stem(lang.locale, quality)}.onnx"
+    # a file exported before is never overwritten: the new one gets the next number
+    onnx_file = train_mod.free_export_path(directory / "export", cfg.file_stem(lang.locale, quality))
     onnx_file.parent.mkdir(parents=True, exist_ok=True)
     train_mod.run(train_mod.export_command(checkpoint, onnx_file, python=python))
     typer.echo(f"Exported {onnx_file} and {train_mod.finish_export(paths, onnx_file, quality)}")
@@ -708,6 +719,13 @@ def base_select(checkpoint: Path) -> None:
         raise typer.BadParameter(f"{checkpoint} not found")
     target = bases_dir(root) / train_mod.SCRATCH_BASE
     target.parent.mkdir(parents=True, exist_ok=True)
+    if target.is_file():
+        # the base before stays, numbered (usable again as ckpt:<path>): nothing is overwritten
+        kept, n = target.with_name(f"{target.stem}-1{target.suffix}"), 2
+        while kept.exists():
+            kept, n = target.with_name(f"{target.stem}-{n}{target.suffix}"), n + 1
+        target.rename(kept)
+        typer.echo(f"The base before is kept as {kept}")
     shutil.copyfile(checkpoint, target)
     typer.echo(f"{checkpoint} -> {target}")
 

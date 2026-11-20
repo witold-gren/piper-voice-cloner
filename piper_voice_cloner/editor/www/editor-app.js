@@ -8,6 +8,9 @@ import { duration } from "./format.js";
 import "./icon.js";
 import "./job-panel.js";
 import "./new-voice.js";
+import "./tour.js";
+import { tourSeen } from "./tour.js";
+import { LESSONS } from "./lessons.js";
 
 const THEMES = ["auto", "light", "dark"];
 // steps a voice can skip: not counted in "6/7" until done, never the next step
@@ -116,6 +119,9 @@ export class PvcEditor extends LitElement {
     _menu: { state: true },
     _gear: { state: true },
     _folded: { state: true },
+    // the tour of the editor (tour.js) over everything, or one of its lessons (lessons.js)
+    _tour: { state: true },
+    _lesson: { state: true },
   };
 
   constructor() {
@@ -140,7 +146,8 @@ export class PvcEditor extends LitElement {
     this._onOutside = (event) => {
       if (!this._menu && !this._gear) return;
       const path = event.composedPath();
-      if (path.some((el) => el.classList?.contains("menu-wrap"))) return;
+      // the bubble of a lesson that shows the box is not "beside" it
+      if (path.some((el) => el.classList?.contains("menu-wrap") || el.tagName === "PVC-TOUR")) return;
       this._menu = false;
       this._gear = false;
     };
@@ -149,6 +156,15 @@ export class PvcEditor extends LitElement {
     this._dialog = null;
     this._notice = null;
     this._onHash = () => (this._selected = decodeURIComponent(location.hash.slice(1)) || null);
+    // the "?" of a view offers the lesson of what it is about
+    this.addEventListener("help-lesson", (event) => this._startLesson(event.detail.key));
+  }
+
+  _startLesson(key) {
+    this._dialog = null;
+    this._gear = false;
+    this._tour = false;
+    this._lesson = LESSONS.find((lesson) => lesson.key === key) ?? null;
   }
 
   connectedCallback() {
@@ -245,6 +261,11 @@ export class PvcEditor extends LitElement {
       }
       if (this._notice?.offline) this._notice = null;
       if (!this._selected && this._state.opening_voice) this._select(`voice/${this._state.opening_voice}`);
+      // the first time the editor opens in this browser its parts are shown one at a time
+      if (!this._tourChecked) {
+        this._tourChecked = true;
+        if (!tourSeen() && !this._dialog) this._tour = true;
+      }
       window.editorReady = true;
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) return;
@@ -424,6 +445,19 @@ export class PvcEditor extends LitElement {
             @create=${(event) => this._createVoice(event.detail)}
           ></pvc-new-voice>`
         : nothing}
+      ${this._dialog === "lessons"
+        ? html`<pvc-lessons .language=${this._language} .app=${this}
+            @close=${() => (this._dialog = null)}
+            @lesson-start=${(event) => this._startLesson(event.detail.key)}></pvc-lessons>`
+        : nothing}
+      ${this._tour || this._lesson
+        ? html`<pvc-tour .root=${this} .host=${this} .language=${this._language} .lesson=${this._lesson}
+            @tour-close=${() => {
+              this._gear = false; // the ⚙ box a lesson opened does not stay over the editor after it
+              this._tour = false;
+              this._lesson = null;
+            }}></pvc-tour>`
+        : nothing}
     `;
   }
 
@@ -487,6 +521,12 @@ export class PvcEditor extends LitElement {
               ${[["pl", "Polski"], ["en", "English"]].map(([code, name]) => html`<button class=${this._language === code ? "on" : ""}
                 data-language-option=${code} @click=${() => this._setLanguage(code)}>${name}</button>`)}
             </div>
+            <button class="ghost" data-gear-tour @click=${() => { this._gear = false; this._lesson = null; this._tour = true; }}>
+              <pvc-icon icon="mdi:map-marker-path"></pvc-icon>${this._t("tour_open")}
+            </button>
+            <button class="ghost" data-gear-lessons @click=${() => { this._gear = false; this._dialog = "lessons"; }}>
+              <pvc-icon icon="mdi:school-outline"></pvc-icon>${this._t("lessons_title")}
+            </button>
             <button class="ghost" data-gear-more @click=${() => { this._gear = false; this._select("settings/editor"); }}>
               <pvc-icon icon="mdi:palette-outline"></pvc-icon>${this._t("gear_more")}
             </button>
@@ -908,6 +948,12 @@ export class PvcEditor extends LitElement {
       .side {
         overflow: auto;
         background: var(--panel);
+        display: flex;
+        flex-direction: column;
+      }
+      /* the job panel fills the column, so its log can take the rest of the height */
+      .side pvc-job-panel {
+        flex: 1 0 auto;
       }
       .middle {
         overflow: auto;
@@ -1052,7 +1098,6 @@ export class PvcEditor extends LitElement {
         gap: 14px;
         padding: 16px 20px 40px;
         align-content: start;
-        max-width: 1100px;
       }
       .phead {
         display: flex;

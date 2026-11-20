@@ -11,6 +11,7 @@ Kolejne strony prowadzą przez jedno zadanie naraz:
 4. [Wytrenuj głos](guide-train.md)
 5. [Wytrenuj głos bazowy](guide-base.md)
 6. [Eksport do Home Assistant](guide-export.md)
+7. [Przewodnik i samouczki w edytorze](guide-tour.md)
 
 ## 1. Zaloguj się {#login}
 

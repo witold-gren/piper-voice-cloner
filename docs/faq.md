@@ -170,6 +170,20 @@ The job's log says `Powering off failed: …` – usually no connection or switc
 <span class="ui">Home Assistant and machine</span>, or a rejected token. After <span class="ui">Stop</span>
 it never powers off, on purpose.
 
+## Tour and lessons {#tour}
+
+### The tour of the editor does not show
+
+It starts by itself only the first time in a browser. After "Skip", Esc or "Done" the editor remembers it was
+seen. A private window lets nothing be remembered, so there the editor counts the tour as seen, or it would come
+back every time. Open it any time from ⚙ → <span class="ui">Tour of the editor</span>.
+
+### A lesson does not go on
+
+A bubble that says "Click the framed part to go on" waits for a click on the framed button. Click it, or
+<span class="ui">Next</span> in the bubble. The rest of the screen is blocked meanwhile, and Esc ends the lesson.
+A lesson greyed out in the list needs a voice of a kind it names: make such a voice first.
+
 ## make on the Mac {#make}
 
 ### `Docker not found: install and start Docker Desktop` / `Docker is not running: start Docker Desktop`

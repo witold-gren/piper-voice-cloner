@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from playwright.sync_api import expect
+import pytest
 
 
 def test_tree_shows_voices_with_the_steps_of_their_way(page):
@@ -203,3 +204,37 @@ def test_the_gear_box_labels_stay_on_one_line(page):
         "(buttons) => buttons.map((b) => Math.round(b.getBoundingClientRect().height))"
     )
     assert len(heights) == 5 and len(set(heights)) == 1, heights
+
+
+@pytest.mark.parametrize("height", [900, 1400])
+def test_the_log_takes_the_rest_of_the_right_column(browser, demo, height):
+    """The log is as tall as the column leaves (a tall screen: a tall log), never under 240 px."""
+    context = browser.new_context(viewport={"width": 1440, "height": height})
+    context.add_init_script("localStorage.setItem('pvc-studio-tour', 'done')")
+    page = context.new_page()
+    page.goto(f"{demo[0]}/#voice/kasia")
+    page.wait_for_function("window.editorReady === true")
+    log = page.locator("[data-log]").bounding_box()
+    side = page.locator("[data-side]").bounding_box()
+    gap = side["y"] + side["height"] - (log["y"] + log["height"])
+    assert 0 <= gap <= 40, (log, side)
+    assert log["height"] >= 240
+    context.close()
+
+
+@pytest.mark.parametrize(
+    ("address", "part"),
+    [("voice/kasia", "[data-voice-overview]"), ("voice/kasia/train", ".card"), ("jobs/queue", ".card")],
+)
+def test_a_view_fills_the_whole_middle_column(browser, demo, address, part):
+    """A wide screen gives its width to the view (no 1100 px limit with an empty strip on its right)."""
+    context = browser.new_context(viewport={"width": 2400, "height": 1000})
+    context.add_init_script("localStorage.setItem('pvc-studio-tour', 'done')")
+    page = context.new_page()
+    page.goto(f"{demo[0]}/#{address}")
+    page.wait_for_function("window.editorReady === true")
+    page.wait_for_timeout(500)
+    middle = page.locator("[data-middle]").bounding_box()
+    card = page.locator(f"[data-middle] {part}").first.bounding_box()
+    assert middle["x"] + middle["width"] - (card["x"] + card["width"]) <= 40, (middle, card)
+    context.close()

@@ -214,11 +214,18 @@ export class PvcJobPanel extends LitElement {
     base,
     dialogStyles,
     css`
+      /* a column: the log takes all the height the cards above leave (at least LOG_MIN) */
       :host {
-        display: grid;
+        display: flex;
+        flex-direction: column;
         gap: 12px;
         padding: 12px;
-        align-content: start;
+        box-sizing: border-box;
+      }
+      .log-card {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
       }
       .head {
         display: flex;
@@ -370,7 +377,8 @@ export class PvcJobPanel extends LitElement {
       }
       .log {
         margin: 8px 0 0;
-        height: 280px;
+        flex: 1 1 0;
+        min-height: 240px;
         overflow: auto;
         padding: 10px 12px;
         border-radius: 8px;
@@ -381,6 +389,7 @@ export class PvcJobPanel extends LitElement {
         word-break: break-word;
       }
       .log.big {
+        flex: none;
         height: min(70vh, 900px);
       }
       .box.wide {

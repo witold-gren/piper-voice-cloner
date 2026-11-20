@@ -43,8 +43,10 @@ scp ~/piper-voice-cloner/data/voices/kuba_bajka/export/pl_PL-kuba_bajka-medium.o
 ```
 
 !!! warning "Do not overwrite a voice in use"
-    The same file name replaces the old voice. Want to keep it? Back the old files up first, or give the
-    new version another Piper file name (e.g. `pl_PL-kuba_bajka_v2`) and compare both.
+    In the editor an export never overwrites a file: when the name is taken, the new one gets a number
+    (`pl_PL-kuba_bajka_2-medium.onnx`). On the Piper server, though, the same file name replaces the old
+    voice. Copy the files with their new name (with the number) and both versions stay side by side in
+    Home Assistant.
 
 ## 3. Let Home Assistant see the voice {#reload}
 

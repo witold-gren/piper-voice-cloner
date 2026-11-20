@@ -32,6 +32,7 @@ export const VOICE_FIELDS = [
     [["train", "batch_size"], "number", 1, 256, 1],
     [["train", "num_workers"], "number", 0, 64, 1],
     [["train", "validation_split"], "number", 0, 0.5, 0.01],
+    [["train", "num_test_examples"], "number", 0, 50, 1],
   ]],
 ]; // prettier-ignore
 
@@ -652,6 +653,10 @@ class PvcSettingsEditor extends StepView {
             </div></div>
         </div>
       </section>
+      <section class="card"><div class="row">
+        <button data-settings-tour @click=${() => { editor._lesson = null; editor._tour = true; }}><pvc-icon icon="mdi:map-marker-path"></pvc-icon>${this._t("tour_open")}</button>
+        <button data-settings-lessons @click=${() => (editor._dialog = "lessons")}><pvc-icon icon="mdi:school-outline"></pvc-icon>${this._t("lessons_title")}</button>
+      </div></section>
       ${this.state?.trusted
         ? html`<section class="card"><div class="row"><pvc-icon icon="mdi:shield-home"></pvc-icon>
             <span class="hint grow" data-trusted-settings>${this._t("trusted_network")}</span></div></section>`

@@ -43,6 +43,7 @@ def login_demo(tmp_path, monkeypatch, request):
 
 def test_login_card_then_the_editor_and_the_menu(browser, login_demo):
     page = browser.new_page()
+    page.add_init_script("localStorage.setItem('pvc-studio-tour', 'done')")  # the tour is tested on its own
     page.goto(f"{login_demo}/#voice/kasia")
     expect(page).to_have_url(re.compile("/login"))
     page.locator("input[name=user]").fill("demo")
@@ -63,6 +64,7 @@ def test_login_card_then_the_editor_and_the_menu(browser, login_demo):
 @pytest.mark.parametrize("login_demo", ["127.0.0.0/8"], indirect=True)
 def test_a_trusted_network_opens_without_login_and_has_no_log_out(browser, login_demo):
     page = browser.new_page()
+    page.add_init_script("localStorage.setItem('pvc-studio-tour', 'done')")  # the tour is tested on its own
     page.goto(f"{login_demo}/login")
     expect(page).not_to_have_url(re.compile("/login"))
     page.wait_for_function("window.editorReady === true")

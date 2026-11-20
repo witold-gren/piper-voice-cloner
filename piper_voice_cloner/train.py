@@ -224,15 +224,22 @@ def latest_checkpoint(work_dir: Path) -> Path | None:
     return last[-1] if last else None
 
 
-def resume_checkpoint(work_dir: Path) -> Path | None:
+def resume_checkpoint(work_dir: Path, *, current_run: bool = False) -> Path | None:
     """The newest checkpoint of any kind, to continue a stopped run with as little lost as possible.
 
     piper1-gpl does not refresh last.ckpt after every epoch, while a new best val_mos/val_mel
     checkpoint is a full one too (weights and optimizers), so after a crash it is often newer.
+    `current_run`: only the run in run.json (a start over that stopped before its first checkpoint
+    must not go on from the run before it).
     """
-    found = sorted(
-        work_dir.glob("lightning_logs/version_*/checkpoints/*.ckpt"), key=lambda p: p.stat().st_mtime
+    from . import train_monitor
+
+    candidates = (
+        train_monitor.run_checkpoints(work_dir)
+        if current_run
+        else work_dir.glob("lightning_logs/version_*/checkpoints/*.ckpt")
     )
+    found = sorted(candidates, key=lambda p: p.stat().st_mtime)
     return found[-1] if found else None
 
 
@@ -310,6 +317,18 @@ def export_command(checkpoint: Path, onnx_file: Path, *, python: str = sys.execu
         "--output-file",
         str(onnx_file),
     ]
+
+
+def free_export_path(folder: Path, stem: str) -> Path:
+    """<stem>.onnx, or with the next number when that name is taken: an export never overwrites one
+    made before (pl_PL-meski-medium.onnx -> pl_PL-meski_2-medium.onnx). The number goes into the name,
+    before the size, so the name keeps Piper's <language>-<name>-<size> form."""
+    name, dash, quality = stem.rpartition("-")
+    candidate, n = folder / f"{stem}.onnx", 2
+    while candidate.exists() or candidate.with_name(candidate.name + ".json").exists():
+        candidate = folder / (f"{name}_{n}{dash}{quality}.onnx" if dash else f"{stem}_{n}.onnx")
+        n += 1
+    return candidate
 
 
 def finish_export(paths: TrainPaths, onnx_file: Path, quality: str = "medium") -> Path:

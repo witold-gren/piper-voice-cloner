@@ -99,7 +99,8 @@ Zielona linia u góry potwierdzi: „bazowy-pl jest gotowy (/data/bases). Nowe g
 - **Kilka głosów:** w <span class="ui">Kolejka treningów</span> wybierz `bazowy-pl` dla wszystkich.
 - **Lepsza baza później:** dotrenuj, wybierz inny checkpoint i znowu kliknij
   <span class="ui">Użyj jako bazowy-pl</span>. Głosy wytrenowane wcześniej zostają przy swoich
-  checkpointach.
+  checkpointach, a poprzednia baza zostaje obok jako `bases/pl-scratch-1.ckpt` (`-2`…). Wrócisz do niej
+  przez `ckpt:<ścieżka>` w <span class="ui">Start od</span>.
 
 Więcej: [Model bazowy](base-model.md).
 

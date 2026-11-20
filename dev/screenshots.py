@@ -1,6 +1,7 @@
 """Screenshots of the editor for the documentation: docs/assets/screens/{en,pl}/NN-name.png.
 
     make screenshots          (Google Chrome through Playwright; the demo data, no GPU)
+    .venv/bin/python dev/screenshots.py --only 17-tour 18-lessons   (only these pictures)
 
 Runs the demo editor in this process on made-up voices and opens each part the guide shows, in both
 languages, in the light theme at 1440×900.
@@ -38,7 +39,13 @@ SHOTS = {
     "14-menu": ("voice/kasia", "menu"),
     "15-countdown": ("voice/kasia/train", "countdown"),
     "16-save": ("voice/kasia/settings", "save"),
+    "17-tour": ("voice/kasia", "tour"),
+    "18-lessons": ("voice/kasia", "lessons"),
+    "19-lesson": ("voice/kasia/train", "lesson"),
+    "20-help-lesson": ("voice/kasia/train", "help-lesson"),
 }
+# what stays over the editor after its picture: the page is loaded again for the next one
+OVERLAYS = {"tour", "lessons", "lesson", "help-lesson"}
 
 
 def free_port() -> int:
@@ -98,13 +105,29 @@ def act(page, action: str | None, app) -> None:
     elif action == "chart":
         page.locator("[data-train-chart] [data-chart]").click()
         page.wait_for_selector("[data-chart-dialog]")
+    elif action == "tour":
+        page.evaluate("document.querySelector('pvc-editor')._tour = true")
+        page.locator("[data-tour-next]").click()  # the tree, after the welcome
+        page.wait_for_timeout(500)
+    elif action == "lessons":
+        page.locator("[data-editor-settings]").click()
+        page.locator("[data-gear-lessons]").click()
+    elif action == "lesson":
+        page.evaluate("document.querySelector('pvc-editor')._startLesson('train')")
+        for _ in range(2):
+            page.locator("[data-tour-next]").click()  # Epochs and time
+        page.wait_for_timeout(500)
+    elif action == "help-lesson":
+        page.locator("[data-step-help] [data-help-button]").first.click()
     elif action == "queue":
         for name in ("tomek", "kasia"):
             page.locator(f"[data-queue-voice='{name}']").check()
 
 
-def main() -> int:
+def main(argv: list[str]) -> int:
     from playwright.sync_api import sync_playwright
+
+    only = set(argv[argv.index("--only") + 1 :]) if "--only" in argv else None
 
     with tempfile.TemporaryDirectory() as tmp:
         base, app = start_demo(Path(tmp))
@@ -115,9 +138,12 @@ def main() -> int:
                 folder.mkdir(parents=True, exist_ok=True)
                 context = browser.new_context(viewport={"width": 1440, "height": 900}, color_scheme="light")
                 app.state.power_timer.cancel()
-                context.add_init_script(f"localStorage.setItem('pvc-lang', '{language}')")
+                seen = "localStorage.setItem('pvc-studio-tour', 'done')"  # the tour has its own pictures
+                context.add_init_script(f"localStorage.setItem('pvc-lang', '{language}'); {seen}")
                 page = context.new_page()
                 for name, (address, action) in SHOTS.items():
+                    if only and name not in only:
+                        continue
                     page.goto(f"{base}/#{address}")
                     page.wait_for_function("window.editorReady === true")
                     page.wait_for_timeout(700)  # the view's data and the chart
@@ -125,10 +151,13 @@ def main() -> int:
                     page.wait_for_timeout(300)
                     page.screenshot(path=str(folder / f"{name}.png"))
                     print(f"{language}/{name}.png")
+                    if action in OVERLAYS:
+                        page.reload()
+                        page.wait_for_function("window.editorReady === true")
                 context.close()
             browser.close()
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

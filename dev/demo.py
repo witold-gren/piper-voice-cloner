@@ -76,15 +76,39 @@ def _dataset(directory: Path, clips: int, *, imported: bool) -> None:
         writer.writerows(rows)
 
 
-def _training(directory: Path, epochs: list[int], start: int = 1113) -> None:
+def _training(directory: Path, epochs: list[int], start: int = 1113, version: int = 0) -> None:
     """Checkpoints, the run plan (run.json) and event files with quality and test sentences."""
-    ckpt_dir = directory / "train" / "lightning_logs" / "version_0" / "checkpoints"
+    ckpt_dir = directory / "train" / "lightning_logs" / f"version_{version}" / "checkpoints"
     for epoch in epochs:
         _write(ckpt_dir / f"epoch={epoch}-step={epoch * 45}-val_mos={3.2 + epoch / 4000:.4f}.ckpt")
     _write(ckpt_dir / "last.ckpt")
-    plan = {"start_epoch": start, "base": "bazowy-pl", "quality": "medium"}
+    plan = {"start_epoch": start, "base": "bazowy-pl", "quality": "medium", "first_version": version}
     _write(directory / "train" / "run.json", json.dumps(plan))
-    tfevents.training(directory / "train", start, max(epochs), SENTENCES[:4])
+    tfevents.training(directory / "train", start, max(epochs), SENTENCES[:4], version=version)
+
+
+def _earlier_run(directory: Path) -> None:
+    """A training started over before the current one (from lessac): its checkpoints stay in version_0,
+    its chart and samples in train/runs/0 (what "Start over" keeps)."""
+    work = directory / "train"
+    ckpt_dir = work / "lightning_logs" / "version_0" / "checkpoints"
+    for epoch, mos in ((2190, 3.31), (2240, 3.42), (2290, 3.47)):
+        _write(ckpt_dir / f"epoch={epoch}-step={epoch * 45}-val_mos={mos:.4f}.ckpt")
+    run = work / "runs" / "0"
+    plan = {"start_epoch": 2164, "base": "/data/bases/en_US-lessac-medium.ckpt", "quality": "medium"}
+    _write(run / "run.json", json.dumps({**plan, "first_version": 0, "last_version": 0}))
+    metrics, audio = {}, {}
+    for epoch in range(2165, 2296, 5):
+        metrics[str(epoch)] = round(2.6 + 0.85 * (1 - 0.97 ** (epoch - 2164)), 3)
+        if epoch % 10 == 0 or epoch in (2165, 2290):
+            name = f"epoch{epoch:05d}-00.wav"
+            _wav(run / "monitor" / "audio" / name, freq=200 + epoch % 50)
+            audio[str(epoch)] = [[0, SENTENCES[0], name, epoch * 100]]
+    state = {
+        "version": 3, "first_version": 0, "run": plan, "offsets": {}, "metrics": {"val_mos": metrics},
+        "sums": {}, "audio": audio, "last_epoch": 2295,
+    }  # fmt: skip
+    _write(run / "monitor" / "state.json", json.dumps(state))
 
 
 def _cloning_voice(ola: Path) -> None:
@@ -164,7 +188,8 @@ def build(root: Path) -> Path:
         kasia, config_mod.VoiceConfig(name="kasia", piper_name="pl_PL-kasia_glos", workflow="import")
     )
     _dataset(kasia, 1496, imported=True)
-    _training(kasia, [1203, 1388, 1573])
+    _earlier_run(kasia)
+    _training(kasia, [1203, 1388, 1573], version=1)
     _write(kasia / "export" / "pl_PL-kasia_glos-medium.onnx")
     _write(kasia / "export" / "pl_PL-kasia_glos-medium.onnx.json", "{}")
     # imported, not trained yet

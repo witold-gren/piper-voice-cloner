@@ -40,6 +40,7 @@ b0002|Za oknem pada deszcz i wieje mocny wiatr.
     - **Import folder:** copy the folder to `~/piper-voice-cloner/data/import/` on the machine – it
       shows up in the list;
     - **ZIP:** send an archive from the browser – it lands in the import folder under the voice's name;
+      an earlier upload of that voice stays as `<voice>_2` (`_3`…), nothing is deleted;
     - **Path:** as the editor sees it (in Docker `/data/…`).
 2. Optionally the persona file and the Whisper check (drops clips whose words differ from the text;
    slower, uses the GPU).

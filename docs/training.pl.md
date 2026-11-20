@@ -118,8 +118,20 @@ poprawność wymowy.
 
 ### Sprzęt
 
-- **Batch:** zostaw 32 (24 GB VRAM wystarcza). Przy `torch.OutOfMemoryError` zmniejsz batch w
-  <span class="ui">Ustawienia głosu</span>.
+- **Batch:** 32 dla medium i 16 dla high mieści się w 24 GB. Większy batch nie daje lepszego głosu, tylko
+  zużywa więcej pamięci. Przy `torch.OutOfMemoryError` zmniejsz batch w <span class="ui">Ustawienia
+  głosu</span> (24, potem 16 dla medium). Mniejszy batch to więcej kroków na epokę, więc wystarczy mniej epok.
+- **Kroki zamiast epok:** jedna epoka to klipy × 0,95 ÷ batch kroków (1500 klipów, batch 32: ok. 44).
+  Dobry zakres to 20–60 tys. kroków.
+- **Procesy wczytujące dane:** 8. Gdy obciążenie karty w prawej kolumnie zostaje wyraźnie poniżej 90%,
+  karta czeka na dane: daj więcej (do liczby rdzeni procesora).
+- **Część walidacyjna i zdania testowe:** 0,05 (z 1500 klipów to 75) i 5 zdań wystarczą. Zostaw co
+  najmniej ok. 50 klipów walidacyjnych; 10 zdań testowych daje stabilniejszy `val_mos`.
+- **`train.extra_args`** (tylko YAML) dokłada opcje trenera Pipera, do eksperymentów. Trening startuje
+  zawsze od checkpointu, a optymalizator wraca z niego ze swoim współczynnikiem uczenia, więc opcje
+  w rodzaju `--model.learning_rate` zmieniają mniej, niż sugeruje nazwa.
+- Samouczek **Dobre ustawienia treningu** (⚙ → <span class="ui">Samouczki</span>) przechodzi te pola
+  w edytorze jedno po drugim.
 - **Dysk:** checkpoint ma ok. 800 MB. Trening trzyma do ok. 9 GB na głos plus cache.
 - **Noc:** <span class="ui">Kolejka treningów</span> trenuje kilka głosów po kolei. Zaznacz
   <span class="ui">Wyłącz maszynę po ostatnim głosie</span>, a Home Assistant wyłączy ją po skończeniu.

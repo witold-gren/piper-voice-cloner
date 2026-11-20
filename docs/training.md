@@ -114,7 +114,20 @@ nor correct pronunciation.
 
 ### Hardware
 
-- **Batch:** keep 32 (fits 24 GB). On `torch.OutOfMemoryError` lower it in <span class="ui">Voice settings</span>.
+- **Batch:** 32 for medium and 16 for high fit 24 GB. A bigger batch is not a better voice, it only needs
+  more memory. On `torch.OutOfMemoryError` lower it in <span class="ui">Voice settings</span> (24, then 16
+  for medium). A smaller batch makes more steps per epoch, so fewer epochs are needed.
+- **Steps, not epochs:** one epoch is clips × 0.95 ÷ batch steps (1500 clips, batch 32: about 44).
+  20–60 thousand steps is a good range.
+- **Data loader processes:** 8. When the load of the card in the right column stays well under 90%, the
+  card waits for data: give more (up to the number of CPU cores).
+- **Validation share and test sentences:** 0.05 (75 of 1500 clips) and 5 sentences are enough. Keep at
+  least ~50 validation clips; 10 test sentences give a steadier `val_mos`.
+- **`train.extra_args`** (YAML only) adds options of Piper's trainer, for experiments. A training always
+  starts from a checkpoint and the optimizer comes back from it with its learning rate, so options like
+  `--model.learning_rate` change less than their name says.
+- The lesson **Good training settings** (⚙ → <span class="ui">Lessons</span>) goes through these fields in
+  the editor one by one.
 - **Disk:** a checkpoint is about 800 MB; up to about 9 GB per voice plus the cache.
 - **Overnight:** the <span class="ui">Training queue</span> trains several voices one after another; tick
   <span class="ui">Power the machine off after the last voice</span> and Home Assistant switches it off.

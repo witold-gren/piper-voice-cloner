@@ -42,8 +42,9 @@ scp ~/piper-voice-cloner/data/voices/kuba_bajka/export/pl_PL-kuba_bajka-medium.o
 ```
 
 !!! warning "Nie nadpisuj używanego głosu"
-    Ta sama nazwa pliku zastępuje stary głos. Chcesz go zachować? Najpierw zrób kopię starych plików
-    albo nadaj nowej wersji inną nazwę pliku Piper (np. `pl_PL-kuba_bajka_v2`) i porównaj obie.
+    W edytorze eksport nigdy nie nadpisuje pliku: gdy nazwa jest zajęta, nowy dostaje numer
+    (`pl_PL-kuba_bajka_2-medium.onnx`). Na serwerze Pipera ta sama nazwa pliku zastępuje jednak stary
+    głos. Kopiuj pliki z ich nową nazwą (z numerem), a obie wersje zostaną w Home Assistant obok siebie.
 
 ## 3. Pokaż głos Home Assistantowi {#reload}
 

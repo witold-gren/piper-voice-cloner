@@ -7,6 +7,7 @@ import { fileUrl, get, post } from "./api.js";
 import { number } from "./format.js";
 import "./icon.js";
 import "./help.js";
+import { lessonFor } from "./lessons.js";
 
 // the guide's chapter for each part of the editor (docs/<lang>/...#anchor)
 export const DOCS = {
@@ -94,6 +95,12 @@ export class StepView extends LitElement {
     return this.state?.jobs?.current?.state === "running";
   }
 
+  /** The lesson of the place this view is (lessons.js), for "Show me step by step" in its "?". */
+  _lesson() {
+    const lesson = lessonFor(this.editor?._selected);
+    return lesson ? { key: lesson.key, name: translate(this.language, `lesson_${lesson.key}_name`) } : null;
+  }
+
   head(icon, title, info, docs) {
     return html`<div class="phead">
         <pvc-icon icon=${icon}></pvc-icon>
@@ -101,7 +108,8 @@ export class StepView extends LitElement {
           <strong>${title}</strong>
           ${this.voice ? html`<div class="path">${this.voice.name}</div>` : nothing}
         </div>
-        <pvc-help data-step-help .language=${this.language} .heading=${title} .text=${info} .link=${docsUrl(this.language, docs)}></pvc-help>
+        <pvc-help data-step-help .language=${this.language} .heading=${title} .text=${info} .link=${docsUrl(this.language, docs)}
+          .lesson=${this._lesson()}></pvc-help>
       </div>
       ${this.error ? html`<p class="bad" data-step-error>${this._t("error", { message: this.error })}</p>` : nothing}`;
   }
@@ -114,7 +122,6 @@ export class StepView extends LitElement {
         gap: 14px;
         padding: 16px 20px 40px;
         align-content: start;
-        max-width: 1100px;
       }
       .phead {
         display: flex;
@@ -247,6 +254,8 @@ export class PvcListen extends LitElement {
   static properties = {
     language: {},
     target: {},
+    // "" = the current training, else an earlier one kept in train/runs/ (read only, no ZIP)
+    run: {},
     refresh: {},
     _data: { state: true },
     _epoch: { state: true },
@@ -259,14 +268,15 @@ export class PvcListen extends LitElement {
   }
 
   willUpdate(changed) {
-    if (changed.has("target")) this._epoch = null;
-    if (changed.has("target") || changed.has("refresh")) this._load();
+    if (changed.has("target") || changed.has("run")) this._epoch = null;
+    if (changed.has("target") || changed.has("run") || changed.has("refresh")) this._load();
   }
 
   async _load() {
     if (!this.target) return;
     const query = new URLSearchParams({ target: this.target });
     if (this._epoch != null) query.set("epoch", this._epoch);
+    if (this.run) query.set("run", this.run);
     this._data = await get(`/api/listen?${query}`).catch(() => null);
   }
 
@@ -305,9 +315,11 @@ export class PvcListen extends LitElement {
             )}
           </select>
         </label>
-        <button data-listen-zip ?disabled=${this._busy} @click=${this._downloadZip}>
-          <pvc-icon icon="mdi:download"></pvc-icon>${this._t("listen_download")}
-        </button>
+        ${this.run
+          ? nothing
+          : html`<button data-listen-zip ?disabled=${this._busy} @click=${this._downloadZip}>
+              <pvc-icon icon="mdi:download"></pvc-icon>${this._t("listen_download")}
+            </button>`}
       </div>
       ${clips(data.samples, this.language)}
       <p class="hint">${this._t("listen_help")}</p>

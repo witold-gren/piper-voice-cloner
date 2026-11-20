@@ -98,6 +98,8 @@ The green line at the top says "bazowy-pl is ready (/data/bases). New voices sta
 - **Several voices:** in <span class="ui">Training queue</span> choose `bazowy-pl` for all of them.
 - **A better base later:** train more, choose another checkpoint and click
   <span class="ui">Use as bazowy-pl</span> again. Voices trained earlier keep their own checkpoints.
+  The base before stays as `bases/pl-scratch-1.ckpt` (`-2`…); go back to it with `ckpt:<path>` in
+  <span class="ui">Start from</span>.
 
 More: [Base model](base-model.md).
 

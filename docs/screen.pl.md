@@ -19,7 +19,8 @@ Od lewej:
    Gdy wyłączenie się nie uda, w tym miejscu pojawi się czerwona pigułka z powodem.
 5. **Motyw**, **?** (ta instrukcja; tylko ten „?” otwiera instrukcję, „?” przy krokach i kartach pokazują
    okienko z opisem) i **⚙**: okienko pod ikoną z motywem i językiem, które zmieniają się od razu. Zamykają je Esc,
-   kliknięcie obok albo ponowne ⚙, a <span class="ui">Cały wygląd i język</span> otwiera pełny widok.
+   kliknięcie obok albo ponowne ⚙, a <span class="ui">Cały wygląd i język</span> otwiera pełny widok. W tym okienku są też
+   <span class="ui">Przewodnik po edytorze</span> i <span class="ui">Samouczki</span> ([Przewodnik i samouczki](guide-tour.md)).
 
 ![Menu i odliczanie](assets/screens/pl/14-menu.png){ .shot }
 

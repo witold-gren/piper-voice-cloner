@@ -1,5 +1,63 @@
 # Changelog
 
+## 0.3.0 (2026-11-20)
+
+The editor teaches itself: a tour of the screen and 23 lessons, three of them on good settings
+(training, cloning and the filter, starting over). Nothing earlier is lost any more: a start over keeps
+the training before it whole and an export never overwrites a file. The log fills the right column
+and the views the whole middle column.
+
+Added:
+- **Tour of the editor** (gpu-studio standard §5a): the first time the editor opens in a browser its parts
+  are framed one at a time (tree, new voice, the step in the middle, the job on the right, the top bar,
+  help and ⚙, the menu) with a bubble that says what each is and where it is set; arrows and Esc work,
+  ⚙ → Tour of the editor opens it again. `editor/www/tour.js`.
+- **Lessons** (⚙ → Lessons, also in Settings → Look and language): twenty-three tasks of the step-by-step guide
+  in three groups, each a short tour that goes where the task is done (chooses the voice and its step),
+  frames one part at a time and waits for the framed button where the task is quick (a new voice, ⚙);
+  buttons that start a long job are shown, never waited for. The list ticks the ones gone through and
+  says what a lesson needs first. The "?" of a step offers its lesson ("Show me step by step").
+  `editor/www/lessons.js`, texts in `lessons-texts.js` (PL+EN).
+- Lessons **Good training settings** (data, base, epochs as steps, batch 32/16 and what to do on out of
+  memory, data loader processes, validation share, test sentences, `extra_args`) and **Good cloning and
+  filter settings** (target clips, generate ×, Chatterbox/XTTS options and seeds, CER, similarity, MOS
+  drop, seconds per character).
+- Lesson **Start over, keep the old training**: what stays (every checkpoint, the chart and the samples),
+  that an export gets a number instead of overwriting, which training the chart shows and how to go back
+  to the old one. Guide: Train a voice → Start over without losing the
+  earlier training (PL+EN).
+- Voice settings: the form has **Test sentences** (`train.num_test_examples`, before only in YAML) and a
+  hint under every training field.
+- Guide: "Tour and lessons" in Step by step, FAQ entries (PL+EN), `dev/screenshots.py --only`.
+- Tests in `tests/browser/test_tour_lessons.py`: the tour starts once, every step of every lesson finds
+  its part on the demo, every text in both languages, a new voice made in its lesson, the "?" offer.
+
+Nothing earlier is lost any more:
+- **Start over keeps the training before it whole.** Each start over is a new *run* (its first
+  `lightning_logs/version_N` in `run.json`); the chart and the samples of the run before move whole to
+  `train/runs/<n>/` and are never thinned again, so two starts from the same base (the same epoch
+  numbers) no longer delete each other's samples. A **Training** field above the chart shows the current
+  training or an earlier one (base, epochs, best val_mos) in the chart and the listening. Its checkpoints
+  stay in the list and in Export, as before.
+- **Resume continues only the current run**: a start over that stopped before its first checkpoint no
+  longer went on from the newest checkpoint of the run before; the yellow resume note counts only it too.
+- **An export never overwrites a file**: a taken name gets the next number before the size
+  (`pl_PL-meski_2-medium.onnx`, `_3` …); the hint under Export shows the name the next file gets.
+- **Use as bazowy-pl keeps the base before** as `bases/pl-scratch-1.ckpt` (`-2` …).
+- **A ZIP sent again keeps the earlier upload** of the voice as `<voice>_2` (`_3` …); a ZIP without
+  metadata.csv puts the earlier one back.
+- Tests in `tests/test_training_runs.py`; the demo voice kasia has an earlier training (from lessac).
+
+Changed:
+- The views fill the whole middle column (they stopped at 1100 px and left an empty strip on a wide
+  screen).
+- The log in the right column takes all the height the cards above it leave (at least 240 px; a short
+  screen scrolls the column) instead of a fixed 280 px.
+
+Fixed:
+- A framed part below the window is scrolled to by the part itself (its frame, cut to the window, looked
+  empty). The ⚙ box stays open while a lesson shows it.
+
 ## 0.2.2 (2026-11-18)
 
 Added:

@@ -13,7 +13,7 @@ import re
 import shutil
 import zipfile
 
-from .. import config as config_mod, train_monitor
+from .. import config as config_mod, train as train_mod, train_monitor
 from ..jobs import JobManager
 from ..runner import STOPPED_CODES, exit_path
 from . import service
@@ -58,8 +58,13 @@ def import_folders(root: Path) -> list[dict]:
 def unpack_dataset(root: Path, voice: str, upload: Path) -> Path:
     """A ZIP of metadata.csv + wav/ goes to <root>/import/<voice>; a single top folder is skipped."""
     target = root / IMPORT_DIR / voice
+    kept = None
     if target.exists():
-        shutil.rmtree(target)
+        # an earlier upload of this voice stays, numbered (<voice>_2, _3 …): nothing is deleted
+        kept, n = target.with_name(f"{voice}_2"), 3
+        while kept.exists():
+            kept, n = target.with_name(f"{voice}_{n}"), n + 1
+        target.rename(kept)
     target.mkdir(parents=True)
     with zipfile.ZipFile(upload) as archive:
         names = [n for n in archive.namelist() if not n.startswith("__MACOSX/") and not n.endswith("/")]
@@ -74,7 +79,9 @@ def unpack_dataset(root: Path, voice: str, upload: Path) -> Path:
             with archive.open(name) as source, path.open("wb") as out:
                 shutil.copyfileobj(source, out)
     if not (target / "metadata.csv").is_file():
-        shutil.rmtree(target)
+        shutil.rmtree(target)  # only what this ZIP unpacked
+        if kept is not None:
+            kept.rename(target)  # the earlier upload goes back to its name
         raise ValueError("metadata.csv not found in the ZIP")
     return target
 
@@ -155,8 +162,16 @@ def resume_plan(root: Path, name: str, max_epochs: int) -> dict | None:
     info_path = work / "run.json"
     if not info_path.is_file():
         return None
-    start = int(json.loads(info_path.read_text(encoding="utf-8")).get("start_epoch", 0))
-    epochs = [c["epoch"] for c in checkpoint_list(root, name) if c["epoch"] is not None]
+    info = json.loads(info_path.read_text(encoding="utf-8"))
+    start, first = int(info.get("start_epoch", 0)), int(info.get("first_version", 0))
+    # only the current run: a run before a "start over" may have reached other epochs
+    epochs = [
+        c["epoch"]
+        for c in checkpoint_list(root, name)
+        if c["epoch"] is not None
+        and train_monitor.version_of(Path(c["path"])) is not None
+        and train_monitor.version_of(Path(c["path"])) >= first
+    ]
     if not epochs:
         return None
     reached = max(epochs)
@@ -211,9 +226,16 @@ def train_view(root: Path, name: str) -> dict:
     }
 
 
-def listen_view(root: Path, work: Path, epoch: int | None = None) -> dict:
+def _run(work: Path, run_id: str | None) -> train_monitor.Run | None:
+    """The current run (read further), or an earlier one kept in runs/ (as it was)."""
+    if run_id:
+        return train_monitor.load_run(work, run_id)
+    return train_monitor.update(work) if train_monitor.event_files(work) else None
+
+
+def listen_view(root: Path, work: Path, epoch: int | None = None, run_id: str | None = None) -> dict:
     """Epochs with samples, their quality and the clips of one epoch (the chosen or the newest)."""
-    run = train_monitor.update(work) if train_monitor.event_files(work) else None
+    run = _run(work, run_id)
     if run is None or not run.epochs:
         return {"epochs": [], "samples": [], "chosen": None, "summary": None}
     scores = run.metrics.get("val_mos", {})
@@ -264,15 +286,16 @@ def chart_target(root: Path, jobs: JobManager, voice: str | None) -> str | None:
     candidates.append(f"base:{quality}")
     for target in candidates:
         try:
-            if train_monitor.event_files(work_dir(root, target)):
+            if train_monitor.event_files(work_dir(root, target), every_run=True):
                 return target
         except ValueError:
             continue
     return None
 
 
-def chart_view(root: Path, target: str) -> dict:
-    run = train_monitor.update(work_dir(root, target))
+def chart_view(root: Path, target: str, run_id: str | None = None) -> dict:
+    work = work_dir(root, target)
+    run = _run(work, run_id) or train_monitor.Run(metrics={}, samples={}, last_epoch=None)
     rows = run.table()
     mos = [(r[0], r[1]) for r in rows if r[1] is not None]
     mel = [(r[0], r[2]) for r in rows if r[2] is not None]
@@ -284,6 +307,9 @@ def chart_view(root: Path, target: str) -> dict:
             "mel": min(mel, key=lambda item: item[1]) if mel else None,
         },
         "last_epoch": run.last_epoch,
+        "run": run_id,
+        # the runs before a "start over", kept whole: the chart and the listening can show them
+        "runs": train_monitor.runs(work),
     }
 
 
@@ -296,7 +322,10 @@ def export_view(root: Path, name: str) -> dict:
     return {
         "checkpoints": checkpoint_list(root, name),
         "files": [{"name": p.name, "url": rel(root, p), "size": p.stat().st_size} for p in files],
-        "stem": cfg.file_stem(cfg.language),
+        # the name the next export gets (a taken name gets the next number, nothing is overwritten)
+        "stem": train_mod.free_export_path(
+            service.voice_dir(root, name) / "export", cfg.file_stem(cfg.language)
+        ).name.removesuffix(".onnx"),
     }
 
 

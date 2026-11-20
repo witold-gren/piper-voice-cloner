@@ -132,7 +132,10 @@ def main(argv: list[str]) -> int:
             folder.mkdir(parents=True, exist_ok=True)
             context = browser.new_context(viewport={"width": 1440, "height": 900}, color_scheme="light")
             language_js = f"localStorage.setItem('pvc-lang', '{language}');"
-            context.add_init_script(language_js + " localStorage.setItem('pvc-studio-theme', 'light')")
+            context.add_init_script(
+                language_js + " localStorage.setItem('pvc-studio-theme', 'light');"
+                " localStorage.setItem('pvc-studio-tour', 'done')"
+            )
             page = context.new_page()
             page.goto(f"{base}/login")
             page.fill("input[name=user]", user)

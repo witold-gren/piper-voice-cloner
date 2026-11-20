@@ -9,6 +9,12 @@ lines of varint parsing are enough.
 The files grow to hundreds of MB (audio every epoch), so they are read incrementally: the offset
 reached is kept in ``<work_dir>/monitor/state.json`` together with the metrics, and the audio of the
 kept epochs is written to ``<work_dir>/monitor/audio/`` as WAV files.
+
+A training started over (`--no-resume`) is a new *run*: Lightning puts it into the next
+``lightning_logs/version_N`` and ``run.json`` records that ``first_version``. The monitor reads only the
+versions of the current run; the monitor of the run before is moved whole to ``<work_dir>/runs/<its first
+version>/`` and never touched again, so starting over deletes no sample, metric or checkpoint of it
+(the same epoch numbers in two runs, e.g. two starts from the same base, never mix either).
 """
 
 from __future__ import annotations
@@ -26,6 +32,9 @@ import threading
 import zipfile
 
 STATE_FILE = "state.json"
+RUN_FILE = "run.json"
+RUNS_DIR = "runs"
+_VERSION = re.compile(r"version_(\d+)")
 # 2: the best epochs keep their audio; 3: so do the epochs with a checkpoint. An older state is read
 # again from the start of the files (the audio of all epochs is still in them), so audio dropped by
 # the old rules comes back
@@ -167,8 +176,82 @@ class Run:
         return [[e, *(self.value(name, e) for name in names)] for e in epochs]
 
 
-def event_files(work_dir: Path) -> list[Path]:
-    return sorted(work_dir.glob("lightning_logs/version_*/events.out.tfevents.*"))
+def version_of(path: Path) -> int | None:
+    """N of the lightning_logs/version_N a file is in."""
+    found = next((m for part in path.parts if (m := _VERSION.fullmatch(part))), None)
+    return int(found.group(1)) if found else None
+
+
+def run_info(work_dir: Path) -> dict:
+    """run.json of the current run (start epoch, base, quality, first version); {} when none."""
+    try:
+        return json.loads((work_dir / RUN_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def first_version(work_dir: Path) -> int:
+    """The first lightning_logs/version_N of the current run (0 for runs from before runs existed)."""
+    return int(run_info(work_dir).get("first_version", 0))
+
+
+def versions(work_dir: Path) -> list[int]:
+    found = (version_of(p) for p in work_dir.glob("lightning_logs/version_*"))
+    return sorted(v for v in found if v is not None)
+
+
+def next_version(work_dir: Path) -> int:
+    """The version Lightning gives the next start (the next free number)."""
+    found = versions(work_dir)
+    return found[-1] + 1 if found else 0
+
+
+def _in_run(path: Path, first: int, last: int | None = None) -> bool:
+    version = version_of(path)
+    return version is not None and version >= first and (last is None or version <= last)
+
+
+def event_files(work_dir: Path, *, every_run: bool = False) -> list[Path]:
+    """The event files of the current run (of every run: whether anything was trained here at all)."""
+    found = sorted(work_dir.glob("lightning_logs/version_*/events.out.tfevents.*"))
+    if every_run:
+        return found
+    first = first_version(work_dir)
+    return [p for p in found if _in_run(p, first)]
+
+
+def run_checkpoints(work_dir: Path, first: int | None = None, last: int | None = None) -> list[Path]:
+    """The checkpoint files of one run (the current one by default)."""
+    first = first_version(work_dir) if first is None else first
+    found = work_dir.glob("lightning_logs/version_*/checkpoints/*.ckpt")
+    return [p for p in found if _in_run(p, first, last)]
+
+
+def archive_monitor(work_dir: Path, info: dict) -> Path | None:
+    """Move the monitor of the run `info` describes (its run.json) to runs/<first version>/, whole.
+
+    Called when a new run starts, and by the monitor itself when it finds the state of another run (a
+    start that stopped before moving it). Nothing is deleted; a name already taken gets a suffix."""
+    monitor = work_dir / "monitor"
+    first = int(info.get("first_version", 0))
+    if not (monitor / STATE_FILE).is_file() and not (monitor / "audio").is_dir():
+        return None
+    try:
+        state = json.loads((monitor / STATE_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        state = {}
+    if state and int(state.get("first_version", 0)) != first:
+        return None  # already the monitor of another run (moved before, made again): not this one
+    runs = work_dir / RUNS_DIR
+    target, n = runs / str(first), 2
+    while target.exists():
+        target, n = runs / f"{first}-{n}", n + 1
+    target.mkdir(parents=True)
+    later = [v for v in versions(work_dir) if v >= first]
+    info = {**info, "first_version": first, "last_version": later[-1] if later else first}
+    (target / RUN_FILE).write_text(json.dumps(info), encoding="utf-8")
+    monitor.rename(target / "monitor")
+    return target
 
 
 def _tracked(tag: str) -> bool:
@@ -178,9 +261,9 @@ def _tracked(tag: str) -> bool:
 _CKPT_EPOCH = re.compile(r"epoch=(\d+)")
 
 
-def checkpoint_epochs(work_dir: Path) -> frozenset[int]:
-    """Epochs that have a checkpoint (piper names them epoch=N-val_mos=….ckpt; last.ckpt has none)."""
-    found = (_CKPT_EPOCH.search(p.name) for p in work_dir.glob("lightning_logs/version_*/checkpoints/*.ckpt"))
+def checkpoint_epochs(work_dir: Path, first: int | None = None, last: int | None = None) -> frozenset[int]:
+    """Epochs of a run with a checkpoint (piper names them epoch=N-val_mos=….ckpt; last.ckpt has none)."""
+    found = (_CKPT_EPOCH.search(p.name) for p in run_checkpoints(work_dir, first, last))
     return frozenset(int(m.group(1)) for m in found if m)
 
 
@@ -201,6 +284,12 @@ def _update(work_dir: Path) -> Run:
     try:
         state = json.loads(state_path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
+        state = {}
+    current = run_info(work_dir)
+    first = int(current.get("first_version", 0))
+    if state and int(state.get("first_version", 0)) != first:
+        # the state of the run before (its start did not move it): kept whole, never mixed or thinned
+        archive_monitor(work_dir, {**state.get("run", {}), "first_version": state.get("first_version", 0)})
         state = {}
     if state.get("version") != STATE_VERSION:
         state = {}  # read everything again (the audio files get the same names, nothing is left over)
@@ -260,7 +349,7 @@ def _update(work_dir: Path) -> Run:
         if new_offset != offsets.get(key, 0):
             offsets[key], changed = new_offset, True
 
-    saved = checkpoint_epochs(work_dir)
+    saved = checkpoint_epochs(work_dir, first)
     if changed:
         # thin out the audio: the first epoch, every KEEP_EVERY-th, the newest, the best ones and the
         # ones with a checkpoint stay
@@ -276,6 +365,8 @@ def _update(work_dir: Path) -> Run:
         monitor.mkdir(parents=True, exist_ok=True)
         state = {
             "version": STATE_VERSION,
+            "first_version": first,
+            "run": current,
             "offsets": offsets,
             "metrics": metrics,
             "sums": sums,
@@ -286,6 +377,10 @@ def _update(work_dir: Path) -> Run:
         tmp.write_text(json.dumps(state), encoding="utf-8")
         tmp.replace(state_path)
 
+    return _from_state(metrics, sums, audio, audio_dir, last_epoch, saved)
+
+
+def _from_state(metrics, sums, audio, audio_dir: Path, last_epoch, saved: frozenset[int]) -> Run:
     means = {tag: {int(e): total / count for e, (total, count) in epochs.items() if count}
              for tag, epochs in sums.items()}  # fmt: skip
     return Run(
@@ -297,6 +392,54 @@ def _update(work_dir: Path) -> Run:
         last_epoch=last_epoch,
         saved=saved,
     )
+
+
+def runs(work_dir: Path) -> list[dict]:
+    """The earlier runs kept in runs/ (newest first): id, base, start epoch, last epoch, best val_mos."""
+    found = []
+    for folder in (work_dir / RUNS_DIR).glob("*") if (work_dir / RUNS_DIR).is_dir() else []:
+        try:
+            info = json.loads((folder / RUN_FILE).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            info = {}
+        try:
+            state = json.loads((folder / "monitor" / STATE_FILE).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            state = {}
+        mos = {int(e): v for e, v in state.get("metrics", {}).get("val_mos", {}).items()}
+        best = max(mos, key=mos.get) if mos else None
+        found.append(
+            {
+                "id": folder.name,
+                "base": info.get("base"),
+                "quality": info.get("quality"),
+                "start_epoch": info.get("start_epoch"),
+                "last_epoch": state.get("last_epoch"),
+                "first_version": info.get("first_version"),
+                "last_version": info.get("last_version"),
+                "best_mos": mos.get(best) if best is not None else None,
+                "best_epoch": best,
+            }
+        )
+    return sorted(found, key=lambda item: (item["first_version"] or 0, item["id"]), reverse=True)
+
+
+def load_run(work_dir: Path, run_id: str) -> Run:
+    """An earlier run as it was kept (read only: nothing is read from the event files or thinned)."""
+    folder = work_dir / RUNS_DIR / run_id
+    if not re.fullmatch(r"[\w-]+", run_id) or not folder.is_dir():
+        raise ValueError(f"no earlier run {run_id!r}")
+    info = run_info(folder)
+    try:
+        state = json.loads((folder / "monitor" / STATE_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        state = {}
+    first, last = int(info.get("first_version", 0)), info.get("last_version")
+    saved = checkpoint_epochs(work_dir, first, None if last is None else int(last))
+    return _from_state(
+        state.get("metrics", {}), state.get("sums", {}), state.get("audio", {}), folder / "monitor" / "audio",
+        state.get("last_epoch"), saved,
+    )  # fmt: skip
 
 
 SAMPLES_ZIP = "samples.zip"

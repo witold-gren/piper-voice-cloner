@@ -39,7 +39,8 @@ b0002|Za oknem pada deszcz i wieje mocny wiatr.
 1. Wskaż nagrania na jeden z trzech sposobów:
    - **Folder importu:** skopiuj folder do `~/piper-voice-cloner/data/import/` na maszynie, a pojawi się
      na liście;
-   - **ZIP:** wyślij archiwum z przeglądarki. Trafi do folderu importu pod nazwą głosu;
+   - **ZIP:** wyślij archiwum z przeglądarki. Trafi do folderu importu pod nazwą głosu; wcześniej wysłany
+     folder tego głosu zostaje jako `<głos>_2` (`_3`…), nic nie jest kasowane;
    - **Ścieżka:** wpisz ścieżkę, jaką widzi edytor (w Dockerze `/data/…`).
 2. Opcjonalnie wpisz plik persony i zaznacz sprawdzanie Whisperem. Whisper odrzuci klipy, w których
    słychać co innego niż w tekście. To trwa dłużej i zajmuje kartę.

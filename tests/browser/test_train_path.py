@@ -33,7 +33,8 @@ def test_training_shows_estimate_resume_chart_and_samples(page):
     expect(page.locator("[data-panel='mel']")).to_be_visible()
     expect(page.locator("[data-listen-summary]")).to_contain_text("Ostatnia epoka")
     expect(page.locator("[data-clips] audio")).to_have_count(4)
-    expect(page.locator("[data-checkpoints] tr")).to_have_count(5)  # head + 3 epochs + last.ckpt
+    # head + 3 epochs + last.ckpt, and the 3 checkpoints of the training before "start over" (kept)
+    expect(page.locator("[data-checkpoints] tr")).to_have_count(8)
 
 
 def test_chart_hover_and_the_big_window(page):
@@ -71,7 +72,7 @@ def test_export_lists_files_and_starts(page):
     expect(page.locator("[data-export-files] a")).to_have_text(
         ["pl_PL-kasia_glos-medium.onnx", "pl_PL-kasia_glos-medium.onnx.json"]
     )
-    expect(page.locator("[data-export-checkpoint] option")).to_have_count(4)
+    expect(page.locator("[data-export-checkpoint] option")).to_have_count(7)  # also the earlier training
     page.locator("[data-run-export]").click()
     expect(page.locator("[data-job='current'] [data-job-name]")).to_contain_text("Eksport · kasia")
 

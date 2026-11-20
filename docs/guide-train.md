@@ -116,6 +116,29 @@ first run prepares its cache for a few minutes before epoch 1.
     <span class="ui">Start from</span> and click <span class="ui">Start over</span>. The editor asks
     first. The earlier checkpoints stay on disk and in the checkpoint list.
 
+### Start over without losing the earlier training {#start-over}
+
+Start over deletes and overwrites nothing.
+
+1. **The checkpoints stay.** The new training goes into a new folder (`lightning_logs/version_1`,
+   `_2`…). The old checkpoints (`version_0`) stay in the list in Training and in Export.
+2. **The chart and the samples stay.** The chart and the listening of the old training go whole to
+   `train/runs/` and are never thinned again. Above the chart the <span class="ui">Training</span> field
+   chooses which one to show: <span class="ui">Current training</span> or an earlier one, with its base,
+   epochs and best `val_mos`. This works even when both have the same epoch numbers (two starts from the
+   same base).
+3. **An export never overwrites.** When `pl_PL-meski-medium.onnx` is already there, the next export
+   writes `pl_PL-meski_2-medium.onnx`, then `_3`. The hint under <span class="ui">Export</span> shows the
+   name the next file gets.
+4. Choose the base in <span class="ui">Start from</span> and the epochs. They count from the base (lessac
+   starts at about epoch 2164).
+5. Click <span class="ui">Start over</span>. From now on <span class="ui">Resume training</span> continues
+   only the new training, even when it stopped before its first checkpoint.
+6. Liked the old one more? Export its checkpoint from the list (`version_0`). Nothing has to be trained
+   again.
+
+The lesson **Start over, keep the old training** (⚙ → <span class="ui">Lessons</span>) shows the same.
+
 <span class="ui">Stop</span> (on the right) ends a training at any time. Resuming later loses a few
 epochs at most.
 

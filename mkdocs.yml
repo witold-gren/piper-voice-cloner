@@ -81,6 +81,7 @@ plugins:
             Train a voice: Wytrenuj głos
             Train the base voice: Wytrenuj głos bazowy
             Export to Home Assistant: Eksport do Home Assistant
+            Tour and lessons: Przewodnik i samouczki
             "Way A: cloning": "Ścieżka A: klonowanie"
             "Way B: own recordings": "Ścieżka B: własne nagrania"
             Training: Trening
@@ -102,6 +103,7 @@ nav:
       - Train a voice: guide-train.md
       - Train the base voice: guide-base.md
       - Export to Home Assistant: guide-export.md
+      - Tour and lessons: guide-tour.md
   - "Way A: cloning": path-clone.md
   - "Way B: own recordings": path-import.md
   - Training: training.md

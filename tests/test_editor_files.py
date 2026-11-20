@@ -90,3 +90,24 @@ def test_install_script_keeps_secrets_and_data_out_of_git():
     ignored = (REPO / ".gitignore").read_text(encoding="utf-8")
     for path in ("docker/.env", "docker/config/", "docker/data/", "Makefile.local"):
         assert path in ignored
+
+
+def test_both_containers_keep_the_time_of_the_machine():
+    """Without /etc/localtime the containers run in UTC and the times of jobs, logs and exported files
+    are 1–2 hours off the time of Home Assistant (gpu-studio standard §3)."""
+    compose = yaml.safe_load((REPO / "docker" / "compose.yaml").read_text(encoding="utf-8"))
+    for name in ("studio", "tensorboard"):
+        assert "/etc/localtime:/etc/localtime:ro" in compose["services"][name]["volumes"], name
+
+
+def test_no_text_key_is_given_twice():
+    """A second key of the same name silently replaces the first in a JS object (a button got another
+    label that way); both files of texts are checked."""
+    for name in ("i18n.js", "lessons-texts.js"):
+        text = (WWW / name).read_text(encoding="utf-8")
+        for language in ("en", "pl"):
+            start = text.index(f"\n  {language}: {{")
+            end = text.index("\n  },", start)
+            keys = KEY.findall(text[start:end])
+            twice = sorted({key for key in keys if keys.count(key) > 1})
+            assert not twice, f"{name} {language}: {twice}"

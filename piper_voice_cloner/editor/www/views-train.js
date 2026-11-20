@@ -132,11 +132,13 @@ customElements.define("pvc-step-import", PvcStepImport);
 // --- training ----------------------------------------------------------------------------------------
 
 class PvcStepTrain extends StepView {
-  static properties = { ...StepView.properties, _epochs: { state: true }, _base: { state: true }, _chart: { state: true } };
+  // _trainRun: "" = the current training, else the id of an earlier one kept in train/runs/
+  static properties = { ...StepView.properties, _epochs: { state: true }, _base: { state: true }, _chart: { state: true }, _trainRun: { state: true } };
 
   async load() {
     const name = encodeURIComponent(this.voice.name);
-    const [view, chart] = await Promise.all([get(`/api/voices/${name}/train`), get(`/api/chart?voice=${name}`)]);
+    if (this._loadedFor !== this.voice.name) this._trainRun = "";
+    const [view, chart] = await Promise.all([get(`/api/voices/${name}/train`), get(this._chartUrl())]);
     this._chart = chart;
     if (this._epochs == null || this._loadedFor !== this.voice.name) {
       this._epochs = view.max_epochs;
@@ -157,8 +159,44 @@ class PvcStepTrain extends StepView {
     clearTimeout(this._chartTimer);
   }
 
+  _chartUrl() {
+    const query = new URLSearchParams({ voice: this.voice.name });
+    if (this._trainRun) query.set("run", this._trainRun);
+    return `/api/chart?${query}`;
+  }
+
   async _refreshChart() {
-    this._chart = await get(`/api/chart?voice=${encodeURIComponent(this.voice.name)}`).catch(() => this._chart);
+    this._chart = await get(this._chartUrl()).catch(() => this._chart);
+  }
+
+  async _chooseRun(id) {
+    this._trainRun = id;
+    await this._refreshChart();
+  }
+
+  /** "bazowy-pl", "lessac" or the file name of the checkpoint a run started from. */
+  _baseName(base) {
+    const file = String(base ?? "").split("/").pop();
+    if (file === "pl-scratch.ckpt") return "bazowy-pl";
+    if (file.startsWith("en_US-lessac")) return "lessac";
+    return file || "—";
+  }
+
+  /** Above the chart when there are earlier trainings (kept whole after "Start over"). */
+  _renderRuns() {
+    const runs = this._chart?.runs ?? [];
+    if (!runs.length) return nothing;
+    const mos = (value) => (value == null ? "—" : number(value, this.language, 2));
+    return html`<label class="field run-pick">
+      <span>${this._t("train_pick")}</span>
+      <select data-train-run @change=${(event) => this._chooseRun(event.target.value)}>
+        <option value="" ?selected=${!this._trainRun}>${this._t("train_pick_current")}</option>
+        ${runs.map((run) => html`<option value=${run.id} ?selected=${this._trainRun === run.id}>
+          ${this._t("train_pick_item", { base: this._baseName(run.base), start: run.start_epoch ?? "—", last: run.last_epoch ?? "—", best: mos(run.best_mos), epoch: run.best_epoch ?? "—" })}
+        </option>`)}
+      </select>
+      <span class="hint">${this._t("train_pick_hint")}</span>
+    </label>`;
   }
 
   /** A new run from the chosen base; the earlier checkpoints stay on disk (and in the list). */
@@ -237,11 +275,12 @@ class PvcStepTrain extends StepView {
       </section>
       <section class="card" data-train-chart>
         <h3>${this._t("chart_title")} · ${chartName}</h3>
+        ${this._renderRuns()}
         <pvc-chart .language=${this.language} .data=${this._chart} .title=${chartName}></pvc-chart>
       </section>
       <section class="card">
         <h3>${this._t("listen_title")}</h3>
-        <pvc-listen .language=${this.language} .target=${`voice:${this.voice.name}`} .refresh=${this._jobKey()}></pvc-listen>
+        <pvc-listen .language=${this.language} .target=${`voice:${this.voice.name}`} .run=${this._trainRun ?? ""} .refresh=${this._jobKey()}></pvc-listen>
       </section>
       <section class="card" data-checkpoints>
         <h3>${this._t("checkpoints")}</h3>

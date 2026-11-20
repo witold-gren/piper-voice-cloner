@@ -11,6 +11,8 @@ export class PvcHelp extends LitElement {
     heading: {},
     text: {},
     link: {},
+    // the lesson of this place: { key, name } — "Show me step by step" starts it (the editor listens)
+    lesson: { attribute: false },
     open: { type: Boolean, reflect: true },
   };
 
@@ -40,6 +42,12 @@ export class PvcHelp extends LitElement {
     window.removeEventListener("pointerdown", this._onPointer, true);
   }
 
+  _startLesson() {
+    const key = this.lesson.key;
+    this._close();
+    this.dispatchEvent(new CustomEvent("help-lesson", { detail: { key }, bubbles: true, composed: true }));
+  }
+
   disconnectedCallback() {
     super.disconnectedCallback();
     this._close();
@@ -56,6 +64,11 @@ export class PvcHelp extends LitElement {
               <button class="x" data-help-close aria-label=${this._t("close")} @click=${this._close}><pvc-icon icon="mdi:close"></pvc-icon></button>
             </div>
             <p>${this.text}</p>
+            ${this.lesson
+              ? html`<button class="lesson" data-help-lesson=${this.lesson.key} @click=${this._startLesson}>
+                  <pvc-icon icon="mdi:school-outline"></pvc-icon>${translate(this.language, "lessons_show", { name: this.lesson.name })}
+                </button>`
+              : nothing}
             ${this.link
               ? html`<a class="more" data-help-more href=${this.link} target="_blank" rel="noopener">${this._t("help_more")}</a>`
               : nothing}
@@ -116,6 +129,17 @@ export class PvcHelp extends LitElement {
       color: var(--muted);
     }
     .x {
+      --icon-size: 16px;
+    }
+    .lesson {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 10px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--link);
       --icon-size: 16px;
     }
   `;

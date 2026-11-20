@@ -114,6 +114,28 @@ minut przygotowuje cache, zanim ruszy epoka 1.
     <span class="ui">Start od</span> i kliknij <span class="ui">Zacznij od nowa</span>. Edytor zapyta
     o potwierdzenie. Wcześniejsze checkpointy zostają na dysku i na liście checkpointów.
 
+### Od nowa bez utraty poprzedniego treningu {#start-over}
+
+„Zacznij od nowa” niczego nie kasuje ani nie nadpisuje.
+
+1. **Checkpointy zostają.** Nowy trening idzie do nowego folderu (`lightning_logs/version_1`, `_2`…).
+   Stare checkpointy (`version_0`) są dalej na liście w Treningu i w Eksporcie.
+2. **Wykres i próbki zostają.** Wykres i odsłuch starego treningu trafiają w całości do `train/runs/`
+   i nikt ich już nie przycina. Nad wykresem pole <span class="ui">Trening</span> wybiera, który pokazać:
+   <span class="ui">Obecny trening</span> albo wcześniejszy, z jego bazą, epokami i najlepszym `val_mos`.
+   Działa nawet wtedy, gdy oba treningi mają te same numery epok (dwa starty od tej samej bazy).
+3. **Eksport nigdy nie nadpisuje.** Gdy `pl_PL-meski-medium.onnx` już jest, kolejny eksport zapisze
+   `pl_PL-meski_2-medium.onnx`, potem `_3`. Podpowiedź pod przyciskiem <span class="ui">Eksportuj</span>
+   pokazuje nazwę, którą dostanie następny plik.
+4. Wybierz bazę w <span class="ui">Start od</span> i epoki. Liczą się od bazy (lessac zaczyna od epoki
+   ok. 2164).
+5. Kliknij <span class="ui">Zacznij od nowa</span>. Od tej chwili <span class="ui">Wznów trening</span>
+   kontynuuje tylko nowy trening, nawet jeśli nowy zatrzymał się przed pierwszym checkpointem.
+6. Stary podobał się bardziej? Wyeksportuj jego checkpoint z listy (`version_0`). Nic nie trzeba trenować
+   ponownie.
+
+To samo pokazuje samouczek **Od nowa, z zachowaniem starego treningu** (⚙ → <span class="ui">Samouczki</span>).
+
 <span class="ui">Zatrzymaj</span> (po prawej) przerywa trening w każdej chwili. Późniejsze wznowienie
 traci najwyżej kilka epok.
 

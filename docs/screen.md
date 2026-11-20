@@ -18,7 +18,8 @@ From the left:
    powering off fails, a red pill with the reason.
 5. **Theme**, **?** (this guide – only this "?" opens the guide; the "?" of steps and cards show a small
    window), **⚙**: a box under the icon with the theme and the language, which change at once. Esc, a click
-   beside it or ⚙ again close it; <span class="ui">All of look and language</span> opens the full view.
+   beside it or ⚙ again close it; <span class="ui">All of look and language</span> opens the full view. The box also has
+   <span class="ui">Tour of the editor</span> and <span class="ui">Lessons</span> ([Tour and lessons](guide-tour.md)).
 
 ![The menu](assets/screens/en/14-menu.png){ .shot }
 

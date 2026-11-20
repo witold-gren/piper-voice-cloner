@@ -220,7 +220,8 @@ def test_run_json_written_once(tmp_path, monkeypatch):
     invoke(tmp_path, "train", "kuba", "--base", f"ckpt:{other}", "--no-resume")
     third = calls[-1]
     assert third[third.index("--ckpt_path") + 1] == str(other)
-    assert json.loads((voice / "train" / "run.json").read_text())["start_epoch"] == 20
+    info = json.loads((voice / "train" / "run.json").read_text())
+    assert info["start_epoch"] == 20 and info["first_version"] == 1  # Lightning's next version_N
 
 
 def test_progress_printer_reports_about_every_percent(capsys):
