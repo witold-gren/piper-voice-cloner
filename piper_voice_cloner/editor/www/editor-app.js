@@ -11,6 +11,7 @@ import "./new-voice.js";
 import "./tour.js";
 import { tourSeen } from "./tour.js";
 import { LESSONS } from "./lessons.js";
+import { ask } from "./confirm.js";
 
 const THEMES = ["auto", "light", "dark"];
 // steps a voice can skip: not counted in "6/7" until done, never the next step
@@ -618,7 +619,8 @@ export class PvcEditor extends LitElement {
   }
 
   async _machineOff() {
-    if (!window.confirm(this._t("machine_off_confirm"))) return;
+    const sure = await ask({ language: this._language, title: this._t("machine_power_off"), text: this._t("machine_off_confirm"), ok: this._t("machine_power_off"), danger: true, icon: "mdi:power" });
+    if (!sure) return;
     try {
       await post("/api/machine/off");
       this._notice = { kind: "ok", text: this._t("machine_off_sent") };

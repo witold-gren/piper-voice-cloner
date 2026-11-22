@@ -114,8 +114,9 @@ def test_export_delete_removes_the_picked_model(page, demo):
     expect(delete).to_be_disabled()  # nothing picked
     page.locator("[data-export-pick='pl_PL-kasia_glos_2-medium.onnx']").check()
     expect(delete).to_contain_text("(1)")
-    page.once("dialog", lambda dialog: dialog.accept())
     delete.click()
+    expect(page.locator("[data-confirm-text]")).to_contain_text("pl_PL-kasia_glos_2-medium.onnx")
+    page.locator("[data-confirm-ok]").click()
     expect(page.locator("[data-export-model]")).to_have_count(1)
     folder = demo[1] / "voices" / "kasia" / "export"
     assert not (folder / "pl_PL-kasia_glos_2-medium.onnx").exists()

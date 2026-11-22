@@ -14,6 +14,7 @@ const HISTORY_ICONS = {
 };
 import "./chart.js";
 import "./job-panel.js";
+import { ask } from "./confirm.js";
 
 function bytes(size, language) {
   return size > 1e6 ? `${number(size / 1e6, language, 1)} MB` : `${number(size / 1e3, language, 0)} kB`;
@@ -215,14 +216,15 @@ class PvcStepTrain extends StepView {
   /** An earlier run trained further: a new run from its newest checkpoint; the current one is kept whole. */
   async _continueRun(run) {
     const text = this._t("train_continue_confirm", { last: run.last_epoch ?? "—", epochs: Number(this._epochs) });
-    if (!window.confirm(text)) return;
+    if (!(await ask({ language: this.language, title: this._t("train_continue"), text, ok: this._t("train_continue"), icon: "mdi:history" }))) return;
     const job = await this._run(true, run.id);
     if (job) await this._chooseRun("");  // the run going on is now the current one
   }
 
   /** A new run from the chosen base; the earlier checkpoints stay on disk (and in the list). */
-  _startOver() {
-    if (!window.confirm(this._t("train_start_over_confirm", { base: this._base }))) return;
+  async _startOver() {
+    const text = this._t("train_start_over_confirm", { base: this._base });
+    if (!(await ask({ language: this.language, title: this._t("train_start_over"), text, ok: this._t("train_start_over") }))) return;
     return this._run(true);
   }
 
@@ -361,7 +363,10 @@ class PvcStepExport extends StepView {
 
   async _delete() {
     const models = [...this._picked];
-    if (!models.length || !window.confirm(this._t("export_delete_confirm", { count: models.length, names: models.join("\n") }))) return;
+    if (!models.length) return;
+    const text = this._t("export_delete_confirm", { count: models.length, names: models.join("\n") });
+    const sure = await ask({ language: this.language, title: this._t("export_delete", { count: models.length }), text, ok: this._t("remove"), danger: true, icon: "mdi:delete-outline" });
+    if (!sure) return;
     this.busy = true;
     try {
       await call(`/api/voices/${encodeURIComponent(this.voice.name)}/export/delete`, { method: "POST", body: { models } });

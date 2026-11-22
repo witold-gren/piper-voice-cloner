@@ -6,6 +6,7 @@ import { VIEWS } from "./editor-app.js";
 import { StepView } from "./parts.js";
 import { call, get, post } from "./api.js";
 import { dialogStyles } from "./styles.js";
+import { ask } from "./confirm.js";
 
 const UNDO_LIMIT = 200;
 const COALESCE_MS = 1500; // typing in one field is one undo step
@@ -540,7 +541,7 @@ class PvcSettingsHomeAssistant extends StepView {
   }
 
   async _remove() {
-    if (!window.confirm(this._t("ha_remove_confirm"))) return;
+    if (!(await ask({ language: this.language, text: this._t("ha_remove_confirm"), ok: this._t("remove"), danger: true }))) return;
     this.data = await call("/api/settings/ha", { method: "DELETE" });
     this._notice = this._t("ha_removed");
   }
@@ -619,7 +620,8 @@ class PvcSettingsHomeAssistant extends StepView {
         <div class="row"><span class="grow"></span>
           <button class="danger" data-machine-off ?disabled=${!this.state?.can_power_off || this.running}
             @click=${async () => {
-              if (!window.confirm(this._t("machine_off_confirm"))) return;
+              const sure = await ask({ language: this.language, title: this._t("machine_power_off"), text: this._t("machine_off_confirm"), ok: this._t("machine_power_off"), danger: true, icon: "mdi:power" });
+              if (!sure) return;
               await this.run("/api/machine/off", {});
             }}><pvc-icon icon="mdi:power"></pvc-icon>${this._t("machine_power_off")}</button>
         </div>

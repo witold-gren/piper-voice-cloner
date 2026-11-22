@@ -46,9 +46,9 @@ def test_start_over_asks_and_trains_from_the_base(page, demo):
     root, app = demo[1], demo[2]
     page.open("voice/kasia/train")
     expect(page.locator("[data-train-base-resume]")).to_be_visible()  # "Resume" ignores the base
-    page.once("dialog", lambda dialog: dialog.accept())
     os.environ["FAKE_PVC_SPEED"] = "50"
     page.locator("[data-train-fresh]").click()
+    page.locator("[data-confirm-ok]").click()
     expect(page.locator("[data-top-job], [data-job-state]").first).to_be_visible()
     app.state.jobs["current"].wait(30)
     log = sorted((root / "jobs").glob("*-train-kasia.log"))[-1].read_text(encoding="utf-8")
@@ -58,8 +58,9 @@ def test_start_over_asks_and_trains_from_the_base(page, demo):
 def test_start_over_can_be_cancelled(page, demo):
     root = demo[1]
     page.open("voice/kasia/train")
-    page.once("dialog", lambda dialog: dialog.dismiss())
     page.locator("[data-train-fresh]").click()
+    page.locator("[data-confirm-cancel]").click()
+    expect(page.locator("[data-confirm]")).to_have_count(0)
     page.wait_for_timeout(500)
     assert not list((root / "jobs").glob("*-train-kasia.log"))
 
@@ -102,12 +103,13 @@ def test_an_earlier_training_can_be_trained_further(page):
             sent.append(request.post_data_json)
 
     page.on("request", watch)
-    page.once("dialog", lambda dialog: dialog.dismiss())  # cancelled: nothing starts
     button.click()
+    page.keyboard.press("Escape")  # cancelled: nothing starts
+    expect(page.locator("[data-confirm]")).to_have_count(0)
     page.wait_for_timeout(300)
     assert sent == []
-    page.once("dialog", lambda dialog: dialog.accept())
     button.click()
+    page.locator("[data-confirm-ok]").click()
     expect(page.locator("[data-train-run]")).to_have_value("")  # back on the current training
     assert sent and sent[-1]["continue_run"] == "0" and sent[-1]["fresh"] is True
 
@@ -158,8 +160,8 @@ def test_weak_recordings_are_taken_out_from_the_rating_step(page, demo):
         expect(page.locator("[data-prune-clips]")).to_contain_text(f"Dataset ma {len(clips)}")
         expect(page.locator("[data-prune-unscored]")).to_have_count(0)
         with page.expect_request(lambda r: r.url.endswith("/kasia/prune")) as sent:
-            page.once("dialog", lambda dialog: dialog.accept())
             page.locator("[data-run-prune]").click()
+            page.locator("[data-confirm-ok]").click()
         assert sent.value.post_data_json == {"below": 3.0}
     finally:
         (dataset / "utmos.json").unlink()
@@ -199,3 +201,29 @@ def test_the_level_shows_what_stays_and_every_clip_is_listed(page, demo):
         expect(page.locator("[data-clips-none]")).to_be_visible()
     finally:
         (dataset / "utmos.json").unlink()
+
+
+def test_questions_are_editor_windows_not_browser_dialogs(page):
+    native = []
+    page.on("dialog", lambda dialog: (native.append(dialog.message), dialog.dismiss()))
+    page.open("voice/kasia/train")
+    page.locator("[data-train-fresh]").click()
+    box = page.locator("[data-confirm]")
+    expect(box).to_have_attribute("aria-modal", "true")
+    expect(box).to_contain_text("Zacząć nowy trening")
+    expect(page.locator("[data-confirm-ok]")).to_be_focused()  # not dangerous: Enter starts it
+    page.mouse.click(5, 5)  # outside the window: cancelled
+    expect(box).to_have_count(0)
+    page.open("voice/kasia/export")
+    page.locator("[data-export-pick]").first.check()
+    page.locator("[data-export-delete]").click()
+    expect(page.locator("[data-confirm-cancel]")).to_be_focused()  # dangerous: Enter alone never does it
+    page.keyboard.press("Tab")
+    expect(page.locator("[data-confirm-ok]")).to_be_focused()
+    page.keyboard.press("Tab")
+    expect(page.locator("[data-confirm-cancel]")).to_be_focused()  # the focus stays in the window
+    page.keyboard.press("Escape")
+    expect(box).to_have_count(0)
+    expect(page.locator("[data-export-model]")).to_have_count(2)  # nothing deleted
+    expect(page.locator("[data-export-delete]")).to_be_focused()  # back on the button that asked
+    assert native == []

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1 (2026-11-22)
+
+Changed:
+- **Questions are windows of the editor**, no longer the browser's `confirm`: in the editor's look and
+  theme, the action button named after the action, red for a dangerous one (delete, power off) with the
+  focus on Cancel, Esc or a click outside cancels (gpu-studio standard §5).
+
 ## 0.4.0 (2026-11-22)
 
 Recordings rated and cleaned before training: every clip gets a UTMOS score (kept, never rated twice),

@@ -5,6 +5,7 @@ import { StepView, clipStyles, clips } from "./parts.js";
 import { fileUrl, get } from "./api.js";
 import { number } from "./format.js";
 import "./chart.js";
+import { ask } from "./confirm.js";
 
 class BaseView extends StepView {
   load() {
@@ -238,10 +239,11 @@ class PvcStepScore extends BaseView {
     const data = this.data;
     const short = Math.max(data.target - data.clips, 0);
     const preview = this._preview();
-    const send = () => {
+    const send = async () => {
       const body = this._best ? { keep_best: Number(this._best) } : { below: Number(this._level) };
       const text = this._best ? this._t("prune_confirm_best", { count: this._best }) : this._t("prune_confirm_below", { level: this._level });
-      if (window.confirm(text)) this.run(`/api/voices/${encodeURIComponent(this.voice.name)}/prune`, body);
+      const sure = await ask({ language: this.language, title: this._t("prune_title"), text, ok: this._t("prune_run"), danger: true });
+      if (sure) this.run(`/api/voices/${encodeURIComponent(this.voice.name)}/prune`, body);
     };
     return html`<section class="card" data-prune>
       <h3>${this._t("prune_title")}</h3>
