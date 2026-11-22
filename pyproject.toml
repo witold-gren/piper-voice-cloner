@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "piper-voice-cloner"
-version = "0.3.0"
+version = "0.4.0"
 description = "Clone a voice from a short recording, generate a checked dataset and train a Piper TTS voice"
 readme = "README.md"
 license = "MIT"

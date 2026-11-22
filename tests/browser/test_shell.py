@@ -11,14 +11,14 @@ import pytest
 def test_tree_shows_voices_with_the_steps_of_their_way(page):
     page.open("voice/kasia")
     expect(page.locator("[data-node='voice/kasia']")).to_have_class(re.compile(r"\bsel\b"))
-    # kasia has its own recordings: import, training, export (+ the voice's settings)
-    expect(page.locator("[data-node^='voice/kasia/']")).to_have_count(4)
+    # kasia has its own recordings: import, rating, training, export (+ the voice's settings)
+    expect(page.locator("[data-node^='voice/kasia/']")).to_have_count(5)
     expect(page.locator("[data-node='voice/kasia/import']")).to_contain_text("Import")
     # other voices stay folded until opened
     expect(page.locator("[data-node^='voice/alicja/']")).to_have_count(0)
     page.locator("[data-fold='voice/alicja']").click()
-    expect(page.locator("[data-node^='voice/alicja/']")).to_have_count(8)
-    expect(page.locator("[data-voice-overview='kasia'] [data-overview-step]")).to_have_count(3)
+    expect(page.locator("[data-node^='voice/alicja/']")).to_have_count(9)
+    expect(page.locator("[data-voice-overview='kasia'] [data-overview-step]")).to_have_count(4)
 
 
 def test_search_finds_steps_and_unfolds(page):

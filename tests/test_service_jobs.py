@@ -143,7 +143,7 @@ def test_create_list_and_yaml_roundtrip(tmp_path):
 def test_steps_follow_progress(tmp_path):
     service.create_voice(tmp_path, "kuba")
     voice = service.voice_dir(tmp_path, "kuba")
-    assert [s.done for s in service.steps(tmp_path, "kuba")] == [False] * 7
+    assert [s.done for s in service.steps(tmp_path, "kuba")] == [False] * 8
     (voice / "reference").mkdir()
     (voice / "reference" / "reference.json").write_text(
         json.dumps({"prompts": ["ref_00.wav"], "seconds": 21.5})
@@ -161,6 +161,18 @@ def test_steps_follow_progress(tmp_path):
     assert steps["filter"].detail == "1 / 2000"
     assert steps["train"].done and steps["export"].detail == "pl_PL-kuba-medium.onnx"
     assert not steps["synthesize"].done and not steps["audition"].done
+    assert not steps["score"].done and steps["score"].detail == ""
+    # "b" was taken out of the dataset: its score is kept, not counted
+    report = {"total": 2, "scores": {"a": 3.4, "b": 1.0}, "texts": {"a": "Ala ma kota.", "b": "Pies."}}
+    (voice / "dataset" / "utmos.json").write_text(json.dumps(report))
+    score = {s.key: s for s in service.steps(tmp_path, "kuba")}["score"]
+    assert score.done and score.detail == "3.40"
+    dataset.write_metadata(
+        voice / "dataset" / "metadata.csv",
+        [dataset.Utterance("a", "Ala ma kota."), dataset.Utterance("c", "Nowe.")],
+    )
+    score = {s.key: s for s in service.steps(tmp_path, "kuba")}["score"]
+    assert score.detail == "3.40 · 1/2"  # the median, and not every clip scored yet
     assert service.checkpoint_choices(tmp_path, "kuba") == [str(ckpt)]
 
 

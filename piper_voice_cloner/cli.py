@@ -517,9 +517,15 @@ def train_queue(
     names: Annotated[list[str], typer.Argument(help="Voices in training order.")],
     epochs: Annotated[int, typer.Option(help="Epochs for every voice.")] = 500,
     base: Annotated[str | None, typer.Option(help="bazowy-pl | lessac | ckpt:<path>")] = None,
+    fresh: Annotated[
+        bool, typer.Option("--fresh", help="Start every voice over from the base (earlier runs are kept).")
+    ] = False,
     python: TrainPython = sys.executable,
 ) -> None:
-    """Train voices one after another; a failed voice does not stop the next one, Ctrl+C stops all."""
+    """Train voices one after another; a failed voice does not stop the next one, Ctrl+C stops all.
+
+    --fresh: like "Start over" for each voice: a new run from the base, the run before kept whole in
+    train/runs/ (without it a voice with checkpoints goes on from them and the base is not used)."""
     root = _state["root"]
     failed = []
     for index, name in enumerate(names, 1):
@@ -530,7 +536,7 @@ def train_queue(
             directory, cfg, _lang = _load(root, name)
             cfg.train.max_epochs = epochs
             config_mod.save(directory, cfg)
-            train(name, base=base, python=python, resume=True, dry_run=False)
+            train(name, base=base, python=python, resume=not fresh, dry_run=False)
         except (train_mod.TrainError, typer.BadParameter, FileNotFoundError) as err:
             typer.secho(f"queue: {name} failed: {err}", fg=typer.colors.RED, err=True)
             failed.append(name)
@@ -552,12 +558,51 @@ def export(
     checkpoint = checkpoint or train_mod.latest_checkpoint(paths.work_dir)
     if checkpoint is None:
         raise typer.BadParameter("no checkpoint found - train first or pass --checkpoint")
-    quality = train_mod.checkpoint_info(checkpoint, python=python).quality
+    info = train_mod.checkpoint_info(checkpoint, python=python)
     # a file exported before is never overwritten: the new one gets the next number
-    onnx_file = train_mod.free_export_path(directory / "export", cfg.file_stem(lang.locale, quality))
+    onnx_file = train_mod.free_export_path(directory / "export", cfg.file_stem(lang.locale, info.quality))
     onnx_file.parent.mkdir(parents=True, exist_ok=True)
     train_mod.run(train_mod.export_command(checkpoint, onnx_file, python=python))
-    typer.echo(f"Exported {onnx_file} and {train_mod.finish_export(paths, onnx_file, quality)}")
+    # which checkpoint and epoch the file is, shown next to it in the editor
+    source = {"checkpoint": f"{checkpoint.parents[1].name}/{checkpoint.name}", "epoch": info.epoch}
+    target = train_mod.finish_export(paths, onnx_file, info.quality, source)
+    typer.echo(f"Exported {onnx_file} and {target}")
+
+
+@app.command()
+def score(
+    name: str,
+    sample: Annotated[int, typer.Option(help="Clips to score at random; 0 = all of them.")] = 0,
+    python: TrainPython = sys.executable,
+) -> None:
+    """Rate the voice's recordings with UTMOS (the val_mos predictor); every score is kept in
+    dataset/utmos.json, so a later run rates only the clips new or changed since."""
+    from . import dataset_quality
+
+    directory, _cfg, _lang = _load(_state["root"], name)
+    dataset = directory / "dataset"
+    if not (dataset / "metadata.csv").is_file():
+        raise typer.BadParameter(f"{dataset / 'metadata.csv'} missing - import or filter the clips first")
+    report = dataset_quality.score_dataset(dataset, sample, python=python, progress=_progress("score"))
+    typer.echo(dataset_quality.describe(report))
+
+
+@app.command()
+def prune(
+    name: str,
+    below: Annotated[float | None, typer.Option(help="Take out the clips scored under this level.")] = None,
+    keep_best: Annotated[int | None, typer.Option(help="Keep only this many best clips.")] = None,
+) -> None:
+    """Take weak clips out of dataset/metadata.csv by their UTMOS (`pvc score` first). Nothing is
+    deleted: the WAV files stay, the old metadata.csv and the list of clips taken out are kept next to it."""
+    from . import dataset_quality
+
+    directory, _cfg, _lang = _load(_state["root"], name)
+    try:
+        result = dataset_quality.prune(directory / "dataset", below=below, keep_best=keep_best)
+    except dataset_quality.ScoreError as err:
+        raise typer.BadParameter(str(err)) from err
+    typer.echo(dataset_quality.describe_prune(result))
 
 
 @app.command()

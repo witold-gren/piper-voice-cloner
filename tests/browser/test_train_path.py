@@ -70,8 +70,15 @@ def test_training_starts_and_the_card_follows_it(page, demo):
 def test_export_lists_files_and_starts(page):
     page.open("voice/kasia/export")
     expect(page.locator("[data-export-files] a")).to_have_text(
-        ["pl_PL-kasia_glos-medium.onnx", "pl_PL-kasia_glos-medium.onnx.json"]
+        [
+            "pl_PL-kasia_glos-medium.onnx",
+            "pl_PL-kasia_glos-medium.onnx.json",
+            "pl_PL-kasia_glos_2-medium.onnx",
+            "pl_PL-kasia_glos_2-medium.onnx.json",
+        ]
     )
+    expect(page.locator("[data-export-source]").first).to_contain_text("Epoka 1573 · val_mos 3,761")
+    expect(page.locator("[data-export-source]").nth(1)).to_contain_text("Checkpoint nieznany")
     expect(page.locator("[data-export-checkpoint] option")).to_have_count(7)  # also the earlier training
     page.locator("[data-run-export]").click()
     expect(page.locator("[data-job='current'] [data-job-name]")).to_contain_text("Eksport · kasia")
@@ -83,7 +90,11 @@ def test_queue_keeps_the_order_of_ticking(page, demo):
     page.locator("[data-queue-voice='kasia']").check()
     expect(page.locator("[data-queue-voices] .order")).to_have_text(["2", "1"])
     page.locator("[data-queue-epochs]").fill("20")
-    page.locator("[data-run-queue]").click()
+    expect(page.locator("[data-queue-fresh]")).not_to_be_checked()  # going on is the default
+    page.locator("[data-queue-fresh]").check()
+    with page.expect_request(lambda r: r.url.endswith("/api/queue") and r.method == "POST") as sent:
+        page.locator("[data-run-queue]").click()
+    assert sent.value.post_data_json["fresh"] is True
     expect(page.locator("[data-queue-item='tomek']")).to_be_visible(timeout=10000)
     demo[2].state.jobs["current"].wait(30)
     expect(page.locator("[data-queue-item]")).to_have_count(2)
@@ -95,3 +106,18 @@ def test_history_opens_a_log(page, demo):
     page.open("jobs/history")
     page.locator("[data-history-open]").first.click()
     expect(page.locator("[data-history-log]")).to_contain_text("filter: done")
+
+
+def test_export_delete_removes_the_picked_model(page, demo):
+    page.open("voice/kasia/export")
+    delete = page.locator("[data-export-delete]")
+    expect(delete).to_be_disabled()  # nothing picked
+    page.locator("[data-export-pick='pl_PL-kasia_glos_2-medium.onnx']").check()
+    expect(delete).to_contain_text("(1)")
+    page.once("dialog", lambda dialog: dialog.accept())
+    delete.click()
+    expect(page.locator("[data-export-model]")).to_have_count(1)
+    folder = demo[1] / "voices" / "kasia" / "export"
+    assert not (folder / "pl_PL-kasia_glos_2-medium.onnx").exists()
+    assert not (folder / "pl_PL-kasia_glos_2-medium.onnx.json").exists()
+    assert (folder / "pl_PL-kasia_glos-medium.onnx").exists()

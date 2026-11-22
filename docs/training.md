@@ -104,6 +104,32 @@ nor correct pronunciation.
 - **About 1500 clips is enough.** More helps less than you would think; bad clips hurt more than
   missing ones.
 
+### Recordings rating (UTMOS) {#score}
+
+The <span class="ui">Recordings rating</span> step of every voice rates its recordings with the same UTMOS
+model that computes `val_mos`. The median is about the ceiling of `val_mos`, and the list of the weakest
+recordings shows what to listen to and maybe remove.
+
+- **Scores are kept.** Every score goes to `dataset/utmos.json` with the size and time of change of its
+  file. A later rating only rates recordings that are new or changed, the rest comes from the file.
+  Recordings removed from the dataset drop out of the report.
+- **A stop loses nothing.** Scores are saved every 100 recordings and on <span class="ui">Stop</span>, so
+  the next rating goes on where it ended.
+- **Recordings to rate:** 0 rates all of them. A number rates that many at random, always the same ones.
+- **Below a level:** the summary says how many recordings score below 2.5, 3.0 and 3.3.
+- From the command line: `pvc score <voice>` (`--sample 300` for a sample).
+- **Take weak recordings out** (below the results): takes the recordings rated below a level (e.g. 3.0)
+  out of `dataset/metadata.csv`, or keeps only the N best (e.g. 3000 of a big set). Nothing is deleted:
+  the WAV files stay, the metadata.csv before goes to `metadata.before-prune-<time>.csv` and the list
+  of recordings taken out to `pruned-<time>.csv`. To put the dataset back, copy the backup back as
+  `metadata.csv`. With fewer than about 1500 recordings left the editor says how many are missing.
+  Every recording must be rated first. From the command line: `pvc prune <voice> --below 3.0` or
+  `--keep-best 3000`.
+- **Preview before taking out:** below the fields you see at once how many recordings stay, how many go
+  and how many would be missing to 1500 at the level (or number of best) typed in.
+- **Every rated recording:** the table below shows each recording with its rating and text, in the
+  dataset or taken out, weakest or best first, optionally only below the level, 50 a page. ▶ plays it.
+
 ### Start and length
 
 - **Start from `bazowy-pl`:** Polish comes faster and more natural. With 1500 clips the base's colour
@@ -131,6 +157,9 @@ nor correct pronunciation.
 - **Disk:** a checkpoint is about 800 MB; up to about 9 GB per voice plus the cache.
 - **Overnight:** the <span class="ui">Training queue</span> trains several voices one after another; tick
   <span class="ui">Power the machine off after the last voice</span> and Home Assistant switches it off.
+  A voice with checkpoints is trained further from them; tick <span class="ui">Start every voice over
+  from the chosen base</span> to start each one over from the base (like Start over; earlier trainings
+  are kept whole).
 
 ### The training queue {#queue}
 

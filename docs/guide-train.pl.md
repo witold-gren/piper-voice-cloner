@@ -133,6 +133,11 @@ minut przygotowuje cache, zanim ruszy epoka 1.
    kontynuuje tylko nowy trening, nawet jeśli nowy zatrzymał się przed pierwszym checkpointem.
 6. Stary podobał się bardziej? Wyeksportuj jego checkpoint z listy (`version_0`). Nic nie trzeba trenować
    ponownie.
+7. Chcesz wrócić do starego i trenować go dalej? Wybierz go w polu <span class="ui">Trening</span> nad
+   wykresem i kliknij <span class="ui">Dotrenuj ten trening</span>. Ruszy nowy trening od najnowszego
+   checkpointu starego, a epoki pójdą dalej od jego numeru (np. od 1612). Pole
+   <span class="ui">Epoki</span> mówi, ile epok dołożyć. Obecny trening trafia do `train/runs/` w całości,
+   jak przy każdym „Zacznij od nowa”, więc możesz potem wrócić także do niego.
 
 To samo pokazuje samouczek **Od nowa, z zachowaniem starego treningu** (⚙ → <span class="ui">Samouczki</span>).
 

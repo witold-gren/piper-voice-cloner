@@ -7,6 +7,7 @@ builds argument lists and resolves the starting checkpoint; `run` executes them.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 import json
 import logging
 import os
@@ -331,9 +332,15 @@ def free_export_path(folder: Path, stem: str) -> Path:
     return candidate
 
 
-def finish_export(paths: TrainPaths, onnx_file: Path, quality: str = "medium") -> Path:
+EXPORT_SOURCE_KEY = "piper_voice_cloner"
+
+
+def finish_export(
+    paths: TrainPaths, onnx_file: Path, quality: str = "medium", source: dict | None = None
+) -> Path:
     """The training config next to the model as <name>.onnx.json (Piper convention), with the model
-    size in audio.quality like the official voices."""
+    size in audio.quality like the official voices. `source` (checkpoint, epoch) goes under
+    EXPORT_SOURCE_KEY with the export time: the editor shows which epoch a file is; Piper ignores it."""
     if not paths.config_json.is_file():
         raise TrainError(f"{paths.config_json} missing - was the voice trained in {paths.work_dir}?")
     config = json.loads(paths.config_json.read_text(encoding="utf-8"))
@@ -343,6 +350,9 @@ def finish_export(paths: TrainPaths, onnx_file: Path, quality: str = "medium") -
     family, _, region = locale.partition("_")
     config.setdefault("language", {"code": locale, "family": family, "region": region})
     config.setdefault("dataset", onnx_file.name.removesuffix(".onnx"))
+    if source is not None:
+        stamp = datetime.now(UTC).isoformat(timespec="seconds")
+        config[EXPORT_SOURCE_KEY] = {**source, "exported": stamp}
     target = onnx_file.with_name(onnx_file.name + ".json")
     target.write_text(json.dumps(config, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return target

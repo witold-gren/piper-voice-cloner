@@ -227,6 +227,20 @@ def run_checkpoints(work_dir: Path, first: int | None = None, last: int | None =
     return [p for p in found if _in_run(p, first, last)]
 
 
+def run_last_checkpoint(work_dir: Path, run_id: str) -> Path | None:
+    """The newest checkpoint of an earlier run kept in runs/ (to train that run further); None: no files.
+
+    Newest by time, like a resume: piper does not refresh last.ckpt every epoch, a best checkpoint is a
+    full one too. On the same time a name with its epoch wins over last.ckpt."""
+    folder = work_dir / RUNS_DIR / run_id
+    if not re.fullmatch(r"[\w-]+", run_id) or not folder.is_dir():
+        raise ValueError(f"no earlier run {run_id!r}")
+    info = run_info(folder)
+    last = info.get("last_version")
+    found = run_checkpoints(work_dir, int(info.get("first_version", 0)), None if last is None else int(last))
+    return max(found, key=lambda p: (p.stat().st_mtime, "epoch=" in p.name)) if found else None
+
+
 def archive_monitor(work_dir: Path, info: dict) -> Path | None:
     """Move the monitor of the run `info` describes (its run.json) to runs/<first version>/, whole.
 

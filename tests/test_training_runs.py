@@ -5,6 +5,7 @@ uploaded again keeps the earlier upload."""
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import sys
 import zipfile
@@ -153,3 +154,37 @@ def test_a_zip_sent_again_keeps_the_earlier_upload(tmp_path):
         steps.unpack_dataset(tmp_path, "kuba", _zip(tmp_path / "3.zip", False))
     assert (first / "note.txt").read_text() == "second"
     assert not first.with_name("kuba_3").exists()
+
+
+def ckpt(work: Path, version: int, name: str, mtime: float) -> Path:
+    path = work / "lightning_logs" / f"version_{version}" / "checkpoints" / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"")
+    os.utime(path, (mtime, mtime))
+    return path
+
+
+def keep_run(work: Path, run_id: str, first: int, last: int) -> None:
+    folder = work / "runs" / run_id
+    folder.mkdir(parents=True)
+    info = {"start_epoch": 1113, "first_version": first, "last_version": last}
+    (folder / "run.json").write_text(json.dumps(info))
+
+
+def test_an_earlier_run_goes_on_from_its_own_newest_checkpoint(tmp_path):
+    work = tmp_path / "train"
+    keep_run(work, "0", 0, 0)
+    ckpt(work, 0, "last.ckpt", 1000)  # piper does not refresh last.ckpt every epoch
+    newest = ckpt(work, 0, "epoch=1608-val_mel=0.3539.ckpt", 1000)  # same time: the epoch in the name wins
+    ckpt(work, 0, "epoch=1296-val_mos=3.7919.ckpt", 500)
+    ckpt(work, 1, "epoch=3130-val_mos=3.7269.ckpt", 9000)  # the current run: never chosen for run 0
+    assert train_monitor.run_last_checkpoint(work, "0") == newest
+
+
+def test_an_earlier_run_without_checkpoints_or_unknown(tmp_path):
+    work = tmp_path / "train"
+    keep_run(work, "0", 0, 0)
+    assert train_monitor.run_last_checkpoint(work, "0") is None
+    for bad in ("7", "../0", ""):
+        with pytest.raises(ValueError):
+            train_monitor.run_last_checkpoint(work, bad)

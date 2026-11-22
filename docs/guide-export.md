@@ -17,7 +17,10 @@ You need a trained voice: [Train a voice](guide-train.md).
 4. Under **<span class="ui">Exported files</span>** two files appear:
     - `pl_PL-<name>-medium.onnx` – the voice (about 60 MB);
     - `pl_PL-<name>-medium.onnx.json` – its settings (a few kB).
-5. Click each name to download it.
+5. Click each name to download it. Under the names you see which epoch and checkpoint the model was
+   exported from (e.g. `Epoch 3093 · val_mos 3.589 · version_1/epoch=3093-…ckpt`).
+6. Exported the wrong checkpoint? Tick the model and click **Delete selected**. Both of its files go;
+   the checkpoint stays, so you can export it again.
 
 The file name comes from the Piper file name of the voice. Change it in
 <span class="ui">Voice settings</span> → <span class="ui">Name and Piper file</span>, then export again.

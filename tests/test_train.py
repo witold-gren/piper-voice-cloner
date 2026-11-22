@@ -197,3 +197,16 @@ def test_exported_config_names_the_language_for_wyoming_piper(tmp_path):
     config = json.loads(target.read_text(encoding="utf-8"))
     assert config["language"] == {"code": "pl_PL", "family": "pl", "region": "PL"}
     assert config["dataset"] == "pl_PL-kuba-medium"
+
+
+def test_exported_config_records_its_checkpoint(tmp_path):
+    p = train.TrainPaths(tmp_path / "dataset", tmp_path / "train")
+    p.config_json.parent.mkdir()
+    p.config_json.write_text("{}", encoding="utf-8")
+    plain = json.loads(train.finish_export(p, tmp_path / "pl_PL-a-medium.onnx").read_text())
+    assert train.EXPORT_SOURCE_KEY not in plain  # nothing known, nothing written
+    source = {"checkpoint": "version_1/epoch=3093-val_mos=3.5894.ckpt", "epoch": 3093}
+    config = json.loads(train.finish_export(p, tmp_path / "pl_PL-b-medium.onnx", source=source).read_text())
+    recorded = config[train.EXPORT_SOURCE_KEY]
+    assert recorded["epoch"] == 3093 and recorded["checkpoint"] == source["checkpoint"]
+    assert recorded["exported"].startswith("20")

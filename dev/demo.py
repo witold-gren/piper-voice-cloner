@@ -167,7 +167,9 @@ def _base(bases: Path) -> None:
     for i, clip in enumerate(clips):
         if i < 6 or i >= 9:
             _wav(dataset / "wav" / f"{clip}.wav", freq=170 + 12 * i)
-    _write(dataset / "metadata.csv", "".join(f"{clip}|{text}\n" for clip, text in clips.items()))
+    # the whole base set in metadata.csv (18 395 clips), a few of them with their recordings and scores
+    filler = "".join(f"z{i:05d}|Zdanie numer {i}.\n" for i in range(18395 - len(clips)))
+    _write(dataset / "metadata.csv", "".join(f"{clip}|{text}\n" for clip, text in clips.items()) + filler)
     scores = {clip: round(2.9 + 0.08 * i, 2) for i, clip in enumerate(clips)}
     report = {"total": 18395, "scores": scores, "texts": clips}
     _write(dataset / "utmos.json", json.dumps(report, ensure_ascii=False))
@@ -191,7 +193,13 @@ def build(root: Path) -> Path:
     _earlier_run(kasia)
     _training(kasia, [1203, 1388, 1573], version=1)
     _write(kasia / "export" / "pl_PL-kasia_glos-medium.onnx")
-    _write(kasia / "export" / "pl_PL-kasia_glos-medium.onnx.json", "{}")
+    _write(
+        kasia / "export" / "pl_PL-kasia_glos-medium.onnx.json",
+        '{"piper_voice_cloner": {"checkpoint": "version_1/epoch=1573-step=786500-val_mos=3.7612.ckpt",'
+        ' "epoch": 1573, "exported": "2026-11-16T20:15:00+00:00"}}',
+    )
+    _write(kasia / "export" / "pl_PL-kasia_glos_2-medium.onnx")
+    _write(kasia / "export" / "pl_PL-kasia_glos_2-medium.onnx.json", "{}")
     # imported, not trained yet
     tomek = voices / "tomek"
     config_mod.save(tomek, config_mod.VoiceConfig(name="tomek", workflow="import"))

@@ -17,7 +17,10 @@ Potrzebny jest wytrenowany głos: [Wytrenuj głos](guide-train.md).
 4. W części **<span class="ui">Wyeksportowane pliki</span>** pojawią się dwa pliki:
     - `pl_PL-<nazwa>-medium.onnx` – sam głos (ok. 60 MB);
     - `pl_PL-<nazwa>-medium.onnx.json` – jego ustawienia (kilka kB).
-5. Kliknij każdą nazwę, żeby pobrać plik.
+5. Kliknij każdą nazwę, żeby pobrać plik. Pod nazwami widać, z której epoki i z którego checkpointu
+   model wyeksportowano (np. `Epoka 3093 · val_mos 3,589 · version_1/epoch=3093-…ckpt`).
+6. Wyeksportowałeś zły checkpoint? Zaznacz model i kliknij **Usuń zaznaczone**. Znikają oba jego
+   pliki; checkpoint zostaje, więc możesz go wyeksportować ponownie.
 
 Nazwa pliku pochodzi z nazwy pliku Piper głosu. Zmienisz ją w <span class="ui">Ustawienia głosu</span>
 → <span class="ui">Nazwa i plik Piper</span>, a potem wyeksportujesz jeszcze raz. Na maszynie pliki

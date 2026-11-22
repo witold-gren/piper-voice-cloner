@@ -18,6 +18,7 @@ export const DOCS = {
   filter: "path-clone#filter",
   import: "path-import",
   train: "training",
+  score: "training#score",
   export: "export",
   base: "base-model",
   queue: "training#queue",

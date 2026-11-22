@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field, ValidationError
 import yaml
 
 from .. import config as config_mod, dataset_quality, ha, power, train as train_mod
+from ..dataset import read_metadata
 from ..jobs import JobManager
 from . import api, service
 from .steps import checkpoint_list, rel
@@ -38,6 +39,11 @@ class BasePrepare(BaseModel):
 
 class BaseScore(BaseModel):
     sample: int = Field(300, ge=0)
+
+
+class Prune(BaseModel):
+    below: float | None = Field(None, gt=0, lt=5)
+    keep_best: int | None = Field(None, ge=1)
 
 
 class BaseTrain(BaseModel):
@@ -279,6 +285,87 @@ def add_settings_routes(app: FastAPI, root: Path, need_voice, start, error) -> M
             raise error("base_no_dataset")
         return start("base-score", "", ["base", "score", "--sample", str(run.sample)], slot="side")
 
+    # --- recordings of a voice: their UTMOS, kept in dataset/utmos.json ---------------------------
+
+    @app.get("/api/voices/{name}/score")
+    def voice_score(name: str):
+        need_voice(name)
+        dataset = service.voice_dir(root, name) / "dataset"
+        report = dataset_quality.current(dataset_quality.load(dataset), dataset)
+        summary = None
+        if report and report.get("scores"):
+            summary = dataset_quality.summary(report) | {"texts": report.get("texts", {})}
+            summary["created"] = report.get("created")
+        has_dataset = (dataset / "metadata.csv").is_file()
+        return {
+            "dataset": has_dataset,
+            "clips": len(read_metadata(dataset / "metadata.csv")) if has_dataset else 0,
+            "target": dataset_quality.TARGET,
+            "pruned": sorted(p.name for p in dataset.glob("pruned-*.csv")),
+            "score": score_payload(root, summary, dataset / "wav"),
+            # every score of the clips in the dataset, low to high: the page works out what a level keeps
+            "values": sorted(round(v, 3) for v in (report or {}).get("scores", {}).values()),
+        }
+
+    @app.get("/api/voices/{name}/clips")
+    def voice_clips(
+        name: str,
+        where: str = "dataset",
+        below: float | None = None,
+        order: str = "asc",
+        offset: int = 0,
+        limit: int = 100,
+    ):
+        """The scored clips one page at a time: in the dataset now or taken out of it (where=out)."""
+        need_voice(name)
+        if where not in ("dataset", "out") or order not in ("asc", "desc"):
+            raise error("clips_bad_query")
+        dataset = service.voice_dir(root, name) / "dataset"
+        report = dataset_quality.load(dataset) or {}
+        lines = read_metadata(dataset / "metadata.csv") if (dataset / "metadata.csv").is_file() else []
+        ids = {u.id for u in lines}
+        scores = report.get("scores", {})
+        # the text as metadata.csv has it now, else as it was when scored (a clip taken out)
+        texts = report.get("texts", {}) | {u.id: u.text for u in lines}
+        found = [
+            (clip, score)
+            for clip, score in scores.items()
+            if (clip in ids) == (where == "dataset") and (below is None or score < below)
+        ]
+        found.sort(key=lambda item: (item[1], item[0]), reverse=order == "desc")
+        page = found[max(offset, 0) : max(offset, 0) + min(max(limit, 1), 500)]
+        wav = dataset / "wav"
+        return {
+            "total": len(found),
+            "unscored": len(ids - scores.keys()) if where == "dataset" else 0,
+            "clips": [
+                {
+                    "id": clip,
+                    "score": score,
+                    "text": texts.get(clip, ""),
+                    "url": rel(root, wav / f"{clip}.wav") if (wav / f"{clip}.wav").is_file() else None,
+                }
+                for clip, score in page
+            ],
+        }
+
+    @app.post("/api/voices/{name}/score")
+    def voice_score_run(name: str, run: BaseScore):
+        need_voice(name)
+        if not (service.voice_dir(root, name) / "dataset" / "metadata.csv").is_file():
+            raise error("train_no_dataset")
+        return start("score", name, ["score", name, "--sample", str(run.sample)], slot="side")
+
+    @app.post("/api/voices/{name}/prune")
+    def voice_prune(name: str, run: Prune):
+        need_voice(name)
+        if (run.below is None) == (run.keep_best is None):
+            raise error("prune_choose")
+        args = ["prune", name] + (
+            ["--below", str(run.below)] if run.below is not None else ["--keep-best", str(run.keep_best)]
+        )
+        return start("prune", name, args)
+
     @app.post("/api/base/train")
     def base_train(run: BaseTrain):
         if run.quality not in ("medium", "high"):
@@ -454,10 +541,11 @@ def add_settings_routes(app: FastAPI, root: Path, need_voice, start, error) -> M
     return machine
 
 
-def score_payload(root: Path, report: dict | None) -> dict | None:
+def score_payload(root: Path, report: dict | None, wav: Path | None = None) -> dict | None:
+    """The numbers of a scoring for the page (the base's clips, or the clips in `wav` of a voice)."""
     if report is None:
         return None
-    wav = service.base_dataset_dir(root) / "wav"
+    wav = wav or service.base_dataset_dir(root) / "wav"
 
     def clips(items):
         return [
@@ -477,6 +565,8 @@ def score_payload(root: Path, report: dict | None) -> dict | None:
         "p90": report["p90"],
         "good": report["good"],
         "good_level": dataset_quality.GOOD,
+        "below": report.get("below", {}),
+        "created": report.get("created"),
         "worst": clips(report["worst"]),
         "best": clips(report["best"]),
     }

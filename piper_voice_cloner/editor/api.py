@@ -14,8 +14,8 @@ from ..runner import STOPPED_CODES
 from . import service
 
 # the steps of each way to a voice, in order (keys match service.steps and the CLI commands)
-CLONE_STEPS = ("reference", "corpus", "audition", "synthesize", "filter", "train", "export")
-IMPORT_STEPS = ("import", "train", "export")
+CLONE_STEPS = ("reference", "corpus", "audition", "synthesize", "filter", "score", "train", "export")
+IMPORT_STEPS = ("import", "score", "train", "export")
 IMPORT_REPORT = "import_report.csv"
 
 

@@ -21,6 +21,7 @@ import torch
 UTMOS_REPO = "tarepan/SpeechMOS:v1.2.0"
 UTMOS_MODEL = "utmos22_strong"
 REPORT_EVERY = 10
+SAVE_EVERY = 100  # clips between two saves of the scores so far
 MIN_FREE_GPU = 2 * 1024**3  # bytes; a training run may hold almost all of the card
 
 
@@ -45,20 +46,33 @@ def read_wav(path: str) -> tuple[np.ndarray, int]:
     return audio, rate
 
 
+def save(out_file: str, scores: dict[str, float]) -> None:
+    """Written whole each time (a new file moved in place): a stop never leaves half a file."""
+    part = Path(out_file + ".part")
+    part.write_text(json.dumps(scores), encoding="utf-8")
+    part.replace(out_file)
+
+
 def main(list_file: str, out_file: str) -> None:
     files = [line for line in Path(list_file).read_text(encoding="utf-8").splitlines() if line]
     device = pick_device()
     print(f"UTMOS on {device}", flush=True)
     model = torch.hub.load(UTMOS_REPO, UTMOS_MODEL, trust_repo=True).to(device).eval()
     scores: dict[str, float] = {}
-    for done, path in enumerate(files, 1):
-        audio, rate = read_wav(path)
-        with torch.inference_mode():
-            wave_in = torch.from_numpy(audio).unsqueeze(0).to(device)
-            scores[path] = round(float(model(wave_in, rate).item()), 4)
-        if done % REPORT_EVERY == 0 or done == len(files):
-            print(f"scored {done}/{len(files)}", flush=True)
-    Path(out_file).write_text(json.dumps(scores), encoding="utf-8")
+    try:
+        for done, path in enumerate(files, 1):
+            audio, rate = read_wav(path)
+            with torch.inference_mode():
+                wave_in = torch.from_numpy(audio).unsqueeze(0).to(device)
+                scores[path] = round(float(model(wave_in, rate).item()), 4)
+            if done % REPORT_EVERY == 0 or done == len(files):
+                print(f"scored {done}/{len(files)}", flush=True)
+            if done % SAVE_EVERY == 0:
+                save(out_file, scores)  # a stop or a crash keeps what is scored so far
+    except KeyboardInterrupt:
+        save(out_file, scores)
+        sys.exit(130)
+    save(out_file, scores)
 
 
 if __name__ == "__main__":

@@ -156,7 +156,7 @@ export const LESSON_STRINGS = {
     lesson_start_over_fresh_title: "Start over",
     lesson_start_over_fresh_text: "It asks first, then trains from the base (hours). From now on Resume continues the new training. Start it yourself when ready.",
     lesson_start_over_runs_title: "Which training to show",
-    lesson_start_over_runs_text: "Above the chart: the current training or an earlier one, with its base, epochs and best val_mos. The chart and the listening show the one chosen; compare them by ear.",
+    lesson_start_over_runs_text: "Above the chart: the current training or an earlier one, with its base, epochs and best val_mos. The chart and the listening show the one chosen; compare them by ear. With an earlier one chosen, “Train this one further” goes back to it: a new training from its newest checkpoint, and the current one is kept too.",
     lesson_start_over_back_title: "Back to the old one",
     lesson_start_over_back_text: "Liked the old one more? Export its checkpoint from this list (version_0) in Export: nothing has to be trained again.",
 
@@ -460,7 +460,7 @@ export const LESSON_STRINGS = {
     lesson_start_over_fresh_title: "Zacznij od nowa",
     lesson_start_over_fresh_text: "Najpierw pyta, potem trenuje od bazy (godziny). Od tej chwili „Wznów trening” kontynuuje nowy trening. Uruchom, gdy jesteś gotów.",
     lesson_start_over_runs_title: "Który trening pokazać",
-    lesson_start_over_runs_text: "Nad wykresem: obecny trening albo wcześniejszy, z jego bazą, epokami i najlepszym val_mos. Wykres i odsłuch pokazują wybrany; porównaj je na ucho.",
+    lesson_start_over_runs_text: "Nad wykresem: obecny trening albo wcześniejszy, z jego bazą, epokami i najlepszym val_mos. Wykres i odsłuch pokazują wybrany; porównaj je na ucho. Gdy wybierzesz wcześniejszy, „Dotrenuj ten trening” wraca do niego: nowy trening od jego najnowszego checkpointu, a obecny też zostaje.",
     lesson_start_over_back_title: "Powrót do starego",
     lesson_start_over_back_text: "Stary podobał się bardziej? Wyeksportuj jego checkpoint z tej listy (version_0) w kroku Eksport: nic nie trzeba trenować od nowa.",
 

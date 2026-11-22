@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+import statistics
 import unicodedata
 
 import yaml
@@ -194,6 +195,19 @@ def exports(directory: Path) -> list[Path]:
     return sorted(export_dir.glob("*.onnx*")) if export_dir.is_dir() else []
 
 
+def _score_step(dataset: Path) -> Step:
+    """Done once clips are scored: the median, and how many of all when not every clip is."""
+    report = dataset_quality.current(dataset_quality.load(dataset), dataset)
+    scores = list((report or {}).get("scores", {}).values())
+    if not scores:
+        return Step("score", False, "")
+    median = statistics.median(scores)
+    total = report.get("total", len(scores))
+    return Step(
+        "score", True, f"{median:.2f}" + ("" if len(scores) >= total else f" · {len(scores)}/{total}")
+    )
+
+
 def steps(root: Path, name: str) -> list[Step]:
     directory = voice_dir(root, name)
     cfg = load_config(root, name)
@@ -217,6 +231,7 @@ def steps(root: Path, name: str) -> list[Step]:
         Step("audition", (directory / "audition" / audition.RESULTS).is_file(), ""),
         Step("synthesize", raw > 0, f"{raw} / {prompts}" if raw else ""),
         Step("filter", dataset > 0, f"{dataset} / {cfg.target_clips}" if dataset else ""),
+        _score_step(directory / "dataset"),
         Step("train", bool(ckpts), str(len(ckpts)) if ckpts else ""),
         Step(
             "export",
@@ -454,7 +469,7 @@ def base_checkpoint_choices(root: Path) -> list[tuple[str, str]]:
 
 def base_score(root: Path) -> dict | None:
     """Summary of the last UTMOS rating of the base recordings, or None."""
-    report = dataset_quality.load(base_dataset_dir(root))
+    report = dataset_quality.current(dataset_quality.load(base_dataset_dir(root)), base_dataset_dir(root))
     return dataset_quality.summary(report) | {"texts": report.get("texts", {})} if report else None
 
 

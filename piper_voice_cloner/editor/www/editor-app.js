@@ -14,7 +14,7 @@ import { LESSONS } from "./lessons.js";
 
 const THEMES = ["auto", "light", "dark"];
 // steps a voice can skip: not counted in "6/7" until done, never the next step
-const OPTIONAL_STEPS = new Set(["audition"]);
+const OPTIONAL_STEPS = new Set(["audition", "score"]);
 const counted = (steps) => steps.filter((step) => step.done || !OPTIONAL_STEPS.has(step.key));
 const THEME_ICONS = { auto: "mdi:theme-light-dark", light: "mdi:weather-sunny", dark: "mdi:weather-night" };
 // remembered per browser (<app>-studio-*); a private window may refuse it: then nothing is kept
@@ -36,6 +36,7 @@ export const STEP_ICONS = {
   synthesize: "mdi:waveform",
   filter: "mdi:filter-outline",
   import: "mdi:folder-download-outline",
+  score: "mdi:star-check-outline",
   train: "mdi:school-outline",
   export: "mdi:export",
 };

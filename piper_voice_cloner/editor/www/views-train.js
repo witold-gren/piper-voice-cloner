@@ -179,7 +179,11 @@ class PvcStepTrain extends StepView {
     const file = String(base ?? "").split("/").pop();
     if (file === "pl-scratch.ckpt") return "bazowy-pl";
     if (file.startsWith("en_US-lessac")) return "lessac";
-    return file || "—";
+    // a checkpoint of this voice (an earlier run trained further): its epoch, or version_N/last.ckpt
+    const epoch = /epoch=(\d+)/.exec(file);
+    if (epoch) return this._t("train_pick_checkpoint", { epoch: epoch[1] });
+    const version = /(version_\d+)\/checkpoints\//.exec(String(base ?? ""));
+    return version ? `${version[1]}/${file}` : file || "—";
   }
 
   /** Above the chart when there are earlier trainings (kept whole after "Start over"). */
@@ -187,6 +191,7 @@ class PvcStepTrain extends StepView {
     const runs = this._chart?.runs ?? [];
     if (!runs.length) return nothing;
     const mos = (value) => (value == null ? "—" : number(value, this.language, 2));
+    const chosen = runs.find((run) => run.id === this._trainRun);
     return html`<label class="field run-pick">
       <span>${this._t("train_pick")}</span>
       <select data-train-run @change=${(event) => this._chooseRun(event.target.value)}>
@@ -196,7 +201,23 @@ class PvcStepTrain extends StepView {
         </option>`)}
       </select>
       <span class="hint">${this._t("train_pick_hint")}</span>
-    </label>`;
+    </label>
+    ${chosen
+      ? html`<div class="row run-continue">
+          <span class="hint grow">${this._t("train_continue_hint", { last: chosen.last_epoch ?? "—" })}</span>
+          <button data-train-continue ?disabled=${this.busy || this.running || !this.data?.clips} @click=${() => this._continueRun(chosen)}>
+            <pvc-icon icon="mdi:history"></pvc-icon>${this._t("train_continue")}
+          </button>
+        </div>`
+      : nothing}`;
+  }
+
+  /** An earlier run trained further: a new run from its newest checkpoint; the current one is kept whole. */
+  async _continueRun(run) {
+    const text = this._t("train_continue_confirm", { last: run.last_epoch ?? "—", epochs: Number(this._epochs) });
+    if (!window.confirm(text)) return;
+    const job = await this._run(true, run.id);
+    if (job) await this._chooseRun("");  // the run going on is now the current one
   }
 
   /** A new run from the chosen base; the earlier checkpoints stay on disk (and in the list). */
@@ -205,11 +226,12 @@ class PvcStepTrain extends StepView {
     return this._run(true);
   }
 
-  _run(fresh = false) {
+  _run(fresh = false, continueRun = "") {
     return this.run(`/api/voices/${encodeURIComponent(this.voice.name)}/train`, {
       base: this._base,
       epochs: Number(this._epochs),
       fresh,
+      continue_run: continueRun,
       poweroff: Boolean(this.renderRoot.querySelector("[data-train-poweroff]")?.checked),
     });
   }
@@ -312,7 +334,54 @@ customElements.define("pvc-step-train", PvcStepTrain);
 // --- export ------------------------------------------------------------------------------------------
 
 class PvcStepExport extends StepView {
-  static properties = { ...StepView.properties, _checkpoint: { state: true } };
+  static properties = { ...StepView.properties, _checkpoint: { state: true }, _picked: { state: true } };
+
+  constructor() {
+    super();
+    this._picked = new Set();
+  }
+
+  static styles = [
+    StepView.styles,
+    css`
+      .models { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+      .models li { display: flex; gap: 10px; align-items: flex-start; }
+      .models input { margin-top: 3px; }
+      .models .source { color: var(--muted); font-size: 0.9em; }
+      .models + .row { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+    `,
+  ];
+
+  _toggle(name, on) {
+    const picked = new Set(this._picked);
+    if (on) picked.add(name);
+    else picked.delete(name);
+    this._picked = picked;
+  }
+
+  async _delete() {
+    const models = [...this._picked];
+    if (!models.length || !window.confirm(this._t("export_delete_confirm", { count: models.length, names: models.join("\n") }))) return;
+    this.busy = true;
+    try {
+      await call(`/api/voices/${encodeURIComponent(this.voice.name)}/export/delete`, { method: "POST", body: { models } });
+      this._picked = new Set();
+    } catch (err) {
+      this.error = err.message;
+    } finally {
+      this.busy = false;
+      this._reload();
+    }
+  }
+
+  _source(model) {
+    if (model.epoch == null && !model.checkpoint) return this._t("export_source_unknown");
+    const parts = [];
+    if (model.epoch != null) parts.push(`${this._t("chart_epoch")} ${model.epoch}`);
+    if (model.metric) parts.push(`${model.metric} ${number(model.value, this.language, 3)}`);
+    if (model.checkpoint) parts.push(model.checkpoint);
+    return parts.join(" · ");
+  }
 
   load() {
     return get(`/api/voices/${encodeURIComponent(this.voice.name)}/export`);
@@ -342,8 +411,25 @@ class PvcStepExport extends StepView {
       </section>
       <section class="card" data-export-files>
         <h3>${this._t("export_files")}</h3>
-        ${data?.files?.length
-          ? html`<ul>${data.files.map((file) => html`<li><a class="file" href=${fileUrl(file.url)} download>${file.name}</a> · ${bytes(file.size, this.language)}</li>`)}</ul>`
+        ${data?.models?.length
+          ? html`<ul class="models">
+                ${data.models.map(
+                  (model) => html`<li data-export-model=${model.name}>
+                    <input type="checkbox" data-export-pick=${model.name} aria-label=${this._t("export_pick", { name: model.name })}
+                      .checked=${this._picked.has(model.name)} @change=${(event) => this._toggle(model.name, event.target.checked)} />
+                    <div>
+                      <div>${model.files.map((file, index) => html`${index ? " · " : ""}<a class="file" href=${fileUrl(file.url)} download>${file.name}</a>`)}
+                        · ${bytes(model.size, this.language)}</div>
+                      <div class="source" data-export-source>${this._source(model)}</div>
+                    </div>
+                  </li>`,
+                )}
+              </ul>
+              <div class="row">
+                <button data-export-delete ?disabled=${this.busy || this.running || !this._picked.size} @click=${() => this._delete()}>
+                  <pvc-icon icon="mdi:delete-outline"></pvc-icon>${this._t("export_delete", { count: this._picked.size })}
+                </button>
+              </div>`
           : html`<p class="muted">${this._t("export_none")}</p>`}
       </section>
     `;
@@ -396,11 +482,13 @@ class PvcJobsQueue extends StepView {
           <label class="field"><span>${this._t("train_epochs")}</span>
             <input type="number" min="1" data-queue-epochs .value=${String(this._epochs)} @input=${(event) => (this._epochs = event.target.value)} /></label>
         </div>
+        <label class="check" style="margin-top: 12px"><input type="checkbox" data-queue-fresh />${this._t("queue_fresh")}</label>
+        <span class="hint">${this._t("queue_fresh_hint")}</span>
         <div class="row" style="margin-top: 12px">
           ${this.state?.can_power_off ? html`<label class="check"><input type="checkbox" data-queue-poweroff />${this._t("queue_poweroff")}</label>` : nothing}
           <span class="grow"></span>
           <button class="primary" data-run-queue ?disabled=${this.busy || this.running || !this._picked.length}
-            @click=${() => this.run("/api/queue", { voices: this._picked, epochs: Number(this._epochs), base: this._base, poweroff: Boolean(this.renderRoot.querySelector("[data-queue-poweroff]")?.checked) })}>
+            @click=${() => this.run("/api/queue", { voices: this._picked, epochs: Number(this._epochs), base: this._base, fresh: Boolean(this.renderRoot.querySelector("[data-queue-fresh]")?.checked), poweroff: Boolean(this.renderRoot.querySelector("[data-queue-poweroff]")?.checked) })}>
             <pvc-icon icon="mdi:play"></pvc-icon>${this._t("queue_run")}
           </button>
         </div>

@@ -23,7 +23,9 @@ METRIC_IN_NAME = re.compile(r"(val_mos|val_mel)=(\d+(?:\.\d+)?)")
 IMPORT_DIR = "import"  # <root>/import/<folder>: where own recordings are put for the import
 LOG_NAME = re.compile(r"^(\d{8}-\d{6})-(.+)\.log$")
 # job kinds as the job manager names logs (<stamp>-<kind>[-<voice>].log), longest first
-JOB_KINDS = "reference corpus sentences audition synthesize filter import train train-queue export"
+JOB_KINDS = (
+    "reference corpus sentences audition synthesize filter import train train-queue export score prune"
+)
 BASE_KINDS = "base-prepare base-train base-select base-export base-score"
 KINDS = sorted(f"{JOB_KINDS} {BASE_KINDS}".split(), key=len, reverse=True)
 SAMPLE_PLAYERS = 6
@@ -316,17 +318,110 @@ def chart_view(root: Path, target: str, run_id: str | None = None) -> dict:
 # --- export --------------------------------------------------------------------------------------
 
 
+EXPORT_LOG_CHECKPOINT = re.compile(r"--checkpoint (\S+\.ckpt)")
+EXPORT_LOG_FILE = re.compile(r"^Exported (\S+\.onnx) ", re.M)
+
+
 def export_view(root: Path, name: str) -> dict:
     cfg = service.load_config(root, name)
     files = service.exports(service.voice_dir(root, name))
     return {
         "checkpoints": checkpoint_list(root, name),
         "files": [{"name": p.name, "url": rel(root, p), "size": p.stat().st_size} for p in files],
+        "models": export_models(root, name),
         # the name the next export gets (a taken name gets the next number, nothing is overwritten)
         "stem": train_mod.free_export_path(
             service.voice_dir(root, name) / "export", cfg.file_stem(cfg.language)
         ).name.removesuffix(".onnx"),
     }
+
+
+def export_models(root: Path, name: str) -> list[dict]:
+    """Each exported model (.onnx with its .onnx.json) and the checkpoint it was made from.
+
+    The source is in the .onnx.json since exports record it; an older export finds it in the log of
+    the export job that wrote it. Unknown when neither has it (an export of the default last.ckpt).
+    """
+    folder = service.voice_dir(root, name) / "export"
+    if not folder.is_dir():
+        return []
+    from_logs = None
+    models = []
+    for onnx in sorted(folder.glob("*.onnx")):
+        config = onnx.with_name(onnx.name + ".json")
+        source = _export_source(config)
+        if source is None:
+            if from_logs is None:
+                from_logs = _export_sources_from_logs(root, name)
+            source = from_logs.get(onnx.name, {})
+        checkpoint = source.get("checkpoint", "")
+        metric = METRIC_IN_NAME.search(checkpoint)
+        models.append(
+            {
+                "name": onnx.name,
+                "size": onnx.stat().st_size,
+                "files": [
+                    {"name": p.name, "url": rel(root, p), "size": p.stat().st_size}
+                    for p in (onnx, config)
+                    if p.is_file()
+                ],
+                "checkpoint": checkpoint or None,
+                "epoch": source.get("epoch"),
+                "metric": metric.group(1) if metric else None,
+                "value": float(metric.group(2)) if metric else None,
+                "exported": source.get("exported")
+                or datetime.fromtimestamp(onnx.stat().st_mtime).isoformat(timespec="seconds"),
+            }
+        )
+    return models
+
+
+def _export_source(config: Path) -> dict | None:
+    try:
+        source = json.loads(config.read_text(encoding="utf-8")).get(train_mod.EXPORT_SOURCE_KEY)
+    except (OSError, ValueError, AttributeError):
+        return None
+    return source if isinstance(source, dict) else None
+
+
+def _export_sources_from_logs(root: Path, name: str) -> dict[str, dict]:
+    """File name -> {checkpoint, epoch} from the logs of earlier export jobs of this voice."""
+    found: dict[str, dict] = {}
+    for log in sorted((root / "jobs").glob(f"*-export-{name}.log")):
+        try:
+            text = log.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        checkpoint = EXPORT_LOG_CHECKPOINT.search(text.split("\n", 1)[0])
+        if not checkpoint:
+            continue  # the default checkpoint: the log does not say which
+        path = Path(checkpoint.group(1))
+        epoch = EPOCH_IN_NAME.search(path.name)
+        for exported in EXPORT_LOG_FILE.findall(text):
+            found[Path(exported).name] = {
+                "checkpoint": f"{path.parents[1].name}/{path.name}",
+                "epoch": int(epoch.group(1)) if epoch else None,
+            }
+    return found
+
+
+def delete_exports(root: Path, name: str, models: list[str]) -> list[str]:
+    """Delete exported models (each .onnx with its .onnx.json); the names removed.
+
+    Only plain .onnx names straight in the export folder; any other name is refused before anything
+    is removed. A model can be exported again from its checkpoint.
+    """
+    folder = service.voice_dir(root, name) / "export"
+    targets = []
+    for model in models:
+        onnx = folder / model
+        if Path(model).name != model or not model.endswith(".onnx") or not onnx.is_file():
+            raise ValueError(model)
+        targets.append(onnx)
+    for onnx in targets:
+        onnx.unlink()
+        onnx.with_name(onnx.name + ".json").unlink(missing_ok=True)
+    return [p.name for p in targets]
 
 
 # --- job history ---------------------------------------------------------------------------------

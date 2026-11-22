@@ -12,7 +12,7 @@ import pytest
 pytest.importorskip("fastapi")
 from fastapi.testclient import TestClient
 
-from piper_voice_cloner import config as config_mod
+from piper_voice_cloner import config as config_mod, train as train_mod
 from piper_voice_cloner.editor import steps
 from piper_voice_cloner.editor.server import create_app
 
@@ -155,6 +155,30 @@ def test_start_over_trains_from_the_base_instead_of_resuming(setup):
     assert last_call(root, app) == ["train", "kasia", "--base", "lessac", "--no-resume"]
 
 
+def test_an_earlier_training_is_trained_further_from_its_checkpoint(setup):
+    root, app, client = setup
+    directory = voice(root, "kasia", clips=1500)
+    old = checkpoint(directory, "epoch=1608-val_mel=0.3539.ckpt")
+    kept = directory / "train" / "runs" / "0"
+    kept.mkdir(parents=True)
+    (kept / "run.json").write_text('{"start_epoch": 1113, "first_version": 0, "last_version": 0}')
+    body = {"base": "lessac", "epochs": 300, "continue_run": "0"}
+    client.post("/api/voices/kasia/train", json=body)
+    assert last_call(root, app) == ["train", "kasia", "--base", f"ckpt:{old}", "--no-resume"]
+    assert config_mod.load(directory).train.max_epochs == 300
+
+
+def test_training_further_an_unknown_or_empty_earlier_run_is_refused(setup):
+    root, _app, client = setup
+    directory = voice(root, "kasia", clips=1500)
+    body = {"base": "lessac", "epochs": 10, "continue_run": "5"}
+    answer = client.post("/api/voices/kasia/train", json=body)
+    assert answer.status_code == 404 and answer.json()["error"] == "unknown_run"
+    (directory / "train" / "runs" / "5").mkdir(parents=True)
+    answer = client.post("/api/voices/kasia/train", json=body)
+    assert answer.status_code == 400 and answer.json()["error"] == "run_no_checkpoint"
+
+
 def test_training_without_a_dataset_is_refused(setup):
     root, _app, client = setup
     voice(root, "pusty", clips=0)
@@ -212,6 +236,8 @@ def test_queue_runs_the_picked_voices_in_order(setup):
     body = {"voices": ["tomek", "kasia"], "epochs": 500, "base": "lessac"}
     client.post("/api/queue", json=body)
     assert last_call(root, app) == ["train-queue", "tomek", "kasia", "--epochs", "500", "--base", "lessac"]
+    client.post("/api/queue", json={**body, "fresh": True})
+    assert last_call(root, app)[-1] == "--fresh"
     assert client.post("/api/queue", json={**body, "voices": []}).json()["error"] == "queue_empty"
     assert client.post("/api/queue", json={**body, "voices": ["nobody"]}).status_code == 404
 
@@ -252,6 +278,9 @@ def test_export_lists_checkpoints_and_files_and_runs(setup):
             "size": 2000,
         }
     ]
+    [model] = view["models"]
+    assert model["name"] == "pl_PL-kasia_glos-medium.onnx" and model["size"] == 2000
+    assert model["epoch"] is None and model["checkpoint"] is None  # no record, no log
     client.post("/api/voices/kasia/export", json={"checkpoint": str(best)})
     assert last_call(root, app) == ["export", "kasia", "--checkpoint", str(best)]
 
@@ -272,3 +301,65 @@ def test_history_lists_logs_with_their_kind_and_voice(setup):
     ]
     assert "queue 1/2" in client.get("/api/history/20261116-101500-train-queue.log").json()["log"]
     assert client.get("/api/history/..%2Fcalls.json").status_code == 404
+
+
+def _exported(directory, stem, source=None):
+    folder = directory / "export"
+    folder.mkdir(exist_ok=True)
+    (folder / f"{stem}.onnx").write_bytes(b"x" * 10)
+    config = {} if source is None else {train_mod.EXPORT_SOURCE_KEY: source}
+    (folder / f"{stem}.onnx.json").write_text(json.dumps(config), encoding="utf-8")
+
+
+def test_export_models_show_their_epoch_from_the_config_or_the_log(setup):
+    root, _app, client = setup
+    directory = voice(root, "kasia")
+    _exported(
+        directory,
+        "pl_PL-kasia-medium",
+        {"checkpoint": "version_1/epoch=3093-val_mos=3.5894.ckpt", "epoch": 3093},
+    )
+    _exported(directory, "pl_PL-kasia_2-medium")  # older export: the source is in its job log
+    _exported(directory, "pl_PL-kasia_3-medium")  # default checkpoint: unknown
+    jobs = root / "jobs"
+    jobs.mkdir()
+    ckpt = "/data/voices/kasia/train/lightning_logs/version_0/checkpoints/epoch=2100-val_mos=3.4100.ckpt"
+    (jobs / "20261122-211616-export-kasia.log").write_text(
+        f"$ pvc --root /data export kasia --checkpoint {ckpt}\n"
+        "INFO something\n"
+        "Exported /data/voices/kasia/export/pl_PL-kasia_2-medium.onnx and /data/x.onnx.json\n",
+        encoding="utf-8",
+    )
+    (jobs / "20261122-211700-export-kasia.log").write_text(
+        "$ pvc --root /data export kasia\n"
+        "Exported /data/voices/kasia/export/pl_PL-kasia_3-medium.onnx and x\n",
+        encoding="utf-8",
+    )
+    models = {m["name"]: m for m in client.get("/api/voices/kasia/export").json()["models"]}
+    first = models["pl_PL-kasia-medium.onnx"]
+    assert (first["epoch"], first["metric"], first["value"]) == (3093, "val_mos", 3.5894)
+    assert [f["name"] for f in first["files"]] == ["pl_PL-kasia-medium.onnx", "pl_PL-kasia-medium.onnx.json"]
+    second = models["pl_PL-kasia_2-medium.onnx"]
+    assert second["epoch"] == 2100 and second["checkpoint"] == "version_0/epoch=2100-val_mos=3.4100.ckpt"
+    assert models["pl_PL-kasia_3-medium.onnx"]["epoch"] is None
+    assert models["pl_PL-kasia_3-medium.onnx"]["exported"]  # the file time at least
+
+
+def test_export_delete_removes_the_model_with_its_config(setup):
+    root, _app, client = setup
+    directory = voice(root, "kasia")
+    _exported(directory, "pl_PL-kasia-medium")
+    _exported(directory, "pl_PL-kasia_2-medium")
+    url = "/api/voices/kasia/export/delete"
+    assert client.post(url, json={"models": []}).json()["error"] == "export_delete_none"
+    for bad in ("../voice.yaml", "pl_PL-kasia-medium.onnx.json", "nope.onnx"):
+        answer = client.post(url, json={"models": ["pl_PL-kasia-medium.onnx", bad]})
+        assert answer.status_code == 404 and answer.json()["error"] == "export_unknown"
+    assert (directory / "export" / "pl_PL-kasia-medium.onnx").is_file()  # nothing removed on a refusal
+    answer = client.post(url, json={"models": ["pl_PL-kasia_2-medium.onnx"]}).json()
+    assert answer == {"deleted": ["pl_PL-kasia_2-medium.onnx"]}
+    assert sorted(p.name for p in (directory / "export").iterdir()) == [
+        "pl_PL-kasia-medium.onnx",
+        "pl_PL-kasia-medium.onnx.json",
+    ]
+    assert client.post("/api/voices/nobody/export/delete", json={"models": ["a.onnx"]}).status_code == 404

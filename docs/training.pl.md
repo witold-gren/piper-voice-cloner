@@ -107,6 +107,32 @@ poprawność wymowy.
 - **Ok. 1500 klipów wystarczy.** Więcej pomaga mniej, niż się wydaje, a słabe klipy szkodzą bardziej
   niż ich brak.
 
+### Ocena nagrań (UTMOS) {#score}
+
+Krok <span class="ui">Ocena nagrań</span> każdego głosu ocenia jego nagrania tym samym modelem UTMOS,
+który liczy `val_mos`. Mediana to mniej więcej sufit `val_mos`, a lista najsłabszych nagrań pokazuje,
+czego posłuchać i co ewentualnie usunąć.
+
+- **Ocena jest zapamiętana.** Każdy wynik trafia do `dataset/utmos.json` razem z rozmiarem i czasem
+  zmiany pliku. Kolejna ocena liczy tylko nagrania nowe albo zmienione, resztę bierze z pliku.
+  Z raportu znikają nagrania usunięte z datasetu.
+- **Przerwanie nic nie psuje.** Wyniki zapisują się co 100 nagrań i przy <span class="ui">Zatrzymaj</span>,
+  więc kolejna ocena rusza od miejsca, w którym skończyła.
+- **Liczba nagrań:** 0 ocenia wszystkie. Liczba ocenia tyle losowych, zawsze tych samych.
+- **Poniżej progu:** podsumowanie mówi, ile nagrań ma wynik poniżej 2,5, 3,0 i 3,3.
+- Z wiersza poleceń: `pvc score <głos>` (`--sample 300` dla próbki).
+- **Usuń słabe nagrania** (pod wynikami): usuwa z `dataset/metadata.csv` nagrania z oceną poniżej
+  progu (np. 3,0) albo zostawia tylko N najlepszych (np. 3000 z dużego zbioru). Nic nie jest kasowane:
+  pliki WAV zostają, poprzedni `metadata.csv` trafia do `metadata.before-prune-<czas>.csv`, a lista
+  usuniętych do `pruned-<czas>.csv`. Żeby przywrócić dataset, skopiuj kopię z powrotem jako
+  `metadata.csv`. Gdy zostanie mniej niż ok. 1500 nagrań, edytor pisze, ilu brakuje. Wymaga oceny
+  wszystkich nagrań. Z wiersza poleceń: `pvc prune <głos> --below 3.0` albo `--keep-best 3000`.
+- **Podgląd przed usunięciem:** pod polami od razu widać, ile nagrań zostanie, ile wypadnie i ilu
+  zabraknie do 1500 przy wpisanym progu albo liczbie najlepszych.
+- **Wszystkie ocenione nagrania:** tabela pod spodem pokazuje każde nagranie z oceną i tekstem, w datasecie
+  albo usunięte, najsłabsze albo najlepsze najpierw, opcjonalnie tylko poniżej progu, po 50 na stronę.
+  ▶ odtwarza nagranie.
+
 ### Start i długość
 
 - **Startuj od `bazowy-pl`.** Głos uczy się polskiego szybciej i brzmi naturalniej. Przy 1500 klipach
@@ -135,6 +161,9 @@ poprawność wymowy.
 - **Dysk:** checkpoint ma ok. 800 MB. Trening trzyma do ok. 9 GB na głos plus cache.
 - **Noc:** <span class="ui">Kolejka treningów</span> trenuje kilka głosów po kolei. Zaznacz
   <span class="ui">Wyłącz maszynę po ostatnim głosie</span>, a Home Assistant wyłączy ją po skończeniu.
+  Głos z checkpointami kolejka trenuje dalej od nich. Zaznacz <span class="ui">Zacznij każdy głos od
+  nowa od wybranej bazy</span>, żeby każdy głos zaczął nowy trening od bazy (jak „Zacznij od nowa”;
+  wcześniejsze treningi zostają w całości).
 
 ### Kolejka treningów {#queue}
 

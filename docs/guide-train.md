@@ -136,6 +136,11 @@ Start over deletes and overwrites nothing.
    only the new training, even when it stopped before its first checkpoint.
 6. Liked the old one more? Export its checkpoint from the list (`version_0`). Nothing has to be trained
    again.
+7. Want to go back to the old one and train it further? Choose it in <span class="ui">Training</span>
+   above the chart and click <span class="ui">Train this one further</span>. A new training starts from
+   the old one's newest checkpoint and the epochs go on from its number (e.g. from 1612).
+   <span class="ui">Epochs</span> says how many to add. The current training goes whole to `train/runs/`,
+   like on every Start over, so you can come back to it as well.
 
 The lesson **Start over, keep the old training** (⚙ → <span class="ui">Lessons</span>) shows the same.
 

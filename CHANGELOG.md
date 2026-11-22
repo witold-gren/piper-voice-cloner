@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.4.0 (2026-11-22)
+
+Recordings rated and cleaned before training: every clip gets a UTMOS score (kept, never rated twice),
+weak ones leave the dataset with a live preview of what stays, and every score is in a table to listen
+to. An earlier training can be trained further, the queue can start every voice over, and the export
+shows the epoch of each model and deletes a wrong one.
+
+Added:
+- **Train an earlier training further.** With an earlier training chosen above the chart, “Train this
+  one further” starts a new training from its newest checkpoint (the epochs go on from its number); the
+  current one is kept whole in `train/runs/` like on every start over. API: `continue_run` in
+  `POST /api/voices/<name>/train`.
+- **Recordings rating of every voice** (new optional step, `pvc score <voice>`): UTMOS of every
+  recording, the same predictor as val_mos, with the clips under 2.5 / 3.0 / 3.3 counted. Every score
+  is kept in `dataset/utmos.json` with the size and time of its file, so a later rating only rates the
+  clips new or changed since; scores are saved every 100 clips and on Stop (the base rating keeps its
+  scores the same way; the scores of an earlier base rating are taken over).
+- **Take weak recordings out** (in the rating step, `pvc prune <voice> --below 3.0 | --keep-best N`):
+  weak clips leave metadata.csv only; the WAV files, the metadata.csv before and the list taken out are
+  kept. Says how many clips are missing to about 1500, and before taking anything out it shows live what
+  the level (or the number of best clips) keeps and how many would then be missing.
+- **Every rated recording in a table** (rating step): in the dataset or taken out, weakest or best first,
+  only below the level, 50 a page, each one to listen to.
+- The rating summary counts only the clips in the dataset now; the scores of clips taken out stay in
+  `utmos.json`, so a dataset put back is not rated again.
+- **Export shows the epoch of every exported model** (and its checkpoint, `val_mos`): new exports
+  record it in the `.onnx.json` (key `piper_voice_cloner`, Piper ignores it), older ones find it in the
+  log of the export job.
+- **Delete exported models**: tick them in the export step and “Delete selected” removes the `.onnx`
+  with its `.onnx.json` (API: `POST /api/voices/<name>/export/delete`); the checkpoints stay.
+- **The training queue can start every voice over** from the chosen base (“Start over” for each,
+  `pvc train-queue --fresh`); before, a voice with checkpoints always went on from them.
+
 ## 0.3.0 (2026-11-20)
 
 The editor teaches itself: a tour of the screen and 23 lessons, three of them on good settings

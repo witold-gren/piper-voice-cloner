@@ -108,6 +108,8 @@ def test_base_score_report_with_clips(setup):
         "texts": {"a": "Ala.", "b": "Kot.", "c": "Pies."},
     }
     (dataset / "utmos.json").write_text(json.dumps(report), encoding="utf-8")
+    lines = "".join(f"{clip}|x\n" for clip in "abc") + "".join(f"z{i}|x\n" for i in range(97))
+    (dataset / "metadata.csv").write_text(lines, encoding="utf-8")  # 100 clips, 3 of them scored
     score = client.get("/api/base").json()["score"]
     assert score["count"] == 3 and score["total"] == 100 and score["median"] == 3.5
     assert score["worst"][0] == {"url": "bases/pl-scratch/dataset/wav/a.wav", "text": "2.50 · Ala."}
@@ -274,3 +276,76 @@ def test_with_workflow_changes_or_adds_one_line():
     assert settings.with_workflow("# c\nname: a\nlanguage: pl\n", "import") == (
         "# c\nname: a\nworkflow: import\nlanguage: pl\n"
     )
+
+
+def test_voice_recordings_are_rated_and_the_kept_scores_shown(setup):
+    root, app, client = setup
+    assert client.post("/api/voices/kasia/score", json={"sample": 0}).json()["error"] == "train_no_dataset"
+    dataset = root / "voices" / "kasia" / "dataset"
+    (dataset / "wav").mkdir(parents=True)
+    (dataset / "metadata.csv").write_text("a|Ala.\nb|Kot.\nc|Pies.\n", encoding="utf-8")
+    view = client.get("/api/voices/kasia/score").json()
+    assert view["dataset"] is True and view["score"] is None and view["clips"] == 3
+    job = client.post("/api/voices/kasia/score", json={"sample": 0}).json()
+    assert job["kind"] == "score"
+    assert last_call(root, app, "side") == ["score", "kasia", "--sample", "0"]
+    for clip in ("a", "b", "c"):
+        (dataset / "wav" / f"{clip}.wav").write_bytes(b"RIFF")
+    report = {
+        "total": 3,
+        "scores": {"a": 2.4, "b": 3.1, "c": 4.2},
+        "texts": {"a": "Ala.", "b": "Kot.", "c": "Pies."},
+    }
+    (dataset / "utmos.json").write_text(json.dumps(report), encoding="utf-8")
+    score = client.get("/api/voices/kasia/score").json()["score"]
+    assert score["median"] == 3.1 and score["below"] == {"2.5": 1, "3.0": 1, "3.3": 2}
+    assert score["worst"][0] == {"url": "voices/kasia/dataset/wav/a.wav", "text": "2.40 · Ala."}
+
+
+def test_weak_recordings_are_taken_out_by_a_job(setup):
+    root, app, client = setup
+    dataset = root / "voices" / "kasia" / "dataset"
+    dataset.mkdir(parents=True)
+    (dataset / "metadata.csv").write_text("a|Ala.\nb|Kot.\n", encoding="utf-8")
+    view = client.get("/api/voices/kasia/score").json()
+    assert view["clips"] == 2 and view["target"] == 1500 and view["pruned"] == []
+    assert client.post("/api/voices/kasia/prune", json={}).json()["error"] == "prune_choose"
+    both = {"below": 3.0, "keep_best": 2}
+    assert client.post("/api/voices/kasia/prune", json=both).json()["error"] == "prune_choose"
+    job = client.post("/api/voices/kasia/prune", json={"below": 3.0}).json()
+    assert job["kind"] == "prune" and last_call(root, app) == ["prune", "kasia", "--below", "3.0"]
+    client.post("/api/voices/kasia/prune", json={"keep_best": 3000})
+    assert last_call(root, app) == ["prune", "kasia", "--keep-best", "3000"]
+
+
+def test_every_scored_clip_one_page_at_a_time(setup):
+    root, _app, client = setup
+    dataset = root / "voices" / "kasia" / "dataset"
+    (dataset / "wav").mkdir(parents=True)
+    (dataset / "metadata.csv").write_text("a|Ala.\nb|Kot.\nc|Pies.\nn|Nowe.\n", encoding="utf-8")
+    for clip in ("a", "b", "x"):
+        (dataset / "wav" / f"{clip}.wav").write_bytes(b"RIFF")
+    report = {
+        "scores": {"a": 2.4, "b": 3.6, "c": 2.9, "x": 1.5},  # x was taken out of the dataset
+        "texts": {"b": "Kot.", "x": "Stare."},  # a and c: their text comes from metadata.csv
+    }
+    (dataset / "utmos.json").write_text(json.dumps(report), encoding="utf-8")
+    view = client.get("/api/voices/kasia/score").json()
+    assert view["values"] == [2.4, 2.9, 3.6] and view["clips"] == 4  # n is not scored yet
+    page = client.get("/api/voices/kasia/clips").json()
+    assert (
+        [c["id"] for c in page["clips"]] == ["a", "c", "b"] and page["total"] == 3 and page["unscored"] == 1
+    )
+    assert page["clips"][0] == {
+        "id": "a",
+        "score": 2.4,
+        "text": "Ala.",
+        "url": "voices/kasia/dataset/wav/a.wav",
+    }
+    assert page["clips"][1]["url"] is None  # no file to listen to
+    best = client.get("/api/voices/kasia/clips?order=desc&limit=1&offset=1").json()
+    assert [c["id"] for c in best["clips"]] == ["c"] and best["total"] == 3
+    assert [c["id"] for c in client.get("/api/voices/kasia/clips?below=3.0").json()["clips"]] == ["a", "c"]
+    out = client.get("/api/voices/kasia/clips?where=out").json()
+    assert [c["id"] for c in out["clips"]] == ["x"] and out["clips"][0]["text"] == "Stare."
+    assert client.get("/api/voices/kasia/clips?where=nowhere").json()["error"] == "clips_bad_query"

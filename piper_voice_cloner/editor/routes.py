@@ -9,6 +9,7 @@ import tempfile
 from fastapi import FastAPI, UploadFile
 from pydantic import BaseModel, Field
 
+from .. import train_monitor
 from . import service, steps
 
 
@@ -23,6 +24,7 @@ class TrainRun(BaseModel):
     epochs: int = Field(ge=1)
     poweroff: bool = False
     fresh: bool = False  # start over from the base instead of resuming the voice's last checkpoint
+    continue_run: str = ""  # an earlier run (its id in train/runs/) to train further instead
 
 
 class QueueRun(TrainRun):
@@ -31,6 +33,10 @@ class QueueRun(TrainRun):
 
 class ExportRun(BaseModel):
     checkpoint: str = ""
+
+
+class ExportDelete(BaseModel):
+    models: list[str]
 
 
 def add_step_routes(app: FastAPI, root: Path, need_voice, start, error) -> None:
@@ -77,8 +83,20 @@ def add_step_routes(app: FastAPI, root: Path, need_voice, start, error) -> None:
         need_voice(name)
         if not service.dataset_size(root, name):
             raise error("train_no_dataset")
+        base, fresh = run.base, run.fresh
+        if run.continue_run:
+            # an earlier run trained further: a new run from its newest checkpoint (the epochs go on from
+            # there); the current run is kept whole in runs/ like on every start over
+            work = steps.work_dir(root, f"voice:{name}")
+            try:
+                found = train_monitor.run_last_checkpoint(work, run.continue_run)
+            except ValueError as err:
+                raise error("unknown_run", str(err), status=404) from err
+            if found is None:
+                raise error("run_no_checkpoint")
+            base, fresh = f"ckpt:{found}", True
         service.set_max_epochs(root, name, run.epochs)
-        args = ["train", name, "--base", run.base] + (["--no-resume"] if run.fresh else [])
+        args = ["train", name, "--base", base] + (["--no-resume"] if fresh else [])
         return start("train", name, args, poweroff=run.poweroff)
 
     @app.post("/api/queue")
@@ -88,6 +106,7 @@ def add_step_routes(app: FastAPI, root: Path, need_voice, start, error) -> None:
         for name in run.voices:
             need_voice(name)
         args = ["train-queue", *run.voices, "--epochs", str(run.epochs), "--base", run.base]
+        args += ["--fresh"] if run.fresh else []
         return start("train-queue", "", args, poweroff=run.poweroff)
 
     @app.get("/api/queue")
@@ -136,6 +155,16 @@ def add_step_routes(app: FastAPI, root: Path, need_voice, start, error) -> None:
         need_voice(name)
         args = ["export", name] + (["--checkpoint", run.checkpoint] if run.checkpoint else [])
         return start("export", name, args)
+
+    @app.post("/api/voices/{name}/export/delete")
+    def export_delete(name: str, body: ExportDelete):
+        need_voice(name)
+        if not body.models:
+            raise error("export_delete_none")
+        try:
+            return {"deleted": steps.delete_exports(root, name, body.models)}
+        except ValueError as err:
+            raise error("export_unknown", str(err), status=404, model=str(err)) from err
 
     # --- history ----------------------------------------------------------------------------------
 

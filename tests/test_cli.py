@@ -150,6 +150,27 @@ def test_base_score(tmp_path):
     assert (folder / "utmos.json").is_file()
 
 
+def test_voice_score_keeps_its_scores(tmp_path):
+    from piper_voice_cloner import config as config_mod
+    from piper_voice_cloner.dataset import Utterance, write_metadata
+
+    from .test_dataset_quality import fake_scorer
+
+    config_mod.save(tmp_path / "voices" / "kuba", config_mod.VoiceConfig(name="kuba"))
+    result = runner.invoke(app, ["--root", str(tmp_path), "score", "kuba"])
+    assert result.exit_code != 0 and "import" in " ".join(result.output.split())  # no clips yet
+    folder = tmp_path / "voices" / "kuba" / "dataset"
+    write_metadata(folder / "metadata.csv", [Utterance(f"c{i}", "Zdanie.") for i in range(4)])
+    python = fake_scorer(tmp_path, {"c0": 2.4, "c1": 3.5, "c2": 3.7, "c3": 4.2})
+    out = invoke(tmp_path, "score", "kuba", "--python", python)  # all of them by default
+    assert "progress score 4/4" in out and "median 3.60" in out and "below: 2.5 1" in out
+    out = invoke(tmp_path, "score", "kuba", "--python", python)
+    assert "4 of 4 clips already scored, scoring 0" in out
+    out = invoke(tmp_path, "prune", "kuba", "--below", "3.0")
+    assert "kept 3 of 4 clips, took out 1" in out and "1497 short of 1500" in out
+    assert len((folder / "metadata.csv").read_text().splitlines()) == 3
+
+
 def test_base_select(tmp_path):
     ckpt = tmp_path / "epoch=3000-val_mel=0.2.ckpt"
     ckpt.write_bytes(b"model")
@@ -161,6 +182,28 @@ def test_export_without_checkpoint(tmp_path):
     invoke(tmp_path, "init", "kuba")
     result = runner.invoke(app, ["--root", str(tmp_path), "export", "kuba"])
     assert result.exit_code != 0
+
+
+def test_export_records_the_checkpoint_and_epoch(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    from piper_voice_cloner import train
+
+    monkeypatch.setattr(
+        train, "checkpoint_info", lambda path, python: SimpleNamespace(quality="medium", epoch=3093)
+    )
+    monkeypatch.setattr(train, "run", lambda cmd: None)
+    invoke(tmp_path, "init", "kuba")
+    work = tmp_path / "voices" / "kuba" / "train"
+    ckpt = work / "lightning_logs" / "version_1" / "checkpoints" / "epoch=3093-val_mos=3.5894.ckpt"
+    ckpt.parent.mkdir(parents=True)
+    ckpt.write_bytes(b"x")
+    (work / "config.json").write_text("{}", encoding="utf-8")
+    invoke(tmp_path, "export", "kuba", "--checkpoint", str(ckpt))
+    [config] = (tmp_path / "voices" / "kuba" / "export").glob("*.onnx.json")
+    source = json.loads(config.read_text(encoding="utf-8"))[train.EXPORT_SOURCE_KEY]
+    assert source["epoch"] == 3093
+    assert source["checkpoint"] == "version_1/epoch=3093-val_mos=3.5894.ckpt"
 
 
 @requires_ffmpeg
@@ -373,6 +416,21 @@ def test_train_queue_keeps_order_and_survives_a_failed_voice(tmp_path, monkeypat
     assert json.loads((tmp_path / "jobs" / "train_queue.json").read_text(encoding="utf-8")) == {
         "voice": "piotr"
     }
+
+
+def test_train_queue_fresh_starts_every_voice_over(tmp_path, monkeypatch):
+    from piper_voice_cloner import cli, train
+
+    resumed = []
+    monkeypatch.setattr(cli, "_train", lambda name, *args, resume, **_kw: resumed.append((name, resume)))
+    monkeypatch.setattr(train, "resolve_base", lambda *args, **kwargs: None)
+    for name in ("opt", "piotr"):
+        invoke(tmp_path, "init", name, "--base", "lessac")
+    invoke(tmp_path, "train-queue", "opt", "piotr", "--base", "lessac")
+    assert resumed == [("opt", True), ("piotr", True)]  # a voice with checkpoints goes on from them
+    resumed.clear()
+    invoke(tmp_path, "train-queue", "opt", "piotr", "--base", "lessac", "--fresh")
+    assert resumed == [("opt", False), ("piotr", False)]  # like "Start over" for each
 
 
 def test_train_queue_ctrl_c_stops_the_rest(tmp_path, monkeypatch):
